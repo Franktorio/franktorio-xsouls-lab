@@ -1,0 +1,54 @@
+# ==================================================
+#               FRD BOT CONFIGURATION
+# ==================================================
+
+from typing import Literal
+
+# ===========================
+#   SECRET KEYS AND TOKENS
+# ===========================
+
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+
+# R2 STORAGE CONFIGURATION
+R2_ENABLED = True
+R2_ACCOUNT_ID = "YOUR_R2_ACCOUNT_ID_HERE"
+R2_ACCESS_KEY_ID = "YOUR_R2_ACCESS_KEY_ID_HERE"
+R2_SECRET_ACCESS_KEY = "YOUR_R2_SECRET_ACCESS_KEY_HERE"
+R2_BUCKET_NAME = "YOUR_R2_BUCKET_NAME_HERE"
+R2_PUBLIC_URL = "https://cdn.xsoul.org"
+R2_MAX_RETRIES = 3
+R2_TIMEOUT_SECONDS = 30
+
+# API CONFIGURATION
+API_BASE_URL = "https://pressure.xsoul.org/api"
+API_KEY = "YOUR_API_KEY_HERE"
+
+# LOCAL API SERVER CONFIGURATION
+LOCAL_KEY = "YOUR_LOCAL_KEY_HERE"
+
+# ===========================
+#        IDENTIFIERS
+# ===========================
+
+# MAIN SERVER GUILD ID
+HOME_GUILD_ID = "YOUR_HOME_GUILD_ID_HERE"
+
+# ROLES IN HOME GUILD FOR PERMISSION CHECKS
+TRIAL_RESEARCHER = "YOUR_TRIAL_RESEARCHER_ROLE_ID_HERE"
+NOVICE_RESEARCHER = "YOUR_NOVICE_RESEARCHER_ROLE_ID_HERE"
+EXPERIENCED_RESEARCHER = "YOUR_EXPERIENCED_RESEARCHER_ROLE_ID_HERE"
+HEAD_RESEARCHER = "YOUR_HEAD_RESEARCHER_ROLE_ID_HERE"
+
+# OWNER USER ID
+OWNER_ID = "YOUR_OWNER_USER_ID_HERE"
+
+# ===========================
+#       OTHER SETTINGS
+# ===========================
+
+RoomType = Literal["Hadal Blacksite", "Blacksite Administration", "Flooded Rooms", "Heavy Containment", "Maintenance Tunnels", "Mantle Extraction", 
+                   "Oxygen Gardens", "River Rooms", "Server Farms", "The Dredge", "The Outskirts", "Trench Tunnels", "Endless Ridge", 
+                   "Hotel Rooms", "Meat Rooms", "The Rooms", "Sewers", "The Back Area", "Winter Gardens", "The Ridge"]
+
+Tags = Literal["SS", "PSS", "Shop", "Rare", "Easter Egg", "Bunnies", "Has Document", "Endless", " Dead Zone"]

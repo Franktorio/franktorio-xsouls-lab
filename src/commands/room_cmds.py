@@ -1,0 +1,140 @@
+# Franktorio's Research Division
+# Author: Franktorio
+# November 7th, 2025
+# Research Commands
+
+# Standard library imports
+import dis
+from email.mime import image
+import io
+import json
+from math import e
+from os import name
+
+# Third-party imports
+from src.datamanager import room_db_handler, server_profiler
+import discord
+from discord.ext import commands
+from discord import app_commands
+from typing import Literal, Optional
+import aiohttp
+
+# Local imports
+import shared
+from ..utils import _helpers
+from src.utils import embeds
+import src.api._r2_handler as r2_handler
+import src.datamanager.room_db_handler as room_db_handler
+from config.vars import RoomType, Tags
+import config.vars as vars
+
+class RoomCommands(app_commands.Group):
+    """Commands related to room searching and information."""
+    def __init__(self):
+        super().__init__(name="room", description="Commands related to room searching and information.")
+    
+    @app_commands.command(name="info", description="Get information about a specific room.")
+    @app_commands.describe(room_name="The name of the room to get information about.")
+    async def room_info(self, interaction: discord.Interaction, room_name: str):
+        """Fetch and display information about a specific room."""
+        print(f"[COMMAND] 📋 Room info requested for '{room_name}' by {interaction.user}")
+        await interaction.response.defer()
+        
+        room = room_db_handler.get_roominfo(room_name)
+        if not room:
+            embed = embeds.create_error_embed("Room Not Found", f"No information found for room: **{room_name}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        embed, images = await embeds.send_room_documentation_embed(interaction.channel, room, return_embed=True)
+        await interaction.followup.send(embed=embed, files=images)
+    
+    @app_commands.command(name="search", description="Search for rooms by name.")
+    @app_commands.describe(name="The search query for room names.", tag="Tag to filter rooms by.", roomtype="Type of room to filter by.")
+    async def room_search(self, interaction: discord.Interaction, name: Optional[str] = None, tag: Optional[Tags] = None, roomtype: Optional[RoomType] = None):
+        """Search for rooms by name."""
+        print(f"[COMMAND] 🔍 Room search by {interaction.user} - name:{name}, tag:{tag}, type:{roomtype}")
+        await interaction.response.defer()
+        
+        if not name and not tag and not roomtype:
+            r_embed = embeds.create_error_embed("Invalid Search", "Please provide at least one search parameter: name, tag, or roomtype.")
+            await interaction.followup.send(embed=r_embed)
+            return
+        if name:
+            name_result = room_db_handler.search_rooms_by_name(name)
+        
+        if tag:
+            tag_result = room_db_handler.search_rooms_by_tag(tag)
+
+        if roomtype:
+            type_result = room_db_handler.search_rooms_by_roomtype(roomtype)
+
+        search_type = ""
+
+        # Only show rooms that match all provided criteria
+        if name and tag and roomtype:
+            results = [room for room in name_result if room in tag_result and room in type_result]
+            search_type = "tag & type & name"
+        elif name and tag:
+            results = [room for room in name_result if room in tag_result]
+            search_type = "tag & name"
+        elif name and roomtype:
+            results = [room for room in name_result if room in type_result]
+            search_type = "type & name"
+        elif tag and roomtype:
+            results = [room for room in tag_result if room in type_result]
+            search_type = "tag & type"
+        elif name:
+            results = name_result
+            search_type = "name"
+        elif tag:
+            results = tag_result
+            search_type = "tag"
+        elif roomtype:
+            results = type_result
+            search_type = "type"
+
+        query_parts = []
+        if name:
+            query_parts.append(name)
+        if tag:
+            query_parts.append(f"Tag: {tag}")
+        if roomtype:
+            query_parts.append(f"Type: {roomtype}")
+        query = ", ".join(query_parts)
+    
+        if not results:
+            r_embed = embeds.create_error_embed("No Results", f"No rooms found matching your query: **{query}**")
+            await interaction.followup.send(embed=r_embed)
+            return
+        
+        
+        result_embeds = embeds.create_search_result_embed(search_type, query, results, interaction.guild_id)
+        result_embeds = result_embeds[:20]  # Limit to 20 embeds
+        first_embed = result_embeds.pop(0)
+        await interaction.followup.send(embed=first_embed)
+        for embed in result_embeds:
+            await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @app_commands.command(name="history", description="View the edit history of a room.")
+    @app_commands.describe(room_name="The name of the room to view history for.")
+    async def room_history(self, interaction: discord.Interaction, room_name: str):
+        """View the edit history of a room."""
+        print(f"[COMMAND] 📜 Room history requested for '{room_name}' by {interaction.user}")
+        await interaction.response.defer()
+        
+        room = room_db_handler.get_roominfo(room_name)
+        if not room:
+            embed = embeds.create_error_embed("Room Not Found", f"No information found for room: **{room_name}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        history_embeds = embeds.create_edit_history_embed(room_name, room)
+        history_embeds = history_embeds[:20]  # Limit to 20 embeds
+        first_embed = history_embeds.pop(0)
+        await interaction.followup.send(embed=first_embed)
+        for embed in history_embeds:
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+shared.FRD_bot.tree.add_command(RoomCommands())

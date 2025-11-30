@@ -1,0 +1,101 @@
+# Franktorio's Research Division
+# Author: Franktorio
+# November 7th, 2025
+# Management Commands (head researcher+ only commands)
+
+# Standard library imports
+from typing import Literal
+import discord
+from discord.ext import commands
+from discord import app_commands
+
+# Local imports
+import shared
+from src import datamanager
+from src.tasks.sync_databases import sync_databases
+from ..utils import _helpers
+import config.vars as vars
+from src.utils.embeds import create_error_embed, create_success_embed
+from src.api import external_api as ext_api
+
+FRD_bot = shared.FRD_bot
+
+class Management(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="management", description="Management commands")
+
+    @app_commands.command(name="sync", description="Manually trigger database synchronization across servers.")
+    async def sync_databases(self, interaction: discord.Interaction):
+        """Manually trigger database synchronization across servers."""
+        print(f"[COMMAND] 🔄 Manual database sync triggered by {interaction.user}")
+        await interaction.response.defer()
+        
+        level = await _helpers.permission_check(interaction.user)
+        if level < 4:
+            embed = create_error_embed(title="Permission Denied", description="You do not have permission to use this command. You need to be a Head Researcher or higher.")
+            await interaction.followup.send(embed=embed)
+            return
+        try:
+            sync_databases.restart()
+            embed = create_success_embed(title="✅ Database Synchronization Triggered", description="Database synchronization across servers has been manually triggered.")
+            await interaction.followup.send(embed=embed)
+        except Exception as e:
+            embed = create_error_embed(title="❌ Synchronization Failed", description=f"An error occurred while triggering synchronization: {str(e)}")
+            await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="set_level", description="Set the permission level of a user.")
+    @app_commands.describe(user="The user to set the permission level for.", role="The permission role to assign.")
+    async def set_permission_level(self, interaction: discord.Interaction, user: discord.User, role: Literal["Viewer", "Trial Researcher", "Novice Researcher", "Experienced Researcher", "Head Researcher"]):
+        """Set the permission level of a user."""
+        print(f"[COMMAND] 👥 Set permission level for {user} to '{role}' by {interaction.user}")
+        await interaction.response.defer()
+        
+        level = await _helpers.permission_check(interaction.user)
+        if level < 4:
+            embed = create_error_embed(title="Permission Denied", description="You do not have permission to use this command. You need to be a Head Researcher or higher.")
+            await interaction.followup.send(embed=embed)
+            return
+
+        role_map = {
+            "Viewer": None,
+            "Trial Researcher": vars.TRIAL_RESEARCHER,
+            "Novice Researcher": vars.NOVICE_RESEARCHER,
+            "Experienced Researcher": vars.EXPERIENCED_RESEARCHER,
+            "Head Researcher": vars.HEAD_RESEARCHER
+        }
+
+        guild = shared.FRD_bot.get_guild(vars.HOME_GUILD_ID)
+        member = guild.get_member(user.id)
+        if member is None:
+            embed = create_error_embed(title="User Not Found", description="The specified user is not a member of the home server.")
+            await interaction.followup.send(embed=embed)
+            return
+
+        # Remove all research roles first
+        research_roles = [
+            vars.TRIAL_RESEARCHER,
+            vars.NOVICE_RESEARCHER,
+            vars.EXPERIENCED_RESEARCHER,
+            vars.HEAD_RESEARCHER
+        ]
+        
+        for r_id in research_roles:
+            r_role = guild.get_role(r_id)
+            if r_role in member.roles:
+                await member.remove_roles(r_role)
+
+        # Assign new role if not Viewer
+        if role_map[role]:
+            new_role = guild.get_role(role_map[role])
+            await member.add_roles(new_role)
+
+        # Sync role to external API
+        try:
+            await ext_api.set_user_role_api(user.id, role)
+            embed = create_success_embed(title="Permission Level Updated", description=f"Set **{user}**'s permission level to **{role}** on both Discord and the web dashboard.")
+        except Exception as e:
+            embed = create_success_embed(title="Permission Level Partially Updated", description=f"⚠️ Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {str(e)}\nPlease try again.")
+        
+        await interaction.followup.send(embed=embed)
+
+shared.FRD_bot.tree.add_command(Management())
