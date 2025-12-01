@@ -14,34 +14,6 @@ import uvicorn
 import config
 import shared
 
-"""
-REQUIRED BOT PERMISSIONS:
-=========================
-The bot requires the following Discord permissions to function properly:
-
-Server Permissions:
-- Manage Channels: Create/delete documented and leaderboard channels
-- Manage Messages: Purge bot messages, delete documentation messages
-- Send Messages: Post documentation and leaderboard content
-- Embed Links: Send rich embeds for documentation
-- Attach Files: Upload images for room documentation
-- Read Message History: Fetch messages for updates and purges
-- Add Reactions: Add reactions for confirmation prompts
-- Use External Emojis: (Optional) For enhanced embeds
-
-Channel-Specific Permissions:
-- In documented channels: Send Messages, Embed Links, Attach Files, Read Message History
-- In leaderboard channels: Send Messages, Embed Links, Read Message History
-- Deny @everyone Send Messages in documented/leaderboard channels
-
-OAuth2 Scopes:
-- bot
-- applications.commands
-
-Bot Invite Link should include permissions integer: 277025770560
-(Manage Channels, Manage Messages, Send Messages, Embed Links, Attach Files, 
- Read Message History, Add Reactions, Use External Emojis)
-"""
 
 # Bot intents
 intents = discord.Intents.default()

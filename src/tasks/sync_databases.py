@@ -91,11 +91,11 @@ async def sync_databases():
         else:
             print(f"  ✅ Uploaded {room_name}")
 
-    # Process missing locally - download from external API
+    # Process missing locally, download from external API
     for room_name, ext_data in missing_locally:
         print(f"⬇️ Downloading missing room from external API: {room_name}")
         
-        # Validate image URLs from external API - filter out file paths
+        # Validate image URLs from external API: filter out file paths
         picture_urls = ext_data.get("images", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
@@ -120,11 +120,11 @@ async def sync_databases():
         )
         print(f"  ✅ Downloaded {room_name}")
 
-    # Process newer locally - delete external and re-upload
+    # Process newer locally: upload to external API
     for room_name, local_data in newer_locally:
         print(f"🔄 Updating external API (local is newer): {room_name}")
         
-        # Validate image URLs - filter out file paths
+        # Validate image URLs: filter out file paths
         picture_urls = local_data.get("picture_urls", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
@@ -136,8 +136,6 @@ async def sync_databases():
             print(f"  ⚠️  Keeping external version to avoid data loss")
             continue
         
-
-        # Try to upload first to verify data is valid
         upload_result = await ext_api.export_room_to_api(
             room_name=room_name,
             roomtype=local_data.get("roomtype", "Unclassified"),
@@ -150,44 +148,36 @@ async def sync_databases():
         
         if not upload_result.get("success"):
             # Check if this is a skippable error (like not enough images)
-            if upload_result.get("skipped"):
-                print(f"  ⏭️  Skipped {room_name}: {upload_result.get('error')}")
-            else:
-                print(f"  ❌ Failed to upload {room_name}: {upload_result.get('error')}")
-                print(f"  ⚠️  Keeping external version to avoid data loss")
+            print(f"  ❌ Failed to upload {room_name}: {upload_result.get('error')}")
+            print(f"  ⚠️  Keeping external version to avoid data loss")
             continue
         
         print(f"  ✅ Updated {room_name} in external database")
 
-    # Process newer externally - delete local and re-download
+    # Process newer externally: update local database
     for room_name, ext_data in newer_externally:
         print(f"🔄 Updating local database (external is newer): {room_name}")
         
-        # Validate image URLs from external API - filter out file paths
+        # Validate image URLs from external API: filter out file paths
         picture_urls = ext_data.get("images", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
         if len(valid_urls) < len(picture_urls):
             print(f"  ⚠️  External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
         
-        # Get existing local data to preserve edit history before updating
-        local_room = datamanager.room_db_handler.get_roominfo(room_name)
-        existing_edits = local_room.get('edits', []) if local_room else None
-        
-        # Use replace_doc to update without destroying edit history
-        datamanager.room_db_handler.replace_doc(
+        datamanager.room_db_handler.document_room(
             room_name=room_name,
             roomtype=ext_data.get("roomtype", "Unclassified"),
             picture_urls=valid_urls,
             description=ext_data.get("description", ""),
             doc_by_user_id=ext_data.get("documented_by", 0),
             tags=ext_data.get("tags", []),
-            timestamp=ext_data.get("last_edited", 0),
-            edited_by_user_id=ext_data.get("last_edited_by"),
-            edits=existing_edits  # Preserve existing edit history
+            edited_by_user_id=ext_data.get("last_edited_by")
         )
-        print(f"  ✅ Updated {room_name} in local database")
 
+        await _helpers.global_reset(room_name)
+        print(f"  ✅ Updated {room_name} in local database")
+        
     print(f"✅ Database synchronization complete!")
     print(f"   📤 Uploaded: {len(missing_externally)} rooms")
     print(f"   📥 Downloaded: {len(missing_locally)} rooms")

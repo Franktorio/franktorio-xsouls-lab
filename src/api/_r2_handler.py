@@ -35,7 +35,6 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 def _get_cache_filename(url: str) -> str:
     """Generate a consistent cache filename from a URL."""
     # Extract the filename from the URL (e.g., room_name/room_name_0.png)
-    # This preserves the organized structure: room_name_room_name_0.png
     if "cdn.xsoul.org/" in url:
         # Extract everything after the domain
         path_part = url.split("cdn.xsoul.org/")[-1]
@@ -74,7 +73,7 @@ def _is_cached(url: str) -> bool:
 async def _download_and_cache(url: str) -> str:
     """Download an image from URL and cache it. Returns the cache path."""
     
-    # Replace any ? with %3F to avoid filesystem issues
+    # Replace any ? with %3F
     cache_path = _get_cache_path(url)
     
     # Run the blocking requests call in a thread pool to prevent blocking the event loop
@@ -143,10 +142,8 @@ async def upload_to_r2(image_data, room_name: str, image_index: int = 1):
         return None
     
     try:
-        # R2 endpoint format: https://<account_id>.r2.cloudflarestorage.com
         endpoint_url = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
         
-        # Configure S3 client for R2
         config = Config(
             retries={'max_attempts': R2_MAX_RETRIES, 'mode': 'adaptive'},
             connect_timeout=R2_TIMEOUT_SECONDS,
@@ -163,8 +160,7 @@ async def upload_to_r2(image_data, room_name: str, image_index: int = 1):
             region_name='auto'
         )
         
-        # Generate filename: RoomName/RoomName_1_RoomName_1.png
-        # Example: ElectricityPuzzle2/ElectricityPuzzle2_1_ElectricityPuzzle2_1.png
+        # Example: ElectricityPuzzle2/ElectricityPuzzle2_1.png
         clean_room_name = room_name.replace('/', '_').replace('\\', '_')
         filename = f"{clean_room_name}/{clean_room_name}_{image_index}.png"
         
