@@ -8,7 +8,7 @@ import sqlite3
 import os
 
 # Local imports
-from . import room_db_handler, server_profiler
+from . import room_db_handler, server_profiler, scanner_db_handler
 
 # determine project root (two levels up from this file) and put DB in FRD_bot/databases
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -27,4 +27,7 @@ def init_db():
     print("✅ Server profiles table initialized")
     room_db_handler.init_room_db_table()
     print("✅ Room database table initialized")
-    print("✅ Database initialization complete")
+    scanner_db_handler.init_db()
+    print("✅ Scanner database table initialized")
+
+    print("🗃️ All databases initialized successfully")

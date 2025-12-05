@@ -36,12 +36,6 @@ def init_room_db_table():
         )
     """)
     
-    # Add edited_by_user_id column if it doesn't exist (migration)
-    cursor.execute("PRAGMA table_info(room_db)")
-    columns = [row[1] for row in cursor.fetchall()]
-    if 'edited_by_user_id' not in columns:
-        cursor.execute("ALTER TABLE room_db ADD COLUMN edited_by_user_id INTEGER")
-    
     conn.commit()
     conn.close()
 
