@@ -6,7 +6,7 @@ from src.datamanager import helpers
 if __name__ == "__main__": # Main entry point enforcement, ensures the script is run directly and not imported on accident.
     # Initialize or update the scanner database tables
     try:
-        helpers.init_scanner_db()
+        helpers.init_databases()
     except Exception as e:
         print(f"❌ Failed to initialize or update scanner database: {e}")
         exit(1)
