@@ -16,30 +16,26 @@ from .helpers import connect_db
 
 DB_FILE_NAME = "frd_room.db"
 
+ROOM_SCHEMA = {
+    "arg": "CREATE TABLE IF NOT EXISTS room_db",
+    "tables": [
+        "room_name TEXT PRIMARY KEY",
+        "picture_urls TEXT NOT NULL DEFAULT '[]'",
+        "description TEXT NOT NULL DEFAULT ''",
+        "tags TEXT NOT NULL DEFAULT '[]'",
+        "roomtype TEXT NOT NULL DEFAULT ''",
+        "last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "doc_by_user_id INTEGER NOT NULL",
+        "edited_by_user_id INTEGER",
+        "edits TEXT NOT NULL DEFAULT '[]'"
+    ]
+}
+
 def _connect_db() -> sqlite3.Connection:
     """Connect to the room database."""
     return connect_db(DB_FILE_NAME)
 
-def init_db():
-    """Initialize the room_db table if it doesn't exist."""
-    conn = _connect_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS room_db (
-            room_name TEXT PRIMARY KEY,
-            picture_urls TEXT NOT NULL DEFAULT '[]',
-            description TEXT NOT NULL DEFAULT '',
-            tags TEXT NOT NULL DEFAULT '[]',
-            roomtype TEXT NOT NULL DEFAULT '',
-            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            doc_by_user_id INTEGER NOT NULL,
-            edited_by_user_id INTEGER,
-            edits TEXT NOT NULL DEFAULT '[]'
-        )
-    """)
-    
-    conn.commit()
-    conn.close()
+
 
 def document_room(room_name: str, picture_urls: list, description: str, doc_by_user_id: int, tags: list, roomtype: str, timestamp: float, edited_by_user_id: int = None) -> bool:
     """

@@ -5,6 +5,7 @@
 # Standard library imports
 import json
 import sqlite3
+from typing import Dict, Any
 import os
 
 # determine project root (two levels up from this file) and put DB in FRD_bot/databases
@@ -34,19 +35,77 @@ def connect_db(db_file_name: str) -> sqlite3.Connection:
     
     return sqlite3.connect(DB_PATH)
 
-def init_db():
+
+def init_table(schema: Dict[str, Any], db_file_name: str):
+    """Initialize a database with the given schema if it doesn't exist."""
+    conn = connect_db(db_file_name)
+    cursor = conn.cursor()
+    argument = f"{schema['arg']} ({', '.join(schema['tables'])})"
+    cursor.execute(argument)
+    conn.commit()
+    conn.close()
+
+    update_db(schema, db_file_name)
+    remove_unused_tables(schema, db_file_name)
+
+
+def update_db(schema: Dict[str, Any], db_file_name: str):
+    """Update a database with the given schema."""
+    conn = connect_db(db_file_name)
+    cursor = conn.cursor()
+    cursor.execute(f"PRAGMA table_info({schema['arg'].split()[-1]})")
+    existing_columns = {row[1] for row in cursor.fetchall()}
+
+    # Add missing columns
+    for column_def in schema['tables']:
+        column_name = column_def.split()[0]
+        if column_name not in existing_columns:
+            cursor.execute(f"ALTER TABLE {schema['arg'].split()[-1]} ADD COLUMN {column_def}")
+
+    conn.commit()
+    conn.close()
+
+def remove_unused_tables(schema: Dict[str, Any], db_file_name: str) -> bool:
+    """Remove unused tables from the database that are not in the schema."""
+    conn = connect_db(db_file_name)
+    cursor = conn.cursor()
+    
+    # Get existing tables
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    existing_tables = {row[0] for row in cursor.fetchall()}
+    
+    # Determine the table name from the schema argument
+    table_name = schema['arg'].split()[-1]
+    
+    # If the table is not in the schema, drop it
+    if table_name not in existing_tables:
+        cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+        conn.commit()
+        conn.close()
+        return True
+    
+    conn.close()
+    return False
+
+def init_databases():
     """Initialize the database file and tables in FRD_bot/databases if they don't exist."""
     # Import here to avoid circular imports
     from . import room_db_handler, server_db_handler, scanner_db_handler
     
     os.makedirs(DB_DIR, exist_ok=True)
     
-    # Initialize all tables
-    server_db_handler.init_db()
+    # Initialize server profiles table (in frd_bot.db)
+    init_table(server_db_handler.SERVER_SCHEMA, server_db_handler.DB_FILE_NAME)
     print("✅ Server profiles table initialized")
-    room_db_handler.init_db()
+    
+    # Initialize room database table (in frd_room.db)
+    init_table(room_db_handler.ROOM_SCHEMA, room_db_handler.DB_FILE_NAME)
     print("✅ Room database table initialized")
-    scanner_db_handler.init_db()
-    print("✅ Scanner database table initialized")
+    
+    # Initialize scanner database tables (in frd_scanner.db)
+    init_table(scanner_db_handler.SESSIONS_SCHEMA, scanner_db_handler.DB_FILE_NAME)
+    init_table(scanner_db_handler.ENCOUNTERED_ROOMS_SCHEMA, scanner_db_handler.DB_FILE_NAME)
+    scanner_db_handler.init_scanner_extras()
+    print("✅ Scanner database tables initialized")
 
     print("🗃️ All databases initialized successfully")

@@ -15,24 +15,17 @@ from .helpers import connect_db
 
 DB_FILE_NAME = "frd_bot.db"
 
+SERVER_SCHEMA = {
+    "arg": "CREATE TABLE IF NOT EXISTS server_profiles",
+    "tables": ["server_id INTEGER PRIMARY KEY",
+               "leaderboard_channel_id INTEGER",
+               "documented_channel_id INTEGER",
+               "doc_msg_ids TEXT"]
+}
+
 def _connect_db() -> sqlite3.Connection:
     """Connect to the database and return the connection."""
     return connect_db(DB_FILE_NAME)
-
-def init_db():
-    """Initialize the server_profiles table if it doesn't exist."""
-    conn = _connect_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS server_profiles (
-            server_id INTEGER PRIMARY KEY,
-            leaderboard_channel_id INTEGER,
-            documented_channel_id INTEGER,
-            doc_msg_ids TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
 
 
 def get_server_profile(server_id: int) -> Optional[Dict[str, Any]]:

@@ -11,6 +11,7 @@ The bot provides backend support for the franktorio-research-scanner, which quer
 - Finish the scanner API located at `/src/api/research_api.py`
 - Add Discord commands to display gathered data
 - Document all API endpoints
+- Cleanup imports that are not used from modules
 
 ### Setup
 - Install dependencies:

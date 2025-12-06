@@ -39,7 +39,7 @@ def run_api_server():
     uvicorn.run(api_app, host="0.0.0.0", port=config.vars.API_PORT, log_level="info")
 
 # Initialize database
-data_manager.init_db()
+data_manager.init_databases()
 
 @FRD_bot.event
 async def on_ready():

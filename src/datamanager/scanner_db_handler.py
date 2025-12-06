@@ -12,37 +12,42 @@ from typing import Optional, Dict, Any, List, Tuple
 # Local imports
 from .helpers import connect_db
 
-DB_FILE_NAME = "frd_bot.db"
+DB_FILE_NAME = "frd_scanner.db"
+
+# Schema for sessions table
+SESSIONS_SCHEMA = {
+    "arg": "CREATE TABLE IF NOT EXISTS sessions",
+    "tables": [
+        "session_id TEXT PRIMARY KEY",
+        "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+        "last_edited_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+        "scanner_version TEXT NOT NULL",
+        "closed INTEGER NOT NULL DEFAULT 0"
+    ]
+}
+
+# Schema for encountered_rooms table
+ENCOUNTERED_ROOMS_SCHEMA = {
+    "arg": "CREATE TABLE IF NOT EXISTS encountered_rooms",
+    "tables": [
+        "event_id INTEGER PRIMARY KEY AUTOINCREMENT",
+        "session_event TEXT NOT NULL",
+        "session_id TEXT NOT NULL",
+        "room_name TEXT NOT NULL",
+        "found_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+    ]
+}
 
 def _connect_db() -> sqlite3.Connection:
     """Connect to the scanner database and return the connection."""
     return connect_db(DB_FILE_NAME)
 
-def init_db():
-    """Initialize the database with the required tables."""
+def init_scanner_extras():
+    """Initialize database triggers and indexes after tables are created."""
     conn = _connect_db()
     cursor = conn.cursor()
     
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS sessions (
-            session_id TEXT PRIMARY KEY,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            last_edited_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            scanner_version TEXT NOT NULL
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS encountered_rooms (
-            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_event TEXT NOT NULL,
-            session_id TEXT NOT NULL,
-            room_name TEXT NOT NULL,
-            found_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
-        )
-    """)
-
+    # Create trigger to update last_edited_at on sessions table
     cursor.execute("""
         CREATE TRIGGER IF NOT EXISTS update_last_edited_at
         AFTER INSERT ON encountered_rooms
@@ -53,6 +58,12 @@ def init_db():
         END;
     """)
     
+    # Create indexes for performance
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_sessions_open_closed 
+        ON sessions(closed)
+    """)
+
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_rooms_session_id 
         ON encountered_rooms(session_id)
@@ -66,3 +77,15 @@ def init_db():
     conn.commit()
     conn.close()
 
+def start_session(session_id: str, scanner_version: str) -> None:
+    """Start a new scanning session."""
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO sessions (session_id, scanner_version)
+        VALUES (?, ?)
+    """, (session_id, scanner_version))
+    
+    conn.commit()
+    conn.close()
