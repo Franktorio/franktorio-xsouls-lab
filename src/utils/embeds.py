@@ -12,7 +12,7 @@ import urllib.parse
 import aiohttp
 
 # Local imports
-import shared
+from src import shared
 from src.api import _r2_handler
 from ._helpers import get_doc_message_link
 
@@ -321,9 +321,9 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
             added_tags = set(current_state['tags']) - set(prev_tags)
             removed_tags = set(prev_tags) - set(current_state['tags'])
             if added_tags:
-                changes.append(f"🏷️ Tags Added: `{", ".join(added_tags)}`")
+                changes.append(f"🏷️ Tags Added: `{', '.join(added_tags)}`")
             if removed_tags:
-                changes.append(f"🏷️ Tags Removed: `{", ".join(removed_tags)}`")
+                changes.append(f"🏷️ Tags Removed: `{', '.join(removed_tags)}`")
             if not added_tags and not removed_tags:
                 changes.append("🏷️ Tags Modified")
         

@@ -10,7 +10,8 @@ import io
 import json
 
 # Third-party imports
-from src.datamanager import room_db_handler, server_profiler
+from src.datamanager import server_db_handler
+from src.datamanager import room_db_handler
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -19,7 +20,7 @@ import aiohttp
 from PIL import Image #type: ignore
 
 # Local imports
-import shared
+from src import shared
 from src.utils import embeds, _helpers
 import src.api._r2_handler as r2_handler
 import src.api.external_api as external_api

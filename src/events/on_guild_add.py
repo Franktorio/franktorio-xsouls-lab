@@ -13,7 +13,7 @@ from discord.ext import commands
 from discord import app_commands
 
 # Local imports
-import shared
+from src import shared
 from src import datamanager
 import config.vars as vars
 

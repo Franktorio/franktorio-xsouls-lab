@@ -9,7 +9,7 @@ import discord
 from discord.ext import tasks
 
 # Local imports
-import shared
+from src import shared
 import src.api.external_api as ext_api
 from src import datamanager
 from src.utils import embeds

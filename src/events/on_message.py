@@ -13,7 +13,7 @@ from discord.ext import commands
 from discord import app_commands
 
 # Local imports
-import shared
+from src import shared
 from src import datamanager
 import config.vars as vars
 
@@ -28,7 +28,7 @@ async def on_message(message: discord.Message):
     guild_id = message.guild.id if message.guild else None
     if not guild_id:
         return
-    profile = datamanager.server_profiler.get_server_profile(guild_id)
+    profile = datamanager.server_db_handler.get_server_profile(guild_id)
     if not profile:
         return
     

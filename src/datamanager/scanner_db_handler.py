@@ -9,13 +9,14 @@ import datetime
 import os
 from typing import Optional, Dict, Any, List, Tuple
 
-DB_PATH = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), "databases", "frd_bot.db")
+# Local imports
+from .helpers import connect_db
 
-def _connect_db():
-    """Connect to the database and return the connection."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+DB_FILE_NAME = "frd_bot.db"
+
+def _connect_db() -> sqlite3.Connection:
+    """Connect to the scanner database and return the connection."""
+    return connect_db(DB_FILE_NAME)
 
 def init_db():
     """Initialize the database with the required tables."""

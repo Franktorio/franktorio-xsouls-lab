@@ -11,7 +11,7 @@ import discord
 from discord.ext import tasks
 
 # Local imports
-import shared
+from src import shared
 from src import datamanager
 from src.utils import embeds
 from src.utils import _helpers
@@ -24,7 +24,7 @@ async def update_leaderboard():
     # Iterate through all guilds the bot is in
     for guild in shared.FRD_bot.guilds:
         # Get server profile to find leaderboard channel
-        profile = datamanager.server_profiler.get_server_profile(guild.id)
+        profile = datamanager.server_db_handler.get_server_profile(guild.id)
         if not profile or not profile.get('leaderboard_channel_id'):
             continue
 
@@ -32,13 +32,13 @@ async def update_leaderboard():
         if not leaderboard_channel:
             continue
 
-        message_id = datamanager.init_db.actions_data["leaderboard_messages"].get(str(guild.id))
+        message_id = datamanager.helpers.actions_data["leaderboard_messages"].get(str(guild.id))
         if not message_id:
             print(f"❌ Leaderboard message ID not found in server {guild.id}. Creating a new one.")
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id
-            datamanager.init_db.actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
+            datamanager.helpers.actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
             _helpers.save_actions_json()
 
         try:
@@ -48,7 +48,7 @@ async def update_leaderboard():
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id
-            datamanager.init_db.actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
+            datamanager.helpers.actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
             _helpers.save_actions_json()
         
         rooms = datamanager.room_db_handler.jsonify_room_db()

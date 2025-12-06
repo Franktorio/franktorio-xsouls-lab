@@ -53,7 +53,7 @@ bot_logs.txt
 .env.local
 .env.*.local
 
-# Images (uploaded/cached)
+# Images
 databases/images/
 *.png
 *.jpg
@@ -65,5 +65,5 @@ databases/images/
 *.temp
 *.bak
 
-# JSON data files (may contain user data)
+# JSON data files 
 databases/*.json

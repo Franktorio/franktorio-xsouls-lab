@@ -18,7 +18,7 @@ from discord.ext import commands
 from discord import app_commands
 
 # Local imports
-import shared
+from src import shared
 from src import datamanager
 from ..utils import _helpers
 import config.vars as vars
@@ -65,7 +65,7 @@ class Admin(app_commands.Group):
         async def clear_guild_channel(guild):
             """Clear documented channel for a single guild."""
             try:
-                server_profile = datamanager.server_profiler.get_server_profile(guild.id)
+                server_profile = datamanager.server_db_handler.get_server_profile(guild.id)
                 documented_channel_id = server_profile.get('documented_channel_id')
                 if not documented_channel_id:
                     return 0
@@ -79,7 +79,7 @@ class Admin(app_commands.Group):
                 
                 print(f"🗑️ Clearing documented channel in guild {guild.name} ({guild.id})")
                 deleted = await channel.purge(check=is_bot_message, limit=None)
-                datamanager.server_profiler.clear_doc_ids(guild.id)
+                datamanager.server_db_handler.clear_doc_ids(guild.id)
                 print(f"✅ Cleared {len(deleted)} messages in guild {guild.name}")
                 return len(deleted)
             except Exception as e:
@@ -114,7 +114,7 @@ class Admin(app_commands.Group):
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
         
-        server_profile = datamanager.server_profiler.get_server_profile(interaction.guild.id)
+        server_profile = datamanager.server_db_handler.get_server_profile(interaction.guild.id)
         research_channel_id = server_profile.get('documented_channel_id')
         leaderboard_channel_id = server_profile.get('leaderboard_channel_id')
 
@@ -601,7 +601,7 @@ class Admin(app_commands.Group):
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
         
-        datamanager.server_profiler.clear_server_profiles()
+        datamanager.server_db_handler.clear_server_profiles()
         await interaction.followup.send("✅ All server profiles have been reset.", ephemeral=True)
     
     @app_commands.command(name="check_invalid_urls", description="Check for rooms with invalid image URLs (file paths)")

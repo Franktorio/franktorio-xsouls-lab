@@ -11,14 +11,16 @@ import json
 import os
 from typing import Optional, Dict, Any
 
-DB_PATH = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), "databases", "frd_room.db")
+# Local imports
+from .helpers import connect_db
 
-def _connect_db():
-    """Connect to the database and return the connection."""
-    return sqlite3.connect(DB_PATH)
+DB_FILE_NAME = "frd_room.db"
 
+def _connect_db() -> sqlite3.Connection:
+    """Connect to the room database."""
+    return connect_db(DB_FILE_NAME)
 
-def init_room_db_table():
+def init_db():
     """Initialize the room_db table if it doesn't exist."""
     conn = _connect_db()
     cursor = conn.cursor()

@@ -12,7 +12,7 @@ import uvicorn
 
 # Local imports
 import config
-import shared
+import src.shared as shared
 
 
 # Bot intents
@@ -30,13 +30,16 @@ shared.set_bot(FRD_bot)
 import src.commands  # Commands will auto-register via decorators
 import src.events  # Event handlers will auto-register via decorators
 
-import src.datamanager.init_db as data_manager
+import src.datamanager.helpers as data_manager
 import src.tasks.init_tasks as init_tasks
 from src.api.research_api import app as api_app
 
 def run_api_server():
     """Run the FastAPI server in a separate thread."""
-    uvicorn.run(api_app, host="0.0.0.0", port=8651, log_level="info")
+    uvicorn.run(api_app, host="0.0.0.0", port=config.vars.API_PORT, log_level="info")
+
+# Initialize database
+data_manager.init_db()
 
 @FRD_bot.event
 async def on_ready():
@@ -48,14 +51,11 @@ async def on_ready():
     print(f"🕒 Time: {now}")
     print(f"👤 Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
     print("")
-
-    # Initialize database
-    data_manager.init_db()
     
     # Start API server in a separate thread
     api_thread = threading.Thread(target=run_api_server, daemon=True)
     api_thread.start()
-    print("🌐 API server started on http://0.0.0.0:8651")
+    print(f"🌐 API server started on http://0.0.0.0:{config.vars.API_PORT}")
     
     # Start background tasks
     init_tasks.start_all_tasks()

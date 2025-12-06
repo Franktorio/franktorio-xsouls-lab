@@ -7,14 +7,16 @@
 import dis
 import os
 import json
-import shared
 import discord
 import asyncio
 
+# Third-party imports
+from src import shared
+
 # Local imports
-from src.datamanager.init_db import actions_data
 from config import vars
-import src.datamanager.server_profiler as server_profiler
+from src.datamanager.helpers import actions_data
+import src.datamanager.server_db_handler as server_db_handler
 
 def save_actions_json():
     """Save the actions_data to actions.json in the databases directory."""
@@ -100,7 +102,7 @@ async def global_reset(room_name: str):
     """
     async def _delete_message(guild, message_id, room_name):
         """Helper to delete a single message."""
-        profile = server_profiler.get_server_profile(guild.id)
+        profile = server_db_handler.get_server_profile(guild.id)
         if not profile or not profile.get('documented_channel_id'):
             return
         
@@ -115,7 +117,7 @@ async def global_reset(room_name: str):
             pass  # Message already deleted
         
         # Remove message ID from profile
-        server_profiler.remove_doc_id(guild.id, room_name)
+        server_db_handler.remove_doc_id(guild.id, room_name)
     
     # Check if we're running in Discord's event loop or FastAPI's
     try:
@@ -123,7 +125,7 @@ async def global_reset(room_name: str):
         # If we're in FastAPI's loop, schedule tasks in Discord's loop
         if loop != shared.FRD_bot.loop:
             for guild in shared.FRD_bot.guilds:
-                message_id = server_profiler.get_doc_message_id(guild.id, room_name)
+                message_id = server_db_handler.get_doc_message_id(guild.id, room_name)
                 if message_id:
                     asyncio.run_coroutine_threadsafe(
                         _delete_message(guild, message_id, room_name),
@@ -135,7 +137,7 @@ async def global_reset(room_name: str):
     
     # We're in Discord's loop, run normally
     for guild in shared.FRD_bot.guilds:
-        message_id = server_profiler.get_doc_message_id(guild.id, room_name)
+        message_id = server_db_handler.get_doc_message_id(guild.id, room_name)
         if message_id:
             await _delete_message(guild, message_id, room_name)
 
@@ -173,7 +175,7 @@ def get_doc_message_link(server_id: int, room_name: str) -> str:
     Returns:
         A string URL to the documented message, or an empty string if not found.
     """
-    profile = server_profiler.get_server_profile(server_id)
+    profile = server_db_handler.get_server_profile(server_id)
     if not profile or not profile.get('documented_channel_id'):
         return ""
     
@@ -181,7 +183,7 @@ def get_doc_message_link(server_id: int, room_name: str) -> str:
     if not documented_channel:
         return ""
     
-    message_id = server_profiler.get_doc_message_id(server_id, room_name)
+    message_id = server_db_handler.get_doc_message_id(server_id, room_name)
     if not message_id:
         return ""
     

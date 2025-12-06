@@ -9,7 +9,7 @@ import discord
 from discord.ext import tasks
 
 # Local imports
-import shared
+from src import shared
 from src import datamanager
 from src.utils import embeds
 from src.utils import _helpers
@@ -55,7 +55,7 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
         currently_running_builds.append(server_id)
         
         # Get server profile
-        profile = datamanager.server_profiler.get_server_profile(server_id)
+        profile = datamanager.server_db_handler.get_server_profile(server_id)
         if not profile or not profile.get('documented_channel_id'):
             return
         
@@ -69,7 +69,7 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
                 documented_channel = await guild.fetch_channel(profile['documented_channel_id'])
             except discord.NotFound:
                 # Clear the channel ID and doc IDs but keep the profile (preserves leaderboard channel, etc.)
-                datamanager.server_profiler.update_server_profile(
+                datamanager.server_db_handler.update_server_profile(
                     server_id=server_id,
                     documented_channel_id=None,
                     doc_msg_ids={}
@@ -115,7 +115,7 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
         # Process rooms in batches
         for i in range(0, len(rooms_to_process), BATCH_SIZE):
             # Double-check profile still exists and channel ID hasn't changed (in case setup was run again)
-            current_profile = datamanager.server_profiler.get_server_profile(server_id)
+            current_profile = datamanager.server_db_handler.get_server_profile(server_id)
             if not current_profile:
                 print(f"[DOCUMENTED BUILDER] ⚠️ Server profile deleted mid-sync for {guild.name}, stopping.")
                 return
@@ -152,7 +152,7 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
 async def _delete_room_documentation(room_name: str, documented_channel: discord.TextChannel, server_id: int, guild: discord.Guild):
     """Delete a room's documentation message from a server."""
     try:
-        msg_id = datamanager.server_profiler.get_doc_message_id(server_id, room_name)
+        msg_id = datamanager.server_db_handler.get_doc_message_id(server_id, room_name)
         if msg_id:
             try:
                 message = await documented_channel.fetch_message(msg_id)
@@ -162,7 +162,7 @@ async def _delete_room_documentation(room_name: str, documented_channel: discord
                 print(f"[DOCUMENTED BUILDER] ⚠️ Message for '{room_name}' already deleted in {guild.name}")
             
             # Remove from server profile
-            datamanager.server_profiler.remove_doc_id(server_id, room_name)
+            datamanager.server_db_handler.remove_doc_id(server_id, room_name)
     except Exception as e:
         print(f"[DOCUMENTED BUILDER] ❌ Error deleting '{room_name}' from server {server_id}: {e}")
 
@@ -176,11 +176,11 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
             print(f"[DOCUMENTED BUILDER] ⚠️ Room '{room_name}' not found in database")
             return True  # Remove from queue anyway
         
-        if not datamanager.server_profiler.get_server_profile(server_id):
+        if not datamanager.server_db_handler.get_server_profile(server_id):
             return True
         
         # Check if room already has a message in this server
-        existing_msg_id = datamanager.server_profiler.get_doc_message_id(server_id, room_name)
+        existing_msg_id = datamanager.server_db_handler.get_doc_message_id(server_id, room_name)
         
         if existing_msg_id:
             # Update existing message
@@ -201,7 +201,7 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
                 # Delete old message and send new one (to update images)
                 await message.delete()
                 message_id = await embeds.send_room_documentation_embed(documented_channel, room_data)
-                datamanager.server_profiler.add_doc_id(server_id, room_name, message_id)
+                datamanager.server_db_handler.add_doc_id(server_id, room_name, message_id)
                 
                 print(f"[DOCUMENTED BUILDER] 🔄 Updated '{room_name}' in server {guild.name} ({server_id})")
                 return True
@@ -226,7 +226,7 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
         message_id = await embeds.send_room_documentation_embed(documented_channel, room_data)
         
         # Store message ID in server profile
-        datamanager.server_profiler.add_doc_id(server_id, room_name, message_id)
+        datamanager.server_db_handler.add_doc_id(server_id, room_name, message_id)
         
         print(f"[DOCUMENTED BUILDER] ✅ Documented '{room_name}' in server {guild.name} ({server_id})")
         return True
@@ -235,7 +235,7 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
         print(f"[DOCUMENTED BUILDER] ❌ Channel not found when documenting '{room_name}' in server {guild.name} ({server_id})")
         print(f"[DOCUMENTED BUILDER] 💡 Channel was deleted during sync. Clearing channel ID.")
         # Clear the channel reference but keep the profile
-        datamanager.server_profiler.update_server_profile(
+        datamanager.server_db_handler.update_server_profile(
             server_id=server_id,
             documented_channel_id=None,
             doc_msg_ids={}

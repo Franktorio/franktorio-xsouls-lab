@@ -10,16 +10,16 @@ import json
 import os
 from typing import Optional, Dict, Any
 
+# Local imports
+from .helpers import connect_db
 
-def _connect_db():
+DB_FILE_NAME = "frd_bot.db"
+
+def _connect_db() -> sqlite3.Connection:
     """Connect to the database and return the connection."""
-    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    DB_DIR = os.path.join(PROJECT_ROOT, "databases")
-    PATH = os.path.join(DB_DIR, "frd_bot.db")
-    return sqlite3.connect(PATH)
+    return connect_db(DB_FILE_NAME)
 
-
-def init_server_profiles_table():
+def init_db():
     """Initialize the server_profiles table if it doesn't exist."""
     conn = _connect_db()
     cursor = conn.cursor()

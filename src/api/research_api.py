@@ -11,8 +11,9 @@ from datetime import datetime
 
 # Local imports
 from config.vars import LOCAL_KEY
+from src.datamanager import server_db_handler
 from src.utils import _helpers
-from src.datamanager import server_profiler, room_db_handler
+from src.datamanager import room_db_handler
 from . import external_api
 
 app = FastAPI()
@@ -59,7 +60,7 @@ async def read_root(key: str):
         return {"error": "Unauthorized"}
     
     room_amnt = len(room_db_handler.get_all_room_names())
-    servers_amnt = len(server_profiler.get_all_server_profiles())
+    servers_amnt = len(server_db_handler.get_all_server_profiles())
     current_time = datetime.now().timestamp()
 
     return {"message": f"Research API is running. {room_amnt} rooms documented. {servers_amnt} servers using the bot. Current timestamp: {current_time} UTC."}

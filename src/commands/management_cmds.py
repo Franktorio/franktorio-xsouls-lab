@@ -10,7 +10,7 @@ from discord.ext import commands
 from discord import app_commands
 
 # Local imports
-import shared
+from src import shared
 from src import datamanager
 from src.tasks.sync_databases import sync_databases
 from ..utils import _helpers
@@ -43,7 +43,7 @@ class Management(app_commands.Group):
             embed = create_error_embed(title="❌ Synchronization Failed", description=f"An error occurred while triggering synchronization: {str(e)}")
             await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="set_level", description="Set the permission level of a user.")
+    @app_commands.command(name="role", description="Set the role of an user.")
     @app_commands.describe(user="The user to set the permission level for.", role="The permission role to assign.")
     async def set_permission_level(self, interaction: discord.Interaction, user: discord.User, role: Literal["Viewer", "Trial Researcher", "Novice Researcher", "Experienced Researcher", "Head Researcher"]):
         """Set the permission level of a user."""

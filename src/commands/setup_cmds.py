@@ -13,7 +13,7 @@ from discord.ext import commands
 
 # Local imports
 import config
-import shared
+from src import shared
 from ..utils import _helpers
 from src import datamanager
 from src.utils import embeds
@@ -38,7 +38,7 @@ class Setup(app_commands.Group):
 
         # Check if server already has a profile
         server_id = interaction.guild.id
-        profile = datamanager.server_profiler.get_server_profile(server_id)
+        profile = datamanager.server_db_handler.get_server_profile(server_id)
 
         if profile:
             # Ask for confirmation before overwriting
@@ -143,7 +143,7 @@ class Setup(app_commands.Group):
 
         # Create or update server profile in the database
         # Clear old doc_msg_ids when re-initializing to avoid trying to update deleted messages
-        datamanager.server_profiler.create_server_profile(
+        datamanager.server_db_handler.create_server_profile(
             server_id=server_id,
             documented_channel_id=researched_channel.id,
             leaderboard_channel_id=leaderboard_channel.id,
@@ -169,7 +169,7 @@ class Setup(app_commands.Group):
         await interaction.response.defer()
         
         try:
-            profile = datamanager.server_profiler.get_server_profile(interaction.guild.id)
+            profile = datamanager.server_db_handler.get_server_profile(interaction.guild.id)
 
             if not profile:
                 await interaction.followup.send(
@@ -220,7 +220,7 @@ class Setup(app_commands.Group):
                 await interaction.followup.send(embed=embed)
                 return
 
-            datamanager.server_profiler.set_leaderboard_channel(
+            datamanager.server_db_handler.set_leaderboard_channel(
                 server_id=interaction.guild.id,
                 channel_id=new_channel.id
             )
@@ -250,7 +250,7 @@ class Setup(app_commands.Group):
         await interaction.response.defer()
         
         try:
-            profile = datamanager.server_profiler.get_server_profile(interaction.guild.id)
+            profile = datamanager.server_db_handler.get_server_profile(interaction.guild.id)
 
             if not profile:
                 await interaction.followup.send(
@@ -302,12 +302,12 @@ class Setup(app_commands.Group):
                 await interaction.followup.send(embed=embed)
                 return
 
-            datamanager.server_profiler.set_documented_channel(
+            datamanager.server_db_handler.set_documented_channel(
                 server_id=interaction.guild.id,
                 channel_id=new_channel.id
             )
 
-            datamanager.server_profiler.clear_doc_ids(
+            datamanager.server_db_handler.clear_doc_ids(
                 server_id=interaction.guild.id
             )
 
