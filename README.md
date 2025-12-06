@@ -8,7 +8,7 @@ The bot provides backend support for the franktorio-research-scanner, which quer
 
 ### Todo
 - Add functions to manage the scanner database table
-- Finish the scanner API located at /src/api/research_api.py
+- Finish the scanner API located at `/src/api/research_api.py`
 - Add Discord commands to display gathered data
 - Document all API endpoints
 
@@ -18,7 +18,7 @@ The bot provides backend support for the franktorio-research-scanner, which quer
 pip install -r requirements.txt
 ```
 
-- Create a valid vars.py file inside /config
+- Create a valid `vars.py` file inside `/config`
   Use the example file as a template and fill in your own values.
 
 - The application entry point is:
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ## Contact information
 **Franktorio** - Main Bot Developer
 - Discord user: `mr_franktorio` (1181432574317436948)
-- Reach out to me if there is an issue with the **bot**.
+- Reach out to me if there is an issue with the **bot**.<br>
 **xSoul** - Main Web Developer
 - Discord user: `xsoul.org` (589010329900679184)
 - Reach out to him if I am unreachable.
