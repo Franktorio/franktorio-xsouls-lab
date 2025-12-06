@@ -10,7 +10,10 @@ import os
 
 # determine project root (two levels up from this file) and put DB in FRD_bot/databases
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DB_DIR = os.path.join(PROJECT_ROOT, "databases")
+DB_DIR = os.path.join(PROJECT_ROOT, "databases") # Directory for database files
+
+# Create folder if it doesn't exist
+os.makedirs(DB_DIR, exist_ok=True)
 
 ACTIONS_JSON_PATH = os.path.join(DB_DIR, "actions.json")
 

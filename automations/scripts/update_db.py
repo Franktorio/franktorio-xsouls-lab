@@ -7,6 +7,8 @@ if __name__ == "__main__": # Main entry point enforcement, ensures the script is
     # Initialize or update the scanner database tables
     try:
         helpers.init_databases()
+        print("✅ Databases initialized or updated successfully.")
+        exit(0)
     except Exception as e:
-        print(f"❌ Failed to initialize or update scanner database: {e}")
+        print(f"❌ Failed to initialize or update databases: {e}")
         exit(1)
