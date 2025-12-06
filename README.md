@@ -22,8 +22,7 @@ pip install -r requirements.txt
 - Create a valid `vars.py` file inside `/config`
   Use the example file as a template and fill in your own values.
 
-- The application entry point is:
-  python main.py
+- The application entry point is: `main.py`
 
 
 ## Contact information
