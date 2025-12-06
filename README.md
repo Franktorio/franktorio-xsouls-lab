@@ -2,7 +2,7 @@
 ## December 05, 2025
 
 A Discord bot designed to facilitate the collection and display of gameplay data. It is currently adapted for the Roblox game *Pressure*.
-The bot provides backend support for the franktorio-research-scanner, which queries this bot’s database through an API.
+The bot provides backend support for the franktorio-research-scanner, which queries this bot's database through an API.
 
 > This is not an official bot or tool. We are not affiliated with the Pressure development team or staff.
 
