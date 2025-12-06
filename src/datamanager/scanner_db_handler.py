@@ -19,8 +19,8 @@ SESSIONS_SCHEMA = {
     "arg": "CREATE TABLE IF NOT EXISTS sessions",
     "tables": [
         "session_id TEXT PRIMARY KEY",
-        "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
-        "last_edited_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+        "created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))",
+        "last_edited_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))",
         "scanner_version TEXT NOT NULL",
         "closed INTEGER NOT NULL DEFAULT 0"
     ]
@@ -34,7 +34,7 @@ ENCOUNTERED_ROOMS_SCHEMA = {
         "session_event TEXT NOT NULL",
         "session_id TEXT NOT NULL",
         "room_name TEXT NOT NULL",
-        "found_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        "found_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))"
     ]
 }
 
@@ -53,7 +53,7 @@ def init_scanner_extras():
         AFTER INSERT ON encountered_rooms
         BEGIN
             UPDATE sessions
-            SET last_edited_at = CURRENT_TIMESTAMP
+            SET last_edited_at = strftime('%s', 'now')
             WHERE session_id = NEW.session_id;
         END;
     """)

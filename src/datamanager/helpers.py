@@ -90,6 +90,8 @@ def remove_unused_tables(schema: Dict[str, Any], db_file_name: str) -> bool:
     conn.close()
     return False
 
+
+
 def init_databases():
     """Initialize the database file and tables in FRD_bot/databases if they don't exist."""
     # Import here to avoid circular imports

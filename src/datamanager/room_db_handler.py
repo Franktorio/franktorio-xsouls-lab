@@ -24,7 +24,7 @@ ROOM_SCHEMA = {
         "description TEXT NOT NULL DEFAULT ''",
         "tags TEXT NOT NULL DEFAULT '[]'",
         "roomtype TEXT NOT NULL DEFAULT ''",
-        "last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "last_updated INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))",
         "doc_by_user_id INTEGER NOT NULL",
         "edited_by_user_id INTEGER",
         "edits TEXT NOT NULL DEFAULT '[]'"
