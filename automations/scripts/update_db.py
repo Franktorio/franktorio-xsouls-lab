@@ -1,6 +1,9 @@
 # This script updates all the tables so that they are compatible with the latest database schema.
 # It should be run whenever the database schema is updated.
 
+# On home directory of the project, run:
+# python -m automations.scripts.update_db
+
 from src.datamanager import helpers
 
 if __name__ == "__main__": # Main entry point enforcement, ensures the script is run directly and not imported on accident.
