@@ -32,4 +32,4 @@ pip install -r requirements.txt
 
 **xSoul** - Main Web Developer
 - Discord user: `xsoul.org` (589010329900679184)
-- Reach out to him if I (`franktorio`) am unreachable.
+- Reach out to him if I `(franktorio)` am unreachable.
