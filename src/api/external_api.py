@@ -15,7 +15,8 @@ async def export_room_to_api(
     description: str,
     doc_by_user_id: int,
     tags: list[str] = None,
-    last_edited_by: Optional[int] = None
+    last_edited_by: Optional[int] = None,
+    timestamp: Optional[float] = None
 ) -> Dict[str, Any]:
     """
     Export room data to external Pressure API.
@@ -50,6 +51,9 @@ async def export_room_to_api(
     
     if last_edited_by:
         payload["last_edited_by"] = last_edited_by
+    
+    if timestamp is not None:
+        payload["timestamp"] = timestamp
     
     try:
         timeout = aiohttp.ClientTimeout(total=30)

@@ -136,6 +136,8 @@ class ResearchCommands(app_commands.Group):
         if pss:
             tags.append("PSS")
 
+        doc_timestamp = discord.utils.utcnow().timestamp()
+        
         room_db_handler.document_room(
             room_name=roomname,
             roomtype=roomtype,
@@ -143,7 +145,7 @@ class ResearchCommands(app_commands.Group):
             description=description,
             doc_by_user_id=interaction.user.id,
             tags=tags,
-            timestamp=discord.utils.utcnow().timestamp()
+            timestamp=doc_timestamp
         )
 
         # Export to external API after local save
@@ -153,7 +155,8 @@ class ResearchCommands(app_commands.Group):
             picture_urls=image_links,
             description=description,
             doc_by_user_id=interaction.user.id,
-            tags=tags
+            tags=tags,
+            timestamp=doc_timestamp
         )
         
         if not api_response.get("success"):
@@ -251,6 +254,8 @@ class ResearchCommands(app_commands.Group):
         if pss:
             tags.append("PSS")
 
+        redoc_timestamp = discord.utils.utcnow().timestamp()
+        
         room_db_handler.document_room(
             room_name=roomname,
             roomtype=roomtype,
@@ -258,7 +263,7 @@ class ResearchCommands(app_commands.Group):
             description=description,
             doc_by_user_id=existing_room['doc_by_user_id'],  # Preserve original documenter
             tags=tags,
-            timestamp=discord.utils.utcnow().timestamp(),
+            timestamp=redoc_timestamp,
             edited_by_user_id=interaction.user.id  # Track who made this redocumentation
         )
 
@@ -270,7 +275,8 @@ class ResearchCommands(app_commands.Group):
             description=description,
             doc_by_user_id=interaction.user.id,
             tags=tags,
-            last_edited_by=interaction.user.id
+            last_edited_by=interaction.user.id,
+            timestamp=redoc_timestamp
         )
         
         if not api_response.get("success"):

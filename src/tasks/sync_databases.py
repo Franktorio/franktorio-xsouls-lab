@@ -84,7 +84,8 @@ async def sync_databases():
             description=local_data.get("description", ""),
             doc_by_user_id=local_data.get("doc_by_user_id", 0),
             tags=local_data.get("tags", []),
-            last_edited_by=local_data.get("edited_by_user_id")
+            last_edited_by=local_data.get("edited_by_user_id"),
+            timestamp=local_data.get("last_updated", 0)
         )
         if not result.get("success"):
             print(f"  ❌ Failed to upload {room_name}: {result.get('error')}")
@@ -143,7 +144,8 @@ async def sync_databases():
             description=local_data.get("description", ""),
             doc_by_user_id=local_data.get("doc_by_user_id", 0),
             tags=local_data.get("tags", []),
-            last_edited_by=local_data.get("edited_by_user_id")
+            last_edited_by=local_data.get("edited_by_user_id"),
+            timestamp=local_data.get("last_updated", 0)
         )
         
         if not upload_result.get("success"):
@@ -172,6 +174,7 @@ async def sync_databases():
             description=ext_data.get("description", ""),
             doc_by_user_id=ext_data.get("documented_by", 0),
             tags=ext_data.get("tags", []),
+            timestamp=ext_data.get("last_edited", 0),
             edited_by_user_id=ext_data.get("last_edited_by")
         )
 
