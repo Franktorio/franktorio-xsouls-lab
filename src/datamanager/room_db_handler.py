@@ -66,7 +66,7 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
         existing_doc_by = row[6]  # Get existing documenter
         
         edit_entry = {
-            "timestamp": datetime.datetime.now().timestamp(),
+            "timestamp": datetime.datetime.now().timestamp() if timestamp == 0 else timestamp,
             "previous_room_name": room_name,
             "previous_picture_urls": existing_picture_urls,
             "previous_tags": json.loads(row[4]),

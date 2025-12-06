@@ -3,6 +3,8 @@
 
 # On home directory of the project, run:
 # python -m automations.scripts.update_db
+# OR
+# python3 -m automations.scripts.update_db
 
 from src.datamanager import helpers
 
