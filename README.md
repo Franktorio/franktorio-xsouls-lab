@@ -28,7 +28,8 @@ pip install -r requirements.txt
 ## Contact information
 **Franktorio** - Main Bot Developer
 - Discord user: `mr_franktorio` (1181432574317436948)
-- Reach out to me if there is an issue with the **bot**.<br>
+- Reach out to me if there is an issue with the **bot**.
+
 **xSoul** - Main Web Developer
 - Discord user: `xsoul.org` (589010329900679184)
 - Reach out to him if I am unreachable.
