@@ -46,6 +46,10 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
         picture_urls: List of picture URLs documenting the room
         description: Textual description of the room
         doc_by_user_id: Discord user ID of the documenting user
+        tags: List of tags for the room
+        roomtype: Type of the room
+        timestamp: Timestamp of the documentation
+        edited_by_user_id: User ID of the editor if updating an existing room (optional)
         
     Returns:
         True if successful, False otherwise
@@ -77,12 +81,12 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
         }
         edits.append(edit_entry)
         
-        # Update existing record - use Unix timestamp instead of CURRENT_TIMESTAMP
+        # Update existing record
         cursor.execute("""
             UPDATE room_db
-            SET picture_urls = ?, description = ?, last_updated = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?
+            SET picture_urls = ?, description = ?, last_updated = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?, last_updated = ?
             WHERE room_name = ?
-        """, (json.dumps(picture_urls), description, datetime.datetime.now().timestamp(), json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id if edited_by_user_id else doc_by_user_id, room_name))
+        """, (json.dumps(picture_urls), description, datetime.datetime.now().timestamp(), json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id if edited_by_user_id else doc_by_user_id, timestamp, room_name))
     else:
         # Insert new record
         cursor.execute("""
