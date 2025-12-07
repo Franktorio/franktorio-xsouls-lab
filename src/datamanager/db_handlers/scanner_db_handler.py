@@ -6,6 +6,10 @@
 # Standard library imports
 import sqlite3
 import threading
+import random
+import string
+import hashlib
+import os
 
 
 # Local imports
@@ -67,7 +71,27 @@ def _close_sessions_task():
         close_old_sessions()
         sleep(TASK_FREQUENCY)  # Run every 10 minutes
 
+def _generate_password(length: int = 12) -> str:
+    """Generate a random alphanumeric password of given length."""
 
+    characters = string.ascii_letters + string.digits
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
+
+def _hash_password(password: str) -> str:
+    """Hash a password securely."""
+
+    salt = os.urandom(16)
+    pwdhash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    return salt.hex() + pwdhash.hex()
+
+def _compare_password(stored_password: str, provided_password: str) -> bool:
+    """Compare a stored hashed password with a provided password."""
+
+    salt = bytes.fromhex(stored_password[:32])
+    stored_pwdhash = stored_password[32:]
+    pwdhash = hashlib.pbkdf2_hmac('sha256', provided_password.encode('utf-8'), salt, 100000)
+    return pwdhash.hex() == stored_pwdhash
 
 def init_scanner_extras():
     """Initialize database triggers and indexes after tables are created."""
@@ -111,13 +135,12 @@ def start_session(session_id: str, scanner_version: str) -> None:
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO sessions (session_id, scanner_version)
-        VALUES (?, ?)
-    """, (session_id, scanner_version))
+        INSERT INTO sessions (session_id, scanner_version, session_password)
+        VALUES (?, ?, ?)
+    """, (session_id, scanner_version, _hash_password(_generate_password())))
     
     conn.commit()
     conn.close()
-
 
 def end_session(session_id: str) -> None:
     """End a scanning session."""
@@ -133,7 +156,7 @@ def end_session(session_id: str) -> None:
     conn.commit()
     conn.close()
 
-def log_encountered_room(session_id: str, room_name: str) -> bool:
+def log_encountered_room(session_id: str, room_name: str, session_password: str) -> bool:
     """
     Log an encountered room during a scanning session.
     
@@ -146,6 +169,17 @@ def log_encountered_room(session_id: str, room_name: str) -> bool:
     """
     conn = _connect_db()
     cursor = conn.cursor()
+
+    # Verify session password, will return False if invalid or if session is closed
+    cursor.execute("""
+        SELECT session_password
+        FROM sessions
+        WHERE session_id = ? AND closed = 0
+    """, (session_id,))
+    stored_password = cursor.fetchone()
+    if stored_password is None or not _compare_password(stored_password[0], session_password):
+        conn.close()
+        return False
     
     cursor.execute("""
         INSERT INTO encountered_rooms (session_id, room_name)
