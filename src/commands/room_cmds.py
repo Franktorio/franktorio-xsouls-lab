@@ -10,7 +10,6 @@ from typing import Optional
 import discord
 from discord import app_commands
 from discord.ext import commands
-from flask import app
 
 # Local imports
 from config.vars import RoomType, Tags
