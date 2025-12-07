@@ -4,30 +4,18 @@
 # Research Commands
 
 # Standard library imports
-import dis
-from email.mime import image
-import io
-import json
-from math import e
-from os import name
+from typing import Optional
 
 # Third-party imports
-from src.datamanager import server_db_handler
-from src.datamanager import room_db_handler
 import discord
-from discord.ext import commands
 from discord import app_commands
-from typing import Literal, Optional
-import aiohttp
+from discord.ext import commands
 
 # Local imports
-from src import shared
-from ..utils import utils
-from src.utils import embeds
-import src.api._r2_handler as r2_handler
-import src.datamanager.db_handlers.room_db_handler as room_db_handler
 from config.vars import RoomType, Tags
-import config.vars as vars
+from src import shared
+from src.datamanager.db_handlers import room_db_handler
+from src.utils import embeds
 
 class RoomCommands(app_commands.Group):
     """Commands related to room searching and information."""

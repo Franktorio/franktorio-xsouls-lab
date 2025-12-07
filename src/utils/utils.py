@@ -4,19 +4,15 @@
 # Command helper functions
 
 # Standard library imports
-import dis
-import os
-import json
-import discord
 import asyncio
 
 # Third-party imports
-from src import shared
+import discord
 
 # Local imports
 from config import vars
-from src.datamanager.db_handlers.action_json_handler import actions_data, save_actions_json
-import src.datamanager.db_handlers.server_db_handler as server_db_handler
+from src import shared
+from src.datamanager.db_handlers import server_db_handler
 
 async def permission_check(user: discord.User) -> int:
     """Check if a user has permission to use research commands.

@@ -3,15 +3,16 @@
 # November 7th, 2025
 # Background task to build documented channels
 
-# Third-party imports
+# Standard library imports
 import asyncio
+
+# Third-party imports
 import discord
 from discord.ext import tasks
 
 # Local imports
-from src import shared
-from src import datamanager
-from src.utils import embeds, utils
+from src import datamanager, shared
+from src.utils import embeds
 
 # Configuration
 BATCH_SIZE = 100  # Number of rooms to process concurrently per server

@@ -4,14 +4,11 @@
 # Background task to synchronize databases across servers
 
 # Third-party imports
-import asyncio
-import discord
 from discord.ext import tasks
 
 # Local imports
-from src import shared
-import src.api.external_api as ext_api
-from src import datamanager
+from src import datamanager, shared
+from src.api import external_api
 from src.utils import embeds, utils
 
 
@@ -21,7 +18,7 @@ async def sync_databases():
     print("🔄 Starting database synchronization across servers.")
 
     # Export external database
-    ext_export = await ext_api.export_database_api()
+    ext_export = await external_api.export_database_api()
     if not ext_export.get("success"):
         print(f"❌ Failed to export external database: {ext_export.get('error')}")
         return
@@ -76,7 +73,7 @@ async def sync_databases():
             print(f"  ⏭️  Skipped {room_name}: Only {len(valid_urls)} valid HTTP URLs (need at least 4)")
             continue
         
-        result = await ext_api.export_room_to_api(
+        result = await external_api.export_room_to_api(
             room_name=room_name,
             roomtype=local_data.get("roomtype", "Unclassified"),
             picture_urls=valid_urls,
@@ -136,7 +133,7 @@ async def sync_databases():
             print(f"  ⚠️  Keeping external version to avoid data loss")
             continue
         
-        upload_result = await ext_api.export_room_to_api(
+        upload_result = await external_api.export_room_to_api(
             room_name=room_name,
             roomtype=local_data.get("roomtype", "Unclassified"),
             picture_urls=valid_urls,

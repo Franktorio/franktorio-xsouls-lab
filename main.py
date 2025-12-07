@@ -1,14 +1,13 @@
 # Franktorio's Research Bot
 
 # Standard library imports
-import asyncio
 import datetime
 import threading
 
 # Third-party imports
 import discord
-from discord.ext import commands
 import uvicorn
+from discord.ext import commands
 
 # Local imports
 import config

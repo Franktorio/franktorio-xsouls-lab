@@ -3,18 +3,18 @@
 # November 7th, 2025
 # API handler for internal research operations
 
+# Standard library imports
+from datetime import datetime
+from typing import Optional
+
 # Third-party imports
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
 
 # Local imports
 from config.vars import LOCAL_KEY
-from src.datamanager.db_handlers import server_db_handler
+from src.datamanager.db_handlers import room_db_handler, server_db_handler
 from src.utils import utils
-from src.datamanager.db_handlers import room_db_handler
-from . import external_api
 
 app = FastAPI()
 

@@ -4,26 +4,22 @@
 # Admin commands
 
 # Standard library imports
+import asyncio
 import io
 import json
-from math import e
-import re
-from urllib import response
-from typing import Optional
-import aiohttp
-import asyncio
-import discord
 import os
-from discord.ext import commands
+from typing import Optional
+
+# Third-party imports
+import aiohttp
+import discord
 from discord import app_commands
 
 # Local imports
-from src import shared
-from src import datamanager
-from ..utils import utils
 import config.vars as vars
+from src import datamanager, shared
 from src.api import _r2_handler
-from src.utils import embeds
+from src.utils import embeds, utils
 
 class Admin(app_commands.Group):
     def __init__(self):

@@ -5,18 +5,18 @@
 
 # Standard library imports
 from typing import Literal
+
+# Third-party imports
 import discord
-from discord.ext import commands
 from discord import app_commands
 
 # Local imports
-from src import shared
-from src import datamanager
-from src.tasks.sync_databases import sync_databases
-from ..utils import utils
 import config.vars as vars
+from src import shared
+from src.api import external_api
+from src.tasks.sync_databases import sync_databases
+from src.utils import utils
 from src.utils.embeds import create_error_embed, create_success_embed
-from src.api import external_api as ext_api
 
 FRD_bot = shared.FRD_bot
 
@@ -91,7 +91,7 @@ class Management(app_commands.Group):
 
         # Sync role to external API
         try:
-            await ext_api.set_user_role_api(user.id, role)
+            await external_api.set_user_role_api(user.id, role)
             embed = create_success_embed(title="Permission Level Updated", description=f"Set **{user}**'s permission level to **{role}** on both Discord and the web dashboard.")
         except Exception as e:
             embed = create_success_embed(title="Permission Level Partially Updated", description=f"⚠️ Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {str(e)}\nPlease try again.")

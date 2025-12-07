@@ -5,9 +5,6 @@
 
 # Standard library imports
 import sqlite3
-import datetime
-import os
-from typing import Optional, Dict, Any, List, Tuple
 
 # Local imports
 from ..database_manager import connect_db

@@ -3,9 +3,14 @@
 # November 16th, 2025
 # External API Integration for Pressure Research Database
 
-import aiohttp
+# Standard library imports
 import asyncio
 from typing import Optional, Dict, Any
+
+# Third-party imports
+import aiohttp
+
+# Local imports
 from config.vars import API_BASE_URL, API_KEY
 
 async def export_room_to_api(

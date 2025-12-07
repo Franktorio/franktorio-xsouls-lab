@@ -4,11 +4,10 @@
 # Room documentation database handler
 
 # Standard library imports
-import re
-import sqlite3
 import datetime
 import json
-import os
+import re
+import sqlite3
 from typing import Optional, Dict, Any
 
 # Local imports

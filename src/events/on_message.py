@@ -9,13 +9,11 @@ import json
 
 # Third-party imports
 import discord
-from discord.ext import commands
 from discord import app_commands
+from discord.ext import commands
 
 # Local imports
-from src import shared
-from src import datamanager
-import config.vars as vars
+from src import datamanager, shared
 
 @shared.FRD_bot.event
 async def on_message(message: discord.Message):

@@ -4,15 +4,11 @@
 # Background task to build documented channels
 
 # Third-party imports
-from email import message
-import json
-from pydoc import text
 import discord
 from discord.ext import tasks
 
 # Local imports
-from src import shared
-from src import datamanager
+from src import datamanager, shared
 from src.datamanager.db_handlers.action_json_handler import actions_data, save_actions_json
 from src.utils import embeds, utils
 

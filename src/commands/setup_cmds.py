@@ -13,9 +13,7 @@ from discord.ext import commands
 
 # Local imports
 import config
-from src import shared
-from ..utils import utils
-from src import datamanager
+from src import datamanager, shared
 from src.utils import embeds
 
 

@@ -4,16 +4,15 @@
 # API handler for Cloudflare R2 image storage
 
 # Standard library imports
-import os
-import requests
 import asyncio
+import os
 
 # Third-party imports
-import boto3  # type: ignore
-from urllib.parse import urlparse
-from botocore.config import Config  # type: ignore
+import boto3
+import requests
+from botocore.config import Config
 
-# Local imports 
+# Local imports
 from config.vars import (
     R2_ACCOUNT_ID,
     R2_ACCESS_KEY_ID,

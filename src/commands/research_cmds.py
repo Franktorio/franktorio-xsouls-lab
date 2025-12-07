@@ -5,29 +5,22 @@
 
 # Standard library imports
 import asyncio
-from email.mime import image
 import io
 import json
+from typing import Optional
 
 # Third-party imports
-from src.datamanager.db_handlers import server_db_handler
-from src.datamanager.db_handlers import room_db_handler
-import discord
-from discord.ext import commands
-from discord import app_commands
-from typing import Literal, Optional
 import aiohttp
-from PIL import Image #type: ignore
+import discord
+from discord import app_commands
+from PIL import Image
 
 # Local imports
-from src import shared
-from src.utils import embeds
-import src.api._r2_handler as r2_handler
-import src.api.external_api as external_api
-import src.datamanager.db_handlers.room_db_handler as room_db_handler
 from config.vars import RoomType, Tags
-import config.vars as vars
-from src.utils import utils
+from src import shared
+from src.api import _r2_handler, external_api
+from src.datamanager.db_handlers import room_db_handler
+from src.utils import embeds, utils
 
 async def _get_image_links(images: list[Optional[discord.Attachment]], brighten: bool, room_name: str) -> list[str]:
     """Process attachments and return list of image links."""
@@ -57,7 +50,7 @@ async def _get_image_links(images: list[Optional[discord.Attachment]], brighten:
                             processed_data = data
                         
                         # Upload to R2
-                        r2_url = await r2_handler.upload_to_r2(processed_data, room_name, i)
+                        r2_url = await _r2_handler.upload_to_r2(processed_data, room_name, i)
                         if r2_url:
                             image_links.append(r2_url)
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
@@ -239,7 +232,7 @@ class ResearchCommands(app_commands.Group):
             return
         
         # Clear cached images for this room before uploading new ones
-        await r2_handler.delete_room_images(roomname)
+        await _r2_handler.delete_room_images(roomname)
         
         images = [image1, image2, image3, image4, image5, image6, image7, image8, image9, image10] 
         images = [img for img in images if img is not None]
@@ -644,7 +637,7 @@ class ResearchCommands(app_commands.Group):
             return
         
         # Delete the room images from R2 and cache before deleting from database
-        await r2_handler.delete_room_images(roomname)
+        await _r2_handler.delete_room_images(roomname)
         
         success = room_db_handler.delete_room(roomname)
         

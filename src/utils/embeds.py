@@ -3,13 +3,13 @@
 # November 7th, 2025
 # Embed utilities for documentation messages
 
-# Third-party imports
-import io
-from datetime import datetime, timezone
+# Standard library imports
 import time
-import discord
 import urllib.parse
-import aiohttp
+from datetime import datetime, timezone
+
+# Third-party imports
+import discord
 
 # Local imports
 from src import shared

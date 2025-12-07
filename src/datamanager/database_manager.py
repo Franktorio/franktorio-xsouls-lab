@@ -4,8 +4,8 @@
 # Database Manager - Handles initialization of all databases
 
 # Standard library imports
-import sqlite3
 import os
+import sqlite3
 from typing import Dict
 
 # Determine project root (two levels up from this file) and put DB in FRD_bot/databases
