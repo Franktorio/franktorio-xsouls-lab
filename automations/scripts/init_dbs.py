@@ -1,5 +1,7 @@
-# This script updates all the tables so that they are compatible with the latest database schema.
-# It should be run whenever the database schema is updated.
+# This script initializes the databases required for the project.
+# It should be run to set up or update the database tables before using the application.
+
+# FOR MIGRATIONS, USE migrate_db.py INSTEAD. THIS SCRIPT IS ONLY FOR INITIAL SETUP.
 
 # On home directory of the project, run:
 # python -m automations.scripts.init_dbs

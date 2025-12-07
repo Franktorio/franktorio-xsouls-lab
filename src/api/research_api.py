@@ -12,7 +12,7 @@ from datetime import datetime
 # Local imports
 from config.vars import LOCAL_KEY
 from src.datamanager.db_handlers import server_db_handler
-from utils import utils
+from src.utils import utils
 from src.datamanager.db_handlers import room_db_handler
 from . import external_api
 

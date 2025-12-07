@@ -14,8 +14,7 @@ from discord.ext import tasks
 from src import shared
 from src import datamanager
 from src.datamanager.db_handlers.action_json_handler import actions_data, save_actions_json
-from src.utils import embeds
-from utils import utils
+from src.utils import embeds, utils
 
 @tasks.loop(minutes=1)
 async def update_leaderboard():

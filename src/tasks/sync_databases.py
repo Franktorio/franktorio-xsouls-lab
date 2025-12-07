@@ -12,8 +12,7 @@ from discord.ext import tasks
 from src import shared
 import src.api.external_api as ext_api
 from src import datamanager
-from src.utils import embeds
-from utils import utils
+from src.utils import embeds, utils
 
 
 @tasks.loop(hours=1)

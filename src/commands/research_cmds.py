@@ -27,7 +27,7 @@ import src.api.external_api as external_api
 import src.datamanager.db_handlers.room_db_handler as room_db_handler
 from config.vars import RoomType, Tags
 import config.vars as vars
-from utils import utils
+from src.utils import utils
 
 async def _get_image_links(images: list[Optional[discord.Attachment]], brighten: bool, room_name: str) -> list[str]:
     """Process attachments and return list of image links."""
