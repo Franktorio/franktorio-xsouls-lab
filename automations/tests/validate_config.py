@@ -22,7 +22,7 @@ not_set = []
 for name, value in config_vars.__dict__.items():
     print(f"Checking configuration variable: {name}")
     if name.isupper():
-        if value is None:
+        if value is None or (isinstance(value, str) and value.startswith("YOUR_")):
             print(f"❌ Configuration variable '{name}' is not set.")
             not_set.append(name)
 
