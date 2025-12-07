@@ -10,6 +10,7 @@ from typing import Optional
 import discord
 from discord import app_commands
 from discord.ext import commands
+from flask import app
 
 # Local imports
 from config.vars import RoomType, Tags
@@ -166,7 +167,7 @@ class RoomCommands(app_commands.Group):
             await interaction.followup.send(embed=embed)
             return
         
-        reports = room_db_handler.get_bug_report(room_name)
+        reports = room_db_handler.get_room_bug_reports(room_name)
         if not reports:
             embed = embeds.create_error_embed("No Reports Found", f"No bug reports found for room: **{room_name}**")
             await interaction.followup.send(embed=embed)
@@ -197,6 +198,22 @@ class RoomCommands(app_commands.Group):
         await interaction.followup.send(embed=first_embed)
         for embed in report_embeds:
             await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @app_commands.command(name="view_report", description="View a specific bug report by its ID.")
+    @app_commands.describe(report_id="The ID of the bug report to view.")
+    async def view_report(self, interaction: discord.Interaction, report_id: int):
+        """View a specific bug report by its ID."""
+        print(f"[COMMAND] View bug report #{report_id} by {interaction.user}")
+        await interaction.response.defer()
+        
+        report = room_db_handler.get_bug_report(report_id)
+        if not report:
+            embed = embeds.create_error_embed("Report Not Found", f"No bug report found with ID: **{report_id}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        report_embed = embeds.create_single_bug_report_embed(report)
+        await interaction.followup.send(embed=report_embed)
     
     @app_commands.command(name="resolve_report", description="Mark a bug report as resolved.")
     @app_commands.describe(report_id="The ID of the bug report to resolve.")
