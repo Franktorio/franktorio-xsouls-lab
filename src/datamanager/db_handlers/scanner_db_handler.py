@@ -159,6 +159,7 @@ def start_session(scanner_version: str) -> None:
     conn.commit()
     conn.close()
     
+    print(f"[SCANNER DB] Started new session {session_id} with scanner version {scanner_version}.")
     return session_id, password
 
 def end_session(session_id: str) -> None:
@@ -172,6 +173,7 @@ def end_session(session_id: str) -> None:
         WHERE session_id = ?
     """, (session_id,))
     
+    print(f"[SCANNER DB] Ended session {session_id}.")
     conn.commit()
     conn.close()
 
@@ -198,6 +200,7 @@ def log_encountered_room(session_id: str, room_name: str, session_password: str)
     stored_password = cursor.fetchone()
     if stored_password is None or not _compare_password(stored_password[0], session_password):
         conn.close()
+        print(f"[SCANNER DB] Failed to log room '{room_name}': invalid session ID or password, or session is closed.")
         return False
     
     cursor.execute("""
@@ -209,7 +212,8 @@ def log_encountered_room(session_id: str, room_name: str, session_password: str)
     
     conn.commit()
     conn.close()
-
+    
+    print(f"[SCANNER DB] Logged encountered room '{room_name}' in session {session_id}.")
     return success
 
 def get_sessions(include_closed: bool = True) -> list[tuple]:
@@ -238,7 +242,8 @@ def get_sessions(include_closed: bool = True) -> list[tuple]:
     
     sessions = cursor.fetchall()
     conn.close()
-    
+
+    print(f"[SCANNER DB] Retrieved {'all' if include_closed else 'open'} sessions.")
     return sessions
 
 def get_session_rooms(session_id: str) -> list[tuple]:
@@ -261,6 +266,7 @@ def get_session_rooms(session_id: str) -> list[tuple]:
     encounters = cursor.fetchall()
     conn.close()
     
+    print(f"[SCANNER DB] Retrieved encountered rooms for session {session_id}.")
     return encounters
 
 def get_all_encountered_rooms() -> list[tuple]:
@@ -282,6 +288,7 @@ def get_all_encountered_rooms() -> list[tuple]:
     encounters = cursor.fetchall()
     conn.close()
     
+    print(f"[SCANNER DB] Retrieved all encountered rooms across all sessions.")
     return encounters
 
 def jsonify_database() -> dict[str, any]:
@@ -359,6 +366,8 @@ def jsonify_database() -> dict[str, any]:
             })
 
     conn.close()
+    
+    print(f"[SCANNER DB] Converted database to JSON-serializable dictionary.")
     return data
 
 # Start the background task to close old sessions
