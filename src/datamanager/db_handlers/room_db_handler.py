@@ -593,7 +593,7 @@ def jsonify_room_db() -> Dict[str, Any]:
 
 # Bug report handling functions
 
-def report_room_bug(room_name: str, report_text: str, reported_by_user_id: int) -> bool:
+def report_room_bug(room_name: str, report_text: str, reported_by_user_id: int) -> tuple[bool, int]:
     """
     Report a bug related to a specific room.
 
@@ -603,7 +603,7 @@ def report_room_bug(room_name: str, report_text: str, reported_by_user_id: int) 
         reported_by_user_id: Discord user ID of the reporting user
 
     Returns:
-        True if successful, False otherwise
+        (True, ID) if successful, (False, 0) otherwise
     """
     conn = _connect_db()
     cursor = conn.cursor()
@@ -612,9 +612,10 @@ def report_room_bug(room_name: str, report_text: str, reported_by_user_id: int) 
         VALUES (?, ?, ?)
     """, (room_name, report_text, reported_by_user_id))
     conn.commit()
+    last_id = cursor.lastrowid
     success = cursor.rowcount > 0
     conn.close()
-    return success
+    return success, last_id
 
 def mark_bug_report_resolved(report_id: int) -> bool:
     """
@@ -688,6 +689,37 @@ def get_bug_report(report_id: int) -> Optional[Dict[str, Any]]:
             'deleted': bool(row[6])
         }
     return None
+
+def get_all_bug_reports(include_resolved: bool = False, include_deleted: bool = False) -> list:
+    """
+    Retrieve all bug reports.
+    Args:
+        include_resolved: Whether to include resolved reports
+        include_deleted: Whether to include soft-deleted reports\
+    Returns:
+        A list of bug report dictionaries.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    query = "SELECT report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted FROM room_bug_reports WHERE 1=1"
+    # The 1=1 is just a placeholder to make appending conditions easier
+    if not include_resolved:
+        query += " AND resolved = 0"
+    if not include_deleted:
+        query += " AND deleted = 0"
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [{
+        'report_id': row[0],
+        'room_name': row[1],
+        'report_text': row[2],
+        'reported_by_user_id': row[3],
+        'timestamp': row[4],
+        'resolved': bool(row[5]),
+        'deleted': bool(row[6])
+    } for row in rows]
 
 def get_room_bug_reports(room_name: str, include_deleted: bool = False) -> list:
     """

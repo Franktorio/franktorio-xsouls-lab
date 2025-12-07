@@ -26,7 +26,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(room_name="The name of the room to get information about.")
     async def room_info(self, interaction: discord.Interaction, room_name: str):
         """Fetch and display information about a specific room."""
-        print(f"[COMMAND] 📋 Room info requested for '{room_name}' by {interaction.user}")
+        print(f"[COMMAND] Room info requested for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
         
         room = room_db_handler.get_roominfo(room_name)
@@ -42,7 +42,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(name="The search query for room names.", tag="Tag to filter rooms by.", roomtype="Type of room to filter by.")
     async def room_search(self, interaction: discord.Interaction, name: Optional[str] = None, tag: Optional[Tags] = None, roomtype: Optional[RoomType] = None):
         """Search for rooms by name."""
-        print(f"[COMMAND] 🔍 Room search by {interaction.user} - name:{name}, tag:{tag}, type:{roomtype}")
+        print(f"[COMMAND] Room search by {interaction.user} - name:{name}, tag:{tag}, type:{roomtype}")
         await interaction.response.defer()
         
         if not name and not tag and not roomtype:
@@ -109,7 +109,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(room_name="The name of the room to view history for.")
     async def room_history(self, interaction: discord.Interaction, room_name: str):
         """View the edit history of a room."""
-        print(f"[COMMAND] 📜 Room history requested for '{room_name}' by {interaction.user}")
+        print(f"[COMMAND] Room history requested for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
         
         room = room_db_handler.get_roominfo(room_name)
@@ -124,6 +124,132 @@ class RoomCommands(app_commands.Group):
         await interaction.followup.send(embed=first_embed)
         for embed in history_embeds:
             await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @app_commands.command(name="bugreport", description="Report an issue with a room.")
+    @app_commands.describe(room_name="The name of the room to report an issue for.", issue_description="Description of the issue encountered. Be detailed (30-1000 characters).")
+    async def room_bugreport(self, interaction: discord.Interaction, room_name: str, issue_description: str):
+        """Report an issue with a room."""
+        print(f"[COMMAND] Room bug report for '{room_name}' by {interaction.user}")
+        await interaction.response.defer()
+
+        issue_description = issue_description[:1000]  # Limit to 1000 characters
+
+        if len(issue_description) < 30:
+            embed = embeds.create_error_embed("Issue Description Too Short", "Please provide a more detailed description of the issue (at least 30 characters).")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        room = room_db_handler.get_roominfo(room_name)
+        if not room:
+            embed = embeds.create_error_embed("Room Not Found", f"No information found for room: **{room_name}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        success, id = room_db_handler.report_room_bug(room_name=room_name, issue_description=issue_description, reported_by_user_id=interaction.user.id)
+        if not success:
+            embed = embeds.create_error_embed("Report Failed", "An error occurred while submitting your bug report. Please try again later.")
+            await interaction.followup.send(embed=embed)
+            return
+        embed = embeds.create_success_embed("Bug Report Submitted", f"Your bug report for room **{room_name}** has been stored with ID: `{id}`.")
+        await interaction.followup.send(embed=embed)
+    
+    @app_commands.command(name="view_roomreports", description="View bug reports for a specific room.")
+    @app_commands.describe(room_name="The name of the room to view bug reports for.")
+    async def view_roomreports(self, interaction: discord.Interaction, room_name: str):
+        """View bug reports for a specific room."""
+        print(f"[COMMAND] View room reports for '{room_name}' by {interaction.user}")
+        await interaction.response.defer()
+        
+        room = room_db_handler.get_roominfo(room_name)
+        if not room:
+            embed = embeds.create_error_embed("Room Not Found", f"No information found for room: **{room_name}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        reports = room_db_handler.get_bug_report(room_name)
+        if not reports:
+            embed = embeds.create_error_embed("No Reports Found", f"No bug reports found for room: **{room_name}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        report_embeds = embeds.create_bug_report_embed(room_name, reports)
+        report_embeds = report_embeds[:20]  # Limit to 20 embeds
+        first_embed = report_embeds.pop(0)
+        await interaction.followup.send(embed=first_embed)
+        for embed in report_embeds:
+            await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @app_commands.command(name="view_allreports", description="View all unresolved bug reports across all rooms.")
+    async def view_allreports(self, interaction: discord.Interaction):
+        """View all unresolved bug reports."""
+        print(f"[COMMAND] View all bug reports by {interaction.user}")
+        await interaction.response.defer()
+        
+        reports = room_db_handler.get_all_bug_reports(include_resolved=False, include_deleted=False)
+        if not reports:
+            embed = embeds.create_error_embed("No Reports Found", "No unresolved bug reports found.")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        report_embeds = embeds.create_all_bug_reports_embed(reports)
+        report_embeds = report_embeds[:20]  # Limit to 20 embeds
+        first_embed = report_embeds.pop(0)
+        await interaction.followup.send(embed=first_embed)
+        for embed in report_embeds:
+            await interaction.followup.send(embed=embed, ephemeral=True)
+    
+    @app_commands.command(name="resolve_report", description="Mark a bug report as resolved.")
+    @app_commands.describe(report_id="The ID of the bug report to resolve.")
+    async def resolve_report(self, interaction: discord.Interaction, report_id: int):
+        """Mark a bug report as resolved."""
+        print(f"[COMMAND] Resolve bug report #{report_id} by {interaction.user}")
+        await interaction.response.defer()
+        
+        report = room_db_handler.get_bug_report(report_id)
+        if not report:
+            embed = embeds.create_error_embed("Report Not Found", f"No bug report found with ID: **{report_id}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        if report['resolved']:
+            embed = embeds.create_error_embed("Already Resolved", f"Bug report #{report_id} is already marked as resolved.")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        success = room_db_handler.mark_bug_report_resolved(report_id)
+        if success:
+            embed = embeds.create_success_embed("Report Resolved", f"Bug report #{report_id} for room **{report['room_name']}** has been marked as resolved.")
+            await interaction.followup.send(embed=embed)
+        else:
+            embed = embeds.create_error_embed("Failed to Resolve", f"Failed to mark bug report #{report_id} as resolved.")
+            await interaction.followup.send(embed=embed)
+    
+    @app_commands.command(name="delete_report", description="Delete a bug report.")
+    @app_commands.describe(report_id="The ID of the bug report to delete.")
+    async def delete_report(self, interaction: discord.Interaction, report_id: int):
+        """Delete a bug report (soft delete)."""
+        print(f"[COMMAND] Delete bug report #{report_id} by {interaction.user}")
+        await interaction.response.defer()
+        
+        report = room_db_handler.get_bug_report(report_id)
+        if not report:
+            embed = embeds.create_error_embed("Report Not Found", f"No bug report found with ID: **{report_id}**")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        if report['deleted']:
+            embed = embeds.create_error_embed("Already Deleted", f"Bug report #{report_id} has already been deleted.")
+            await interaction.followup.send(embed=embed)
+            return
+        
+        success = room_db_handler.delete_bug_report(report_id)
+        if success:
+            embed = embeds.create_success_embed("Report Deleted", f"Bug report #{report_id} for room **{report['room_name']}** has been deleted.")
+            await interaction.followup.send(embed=embed)
+        else:
+            embed = embeds.create_error_embed("Failed to Delete", f"Failed to delete bug report #{report_id}.")
+            await interaction.followup.send(embed=embed)
+
 
 
 shared.FRD_bot.tree.add_command(RoomCommands())

@@ -182,7 +182,7 @@ def create_search_result_embed(search_type: str, query: str, results: list, serv
         )
         return [embed]
 
-    MAX_FIELDS = 20
+    MAX_FIELDS = 20  # Increased from 10 to reduce total embed count
 
     # Base embed template
     def new_embed(page: int | None = None):
@@ -368,3 +368,129 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
     
     return embeds
 
+def create_bug_report_embed(room_name: str, reports: list) -> list:
+    """Create paginated embeds for room bug reports with multiple reports per page.
+    
+    Args:
+        room_name: The name of the room
+        reports: List of report dictionaries containing report_id, report_text, reported_by_user_id, timestamp, resolved
+    
+    Returns:
+        List of embed objects
+    """
+    embeds = []
+    MAX_REPORTS_PER_PAGE = 5
+    
+    def new_embed(page: int | None = None):
+        title = f"🐞 Bug Reports for **{room_name}**"
+        if page is not None:
+            title += f" — Page {page}"
+        else:
+            title += " — Page 1"
+        
+        embed = discord.Embed(
+            title=title,
+            color=discord.Color.orange(),
+            timestamp=datetime.now(timezone.utc),
+            description=f"**Total Reports:** {len(reports)}"
+        )
+        embed.set_footer(
+            text="Franktorio & xSoul's Research Division",
+            icon_url=shared.FRD_bot.user.display_avatar.url,
+        )
+        return embed
+    
+    embed = new_embed()
+    report_count = 0
+    page = 1
+    
+    for i, report in enumerate(reports, 1):
+        status_emoji = "✅" if report.get('resolved', False) else "🔴"
+        
+        field_name = f"{status_emoji} Report #{report['report_id']}"
+        field_value = (
+            f"**Reported by:** <@{report['reported_by_user_id']}>\n"
+            f"**Time:** <t:{int(report['timestamp'])}:R>\n"
+            f"**Status:** {'Resolved' if report.get('resolved', False) else 'Open'}\n"
+            f"**Issue:**\n{report['report_text'][:400]}{'...' if len(report['report_text']) > 400 else ''}"
+        )
+        
+        embed.add_field(name=field_name, value=field_value, inline=False)
+        report_count += 1
+        
+        # New page
+        if report_count >= MAX_REPORTS_PER_PAGE and i < len(reports):
+            embeds.append(embed)
+            page += 1
+            embed = new_embed(page)
+            report_count = 0
+    
+    # Add final embed
+    if report_count > 0:
+        embeds.append(embed)
+    
+    return embeds
+
+
+def create_all_bug_reports_embed(reports: list) -> list:
+    """Create paginated embeds for all bug reports across rooms.
+    
+    Args:
+        reports: List of report dictionaries containing report_id, room_name, report_text, 
+                 reported_by_user_id, timestamp, resolved, deleted
+    
+    Returns:
+        List of embed objects
+    """
+    embeds = []
+    MAX_REPORTS_PER_PAGE = 5
+    
+    def new_embed(page: int | None = None):
+        title = "🐞 All Bug Reports"
+        if page is not None:
+            title += f" - Page {page}"
+        else:
+            title += " - Page 1"
+        
+        embed = discord.Embed(
+            title=title,
+            color=discord.Color.orange(),
+            timestamp=datetime.now(timezone.utc),
+            description=f"**Total Unresolved Reports:** {len(reports)}"
+        )
+        embed.set_footer(
+            text="Franktorio & xSoul's Research Division",
+            icon_url=shared.FRD_bot.user.display_avatar.url,
+        )
+        return embed
+    
+    embed = new_embed()
+    report_count = 0
+    page = 1
+    
+    for i, report in enumerate(reports, 1):
+        status_emoji = "✅" if report.get('resolved', False) else "🔴"
+        
+        field_name = f"{status_emoji} Report #{report['report_id']} - **{report['room_name']}**"
+        field_value = (
+            f"**Reported by:** <@{report['reported_by_user_id']}>\n"
+            f"**Time:** <t:{int(report['timestamp'])}:R>\n"
+            f"**Status:** {'Resolved' if report.get('resolved', False) else 'Open'}\n"
+            f"**Issue:**\n{report['report_text'][:350]}{'...' if len(report['report_text']) > 350 else ''}"
+        )
+        
+        embed.add_field(name=field_name, value=field_value, inline=False)
+        report_count += 1
+        
+        # New page
+        if report_count >= MAX_REPORTS_PER_PAGE and i < len(reports):
+            embeds.append(embed)
+            page += 1
+            embed = new_embed(page)
+            report_count = 0
+    
+    # Add final embed
+    if report_count > 0:
+        embeds.append(embed)
+    
+    return embeds
