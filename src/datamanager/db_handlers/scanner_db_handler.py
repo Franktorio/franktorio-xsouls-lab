@@ -162,10 +162,22 @@ def start_session(scanner_version: str) -> None:
     print(f"[SCANNER DB] Started new session {session_id} with scanner version {scanner_version}.")
     return session_id, password
 
-def end_session(session_id: str) -> None:
+def end_session(session_id: str, session_password: str) -> None:
     """End a scanning session."""
     conn = _connect_db()
     cursor = conn.cursor()
+
+    # Verify session password
+    cursor.execute("""
+        SELECT session_password
+        FROM sessions
+        WHERE session_id = ? AND closed = 0
+    """, (session_id,))
+    stored_password = cursor.fetchone()
+    if stored_password is None or not _compare_password(stored_password[0], session_password):
+        conn.close()
+        print(f"[SCANNER DB] Failed to end session {session_id}: invalid session ID or password, or session is already closed.")
+        return False
     
     cursor.execute("""
         UPDATE sessions
@@ -366,7 +378,7 @@ def jsonify_database() -> dict[str, any]:
             })
 
     conn.close()
-    
+
     print(f"[SCANNER DB] Converted database to JSON-serializable dictionary.")
     return data
 

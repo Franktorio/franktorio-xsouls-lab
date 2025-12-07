@@ -254,14 +254,32 @@ async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
     return {"success": True, "room_info": room_profile}
 
 @app.get(f"{BASE_URL}/request_session")
-async def request_scanner_session(ip: str = Query(...)):
+async def request_scanner_session(scanner_version: str = Query(...), ip: str = Query(...)):
     """Endpoint to request a new scanner session"""
     
     request_count = _log_request(ip)
     if request_count > IP_RATE_LIMIT:
         return {"error": "Rate limit exceeded. Please try again later."}
     
-    session_id, password = scanner_db_handler.start_session(ip)
+    session_id, password = scanner_db_handler.start_session(scanner_version=scanner_version)
     return {"success": True, "session_id": session_id, "password": password}
 
-
+@app.post(f"{BASE_URL}/end_session")
+async def end_scanner_session(session_id: str = Query(...), password: str = Query(...)):
+    """Endpoint to end a scanner session"""
+    
+    success = scanner_db_handler.end_session(session_id=session_id, session_password=password)
+    if success:
+        return {"success": True, "message": f"Session '{session_id}' has been ended."}
+    else:
+        return {"error": "Invalid session ID or password, or session already ended."}
+    
+@app.post(f"{BASE_URL}/room_encountered")
+async def room_encountered(session_id: str = Query(...), password: str = Query(...), room_name: str = Query(...)):
+    """Endpoint to log that a room has been encountered during a scanning session"""
+    
+    success = scanner_db_handler.log_encountered_room(session_id=session_id, session_password=password, room_name=room_name)
+    if success:
+        return {"success": True, "message": f"Room '{room_name}' has been logged for session '{session_id}'."}
+    else:
+        return {"error": "Invalid session ID or password, or session has ended."}
