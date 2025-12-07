@@ -29,6 +29,18 @@ SCHEMA = {
             edits TEXT NOT NULL DEFAULT '[]'
         );
     """,
+
+    "room_bug_reports": """
+        CREATE TABLE IF NOT EXISTS room_bug_reports (
+            report_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            room_name TEXT NOT NULL,
+            report_text TEXT NOT NULL,
+            reported_by_user_id INTEGER NOT NULL,
+            resolved INTEGER NOT NULL DEFAULT 0,
+            deleted INTEGER NOT NULL DEFAULT 0,
+            timestamp INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+    """
 }
 
 def _connect_db() -> sqlite3.Connection:
@@ -539,15 +551,18 @@ def jsonify_room_db() -> Dict[str, Any]:
     Returns:
         A dictionary where keys are room names and values are room information.
     """
+    
     conn = _connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT room_name, picture_urls, description, last_updated, doc_by_user_id, edits, tags, roomtype, edited_by_user_id FROM room_db")
-    rows = cursor.fetchall()
-    conn.close()
-
-    room_data = {}
-    for row in rows:
-        room_data[row[0]] = {
+    
+    cursor.execute("""
+        SELECT room_name, picture_urls, description, last_updated, doc_by_user_id, edits, tags, roomtype, edited_by_user_id
+        FROM room_db
+    """)
+    room_rows = cursor.fetchall()
+    room_db_dict = {"room_db": {}, "room_bug_reports": {}}
+    for row in room_rows:
+        room_db_dict["room_db"][row[0]] = {
             'picture_urls': json.loads(row[1]),
             'description': row[2],
             'last_updated': row[3],
@@ -557,5 +572,154 @@ def jsonify_room_db() -> Dict[str, Any]:
             'roomtype': row[7],
             'edited_by_user_id': row[8]
         }
-    return room_data
 
+    cursor.execute("""
+        SELECT report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted
+        FROM room_bug_reports
+    """)
+    bug_rows = cursor.fetchall()
+    for row in bug_rows:
+        room_db_dict["room_bug_reports"][row[0]] = {
+            'room_name': row[1],
+            'report_text': row[2],
+            'reported_by_user_id': row[3],
+            'timestamp': row[4],
+            'resolved': bool(row[5]),
+            'deleted': bool(row[6])
+        }
+    
+    conn.close()
+    return room_db_dict
+
+# Bug report handling functions
+
+def report_room_bug(room_name: str, report_text: str, reported_by_user_id: int) -> bool:
+    """
+    Report a bug related to a specific room.
+
+    Args:
+        room_name: The name of the room
+        report_text: The text of the bug report
+        reported_by_user_id: Discord user ID of the reporting user
+
+    Returns:
+        True if successful, False otherwise
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO room_bug_reports (room_name, report_text, reported_by_user_id)
+        VALUES (?, ?, ?)
+    """, (room_name, report_text, reported_by_user_id))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+def mark_bug_report_resolved(report_id: int) -> bool:
+    """
+    Mark a specific bug report as resolved.
+
+    Args:
+        report_id: The ID of the bug report to mark as resolved
+    Returns:
+        True if successful, False otherwise
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE room_bug_reports
+        SET resolved = 1
+        WHERE report_id = ?
+    """, (report_id,))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+def delete_bug_report(report_id: int) -> bool:
+    """
+    Soft-delete a specific bug report from the database.
+
+    Args:
+        report_id: The ID of the bug report to delete
+    Returns:
+        True if successful, False otherwise
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE room_bug_reports
+        SET deleted = 1
+        WHERE report_id = ?
+    """, (report_id,))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+def get_bug_report(report_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Retrieve a specific bug report by its ID.
+
+    Args:
+        report_id: The ID of the bug report to retrieve
+    Returns:
+        A dictionary containing the bug report information, or None if not found.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted
+        FROM room_bug_reports
+        WHERE report_id = ?
+    """, (report_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return {
+            'report_id': row[0],
+            'room_name': row[1],
+            'report_text': row[2],
+            'reported_by_user_id': row[3],
+            'timestamp': row[4],
+            'resolved': bool(row[5]),
+            'deleted': bool(row[6])
+        }
+    return None
+
+def get_room_bug_reports(room_name: str, include_deleted: bool = False) -> list:
+    """
+    Retrieve all bug reports for a specific room.
+
+    Args:
+        room_name: The name of the room
+        include_deleted: Whether to include soft-deleted reports
+    Returns:
+        A list of bug report dictionaries.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    if include_deleted:
+        cursor.execute("""
+            SELECT report_id, report_text, reported_by_user_id, timestamp, resolved
+            FROM room_bug_reports
+            WHERE LOWER(room_name) = LOWER(?)
+        """, (room_name,))
+    else:
+        cursor.execute("""
+            SELECT report_id, report_text, reported_by_user_id, timestamp, resolved
+            FROM room_bug_reports
+            WHERE LOWER(room_name) = LOWER(?) AND deleted = 0
+        """, (room_name,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [{
+        'report_id': row[0],
+        'report_text': row[1],
+        'reported_by_user_id': row[2],
+        'timestamp': row[3],
+        'resolved': bool(row[4])
+    } for row in rows]
