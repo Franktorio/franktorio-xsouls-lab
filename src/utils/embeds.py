@@ -368,18 +368,24 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
     
     return embeds
 
-def create_bug_report_embed(room_name: str, reports: list) -> list:
+def create_bug_report_embed(room_name: str, reports: list, room_data: dict = None) -> list:
     """Create paginated embeds for room bug reports with multiple reports per page.
     
     Args:
         room_name: The name of the room
         reports: List of report dictionaries containing report_id, report_text, reported_by_user_id, timestamp, resolved
+        room_data: Optional room data dictionary containing picture_urls for thumbnail
     
     Returns:
         List of embed objects
     """
     embeds = []
     MAX_REPORTS_PER_PAGE = 5
+    
+    # Get first image URL for thumbnail if available
+    thumbnail_url = None
+    if room_data and room_data.get('picture_urls'):
+        thumbnail_url = room_data['picture_urls'][0]
     
     def new_embed(page: int | None = None):
         title = f"🐞 Bug Reports for **{room_name}**"
@@ -394,6 +400,8 @@ def create_bug_report_embed(room_name: str, reports: list) -> list:
             timestamp=datetime.now(timezone.utc),
             description=f"**Total Reports:** {len(reports)}"
         )
+        if thumbnail_url:
+            embed.set_thumbnail(url=thumbnail_url)
         embed.set_footer(
             text="Franktorio & xSoul's Research Division",
             icon_url=shared.FRD_bot.user.display_avatar.url,
@@ -442,8 +450,13 @@ def create_all_bug_reports_embed(reports: list) -> list:
     Returns:
         List of embed objects
     """
+    from src.datamanager.db_handlers import room_db_handler
+    
     embeds = []
     MAX_REPORTS_PER_PAGE = 5
+    
+    # Cache room data to avoid duplicate queries
+    room_cache = {}
     
     def new_embed(page: int | None = None):
         title = "🐞 All Bug Reports"
@@ -470,6 +483,15 @@ def create_all_bug_reports_embed(reports: list) -> list:
     
     for i, report in enumerate(reports, 1):
         status_emoji = "✅" if report.get('resolved', False) else "🔴"
+        
+        # Get room thumbnail for the first report on each page
+        if report_count == 0:
+            room_name = report['room_name']
+            if room_name not in room_cache:
+                room_cache[room_name] = room_db_handler.get_roominfo(room_name)
+            room_data = room_cache[room_name]
+            if room_data and room_data.get('picture_urls'):
+                embed.set_thumbnail(url=room_data['picture_urls'][0])
         
         field_name = f"{status_emoji} Report #{report['report_id']} - **{report['room_name']}**"
         field_value = (
@@ -503,6 +525,8 @@ def create_single_bug_report_embed(report: dict) -> discord.Embed:
     Returns:
         A discord.Embed object
     """
+    from src.datamanager.db_handlers import room_db_handler
+    
     status_emoji = "✅" if report.get('resolved', False) else "🔴"
     
     embed = discord.Embed(
@@ -516,6 +540,12 @@ def create_single_bug_report_embed(report: dict) -> discord.Embed:
             f"**Issue:**\n{report['report_text']}"
         )
     )
+    
+    # Set thumbnail from room's first image if available
+    room_data = room_db_handler.get_roominfo(report['room_name'])
+    if room_data and room_data.get('picture_urls'):
+        embed.set_thumbnail(url=room_data['picture_urls'][0])
+    
     embed.set_footer(
         text="Franktorio & xSoul's Research Division",
         icon_url=shared.FRD_bot.user.display_avatar.url,
