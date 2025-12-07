@@ -71,6 +71,13 @@ def _close_sessions_task():
         close_old_sessions()
         sleep(TASK_FREQUENCY)  # Run every 10 minutes
 
+def _generate_session_id() -> str:
+    """Generate a random alphanumeric session ID."""
+    length = 16
+    characters = string.ascii_letters + string.digits
+    session_id = ''.join(random.choice(characters) for _ in range(length))
+    return session_id
+
 def _generate_password(length: int = 12) -> str:
     """Generate a random alphanumeric password of given length."""
 
@@ -129,18 +136,30 @@ def init_scanner_extras():
     conn.close()
 
 
-def start_session(session_id: str, scanner_version: str) -> None:
-    """Start a new scanning session."""
+def start_session(scanner_version: str) -> None:
+    """
+    Start a new scanning session.
+    
+    Args:
+        scanner_version: The version of the scanner software.
+    Returns:
+        A tuple containing the session ID and session password.
+    """
     conn = _connect_db()
     cursor = conn.cursor()
+
+    password = _generate_password()
+    session_id = _generate_session_id()
     
     cursor.execute("""
         INSERT INTO sessions (session_id, scanner_version, session_password)
         VALUES (?, ?, ?)
-    """, (session_id, scanner_version, _hash_password(_generate_password())))
+    """, (session_id, scanner_version, _hash_password(password)))
     
     conn.commit()
     conn.close()
+    
+    return session_id, password
 
 def end_session(session_id: str) -> None:
     """End a scanning session."""
