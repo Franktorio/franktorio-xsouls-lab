@@ -214,31 +214,7 @@ class RoomCommands(app_commands.Group):
         report_embed = embeds.create_single_bug_report_embed(report)
         await interaction.followup.send(embed=report_embed)
     
-    @app_commands.command(name="resolve_report", description="Mark a bug report as resolved.")
-    @app_commands.describe(report_id="The ID of the bug report to resolve.")
-    async def resolve_report(self, interaction: discord.Interaction, report_id: int):
-        """Mark a bug report as resolved."""
-        print(f"[COMMAND] Resolve bug report #{report_id} by {interaction.user}")
-        await interaction.response.defer()
-        
-        report = room_db_handler.get_bug_report(report_id)
-        if not report:
-            embed = embeds.create_error_embed("Report Not Found", f"No bug report found with ID: **{report_id}**")
-            await interaction.followup.send(embed=embed)
-            return
-        
-        if report['resolved']:
-            embed = embeds.create_error_embed("Already Resolved", f"Bug report #{report_id} is already marked as resolved.")
-            await interaction.followup.send(embed=embed)
-            return
-        
-        success = room_db_handler.mark_bug_report_resolved(report_id)
-        if success:
-            embed = embeds.create_success_embed("Report Resolved", f"Bug report #{report_id} for room **{report['room_name']}** has been marked as resolved.")
-            await interaction.followup.send(embed=embed)
-        else:
-            embed = embeds.create_error_embed("Failed to Resolve", f"Failed to mark bug report #{report_id} as resolved.")
-            await interaction.followup.send(embed=embed)
+
 
 
 
