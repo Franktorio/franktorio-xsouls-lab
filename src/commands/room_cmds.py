@@ -171,7 +171,7 @@ class RoomCommands(app_commands.Group):
             await interaction.followup.send(embed=embed)
             return
         
-        report_embeds = embeds.create_bug_report_embed(room_name, reports)
+        report_embeds = embeds.create_bug_report_embed(room_name, reports, room_data=room)
         report_embeds = report_embeds[:20]  # Limit to 20 embeds
         first_embed = report_embeds.pop(0)
         await interaction.followup.send(embed=first_embed)

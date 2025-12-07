@@ -659,7 +659,7 @@ def delete_bug_report(report_id: int) -> bool:
     conn.close()
     return success
 
-def get_bug_report(report_id: int) -> Optional[Dict[str, Any]]:
+def get_bug_report(report_id: int, include_deleted: bool = False) -> Optional[Dict[str, Any]]:
     """
     Retrieve a specific bug report by its ID.
 
@@ -670,11 +670,18 @@ def get_bug_report(report_id: int) -> Optional[Dict[str, Any]]:
     """
     conn = _connect_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted
-        FROM room_bug_reports
-        WHERE report_id = ?
-    """, (report_id,))
+    if include_deleted:
+        cursor.execute("""
+            SELECT report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted
+            FROM room_bug_reports
+            WHERE report_id = ?
+        """, (report_id,))
+    else:
+        cursor.execute("""
+            SELECT report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted
+            FROM room_bug_reports
+            WHERE report_id = ? AND deleted = 0
+        """, (report_id,))
     row = cursor.fetchone()
     conn.close()
 
