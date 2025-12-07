@@ -494,3 +494,30 @@ def create_all_bug_reports_embed(reports: list) -> list:
         embeds.append(embed)
     
     return embeds
+
+def create_single_bug_report_embed(report: dict) -> discord.Embed:
+    """Create an embed for a single bug report.
+    
+    Args:
+        report: A dictionary containing report_id, room_name, report_text, reported_by_user_id, timestamp, resolved, deleted
+    Returns:
+        A discord.Embed object
+    """
+    status_emoji = "✅" if report.get('resolved', False) else "🔴"
+    
+    embed = discord.Embed(
+        title=f"{status_emoji} Bug Report #{report['report_id']} - **{report['room_name']}**",
+        color=discord.Color.orange(),
+        timestamp=datetime.now(timezone.utc),
+        description=(
+            f"**Reported by:** <@{report['reported_by_user_id']}>\n"
+            f"**Time:** <t:{int(report['timestamp'])}:R>\n"
+            f"**Status:** {'Resolved' if report.get('resolved', False) else 'Open'}\n\n"
+            f"**Issue:**\n{report['report_text']}"
+        )
+    )
+    embed.set_footer(
+        text="Franktorio & xSoul's Research Division",
+        icon_url=shared.FRD_bot.user.display_avatar.url,
+    )
+    return embed
