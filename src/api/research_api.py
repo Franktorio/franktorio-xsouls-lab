@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 # Local imports
 from config.vars import LOCAL_KEY
-from src.datamanager.db_handlers import room_db_handler, server_db_handler
+from src.datamanager.db_handlers import room_db_handler, server_db_handler, scanner_db_handler
 from src.utils import utils
 
 app = FastAPI()
@@ -219,12 +219,33 @@ async def deletedoc(key: str = Query(...), room_name: str = Query(...)):
 #            SCANNER ENDPOINTS            #
 ###########################################
 
+IP_RATE_LIMIT = 60 # Max requests per minute per IP for unauthenticated scanner endpoints
+
+scanner_request_logs = {}  # Dictionary to track request timestamps per IP
+
+def _log_request(ip: str):
+    """Helper function to log requests per IP for rate limiting"""
+    current_time = datetime.now().timestamp()
+    if ip not in scanner_request_logs:
+        scanner_request_logs[ip] = []
+    
+    # Remove timestamps older than 60 seconds
+    scanner_request_logs[ip] = [t for t in scanner_request_logs[ip] if current_time - t < 60]
+    
+    scanner_request_logs[ip].append(current_time)
+    
+    return len(scanner_request_logs[ip])
+
 BASE_URL = "/scanner"
 
 # UNAUTHENTICATED ENDPOINTS FOR THE SCANNER TOOL
 @app.get(f"{BASE_URL}/get_roominfo")
 async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
     """Endpoint to get room information for the scanner"""
+
+    request_count = _log_request(ip)
+    if request_count > IP_RATE_LIMIT:
+        return {"error": "Rate limit exceeded. Please try again later."}
     
     room_profile = room_db_handler.get_roominfo(room_name)
     if not room_profile:
@@ -232,10 +253,15 @@ async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
     
     return {"success": True, "room_info": room_profile}
 
-@app.post(f"{BASE_URL}/room_encountered")
-async def room_encountered(room_name: str = Query(...), ip: str = Query(...)):
-    """Endpoint to log a room encounter from the scanner"""
+@app.get(f"{BASE_URL}/request_session")
+async def request_scanner_session(ip: str = Query(...)):
+    """Endpoint to request a new scanner session"""
     
-    return {"success": True, "message": f"Room '{room_name}' encounter logged from IP {ip}."}
+    request_count = _log_request(ip)
+    if request_count > IP_RATE_LIMIT:
+        return {"error": "Rate limit exceeded. Please try again later."}
+    
+    session_id, password = scanner_db_handler.start_session(ip)
+    return {"success": True, "session_id": session_id, "password": password}
 
 
