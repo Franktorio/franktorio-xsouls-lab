@@ -5,12 +5,15 @@
 
 # Standard library imports
 import sqlite3
+import threading
 
 # Local imports
 from ..database_manager import connect_db
 
-DB_FILE_NAME = "frd_scanner.db"
 
+DB_FILE_NAME = "frd_scanner.db"
+SESSION_LIFE = 7200  # 2 hours in seconds
+TASK_FREQUENCY = 600  # 10 minutes in seconds
 SCHEMA = {
     "sessions": """
         CREATE TABLE IF NOT EXISTS sessions (
@@ -34,9 +37,36 @@ SCHEMA = {
     """
 }
 
+
 def _connect_db() -> sqlite3.Connection:
     """Connect to the scanner database and return the connection."""
     return connect_db(DB_FILE_NAME)
+
+def _close_sessions_task():
+    """Background task to periodically close old sessions."""
+    from time import sleep
+
+    def close_old_sessions() -> None:
+        """Close sessions that have been inactive for longer than SESSION_LIFE."""
+        conn = _connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE sessions
+            SET closed = 1
+            WHERE closed = 0 AND (strftime('%s', 'now') - last_edited_at) > ?
+        """, (SESSION_LIFE,))
+        
+        conn.commit()
+        conn.close()
+
+        print(f"[SCANNER DB] Closed old sessions inactive for more than {SESSION_LIFE} seconds.")
+
+    while True:
+        close_old_sessions()
+        sleep(TASK_FREQUENCY)  # Run every 10 minutes
+
+
 
 def init_scanner_extras():
     """Initialize database triggers and indexes after tables are created."""
@@ -53,7 +83,7 @@ def init_scanner_extras():
             WHERE session_id = NEW.session_id;
         END;
     """)
-    
+
     # Create indexes for performance
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_sessions_open_closed 
@@ -73,6 +103,7 @@ def init_scanner_extras():
     conn.commit()
     conn.close()
 
+
 def start_session(session_id: str, scanner_version: str) -> None:
     """Start a new scanning session."""
     conn = _connect_db()
@@ -85,3 +116,7 @@ def start_session(session_id: str, scanner_version: str) -> None:
     
     conn.commit()
     conn.close()
+
+
+# Start the background task to close old sessions
+threading.Thread(target=_close_sessions_task, daemon=True).start()
