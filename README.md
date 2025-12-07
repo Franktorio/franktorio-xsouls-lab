@@ -2,16 +2,22 @@
 ## December 05, 2025
 
 A Discord bot designed to facilitate the collection and display of gameplay data. It is currently adapted for the Roblox game *Pressure*.
-The bot provides backend support for the franktorio-research-scanner, which queries this bot's database through an API.
+The bot provides backend support for the [franktorio-research-scanner](https://github.com/Franktorio/franktorio-pressure-scanner), which queries this bot's database through an API.
 
 > This is not an official bot or tool. We are not affiliated with the Pressure development team or staff.
 
 ### Todo
 - Add functions to manage the scanner database table
 - Finish the scanner API located at `/src/api/research_api.py`
-- Add Discord commands to display gathered data
+- Add Discord commands to display gathered data from scanner
 - Document all API endpoints
-- Cleanup imports that are not used from modules
+
+### Current Task
+**Add functions to manage the scanner database table**
+- [ ] Create, get, close and remove sessions
+- [ ] Add and remove encountered rooms
+- [ ] Get rooms from a session
+- [ ] Get all rooms and get all sessions
 
 ### Setup
 - Install dependencies:
