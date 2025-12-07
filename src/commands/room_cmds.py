@@ -9,7 +9,6 @@ from typing import Optional
 # Third-party imports
 import discord
 from discord import app_commands
-from discord.ext import commands
 
 # Local imports
 from config.vars import RoomType, Tags
@@ -179,13 +178,13 @@ class RoomCommands(app_commands.Group):
         for embed in report_embeds:
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    @app_commands.command(name="view_all_reports", description="View all unresolved bug reports across all rooms.")
-    async def view_all_reports(self, interaction: discord.Interaction):
-        """View all unresolved bug reports."""
+    @app_commands.command(name="view_all_reports", description="View all bug reports across all rooms.")
+    async def view_all_reports(self, interaction: discord.Interaction, include_resolved: Optional[bool] = True):
+        """View all bug reports."""
         print(f"[COMMAND] View all bug reports by {interaction.user}")
         await interaction.response.defer()
         
-        reports = room_db_handler.get_all_bug_reports(include_resolved=False, include_deleted=False)
+        reports = room_db_handler.get_all_bug_reports(include_resolved=include_resolved)
         if not reports:
             embed = embeds.create_error_embed("No Reports Found", "No unresolved bug reports found.")
             await interaction.followup.send(embed=embed)
