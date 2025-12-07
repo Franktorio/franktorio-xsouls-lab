@@ -145,7 +145,7 @@ class RoomCommands(app_commands.Group):
             await interaction.followup.send(embed=embed)
             return
         
-        success, id = room_db_handler.report_room_bug(room_name=room_name, issue_description=issue_description, reported_by_user_id=interaction.user.id)
+        success, id = room_db_handler.report_room_bug(room_name=room_name, report_text=issue_description, reported_by_user_id=interaction.user.id)
         if not success:
             embed = embeds.create_error_embed("Report Failed", "An error occurred while submitting your bug report. Please try again later.")
             await interaction.followup.send(embed=embed)
