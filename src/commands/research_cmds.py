@@ -10,8 +10,8 @@ import io
 import json
 
 # Third-party imports
-from src.datamanager import server_db_handler
-from src.datamanager import room_db_handler
+from src.datamanager.db_handlers import server_db_handler
+from src.datamanager.db_handlers import room_db_handler
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -21,12 +21,13 @@ from PIL import Image #type: ignore
 
 # Local imports
 from src import shared
-from src.utils import embeds, _helpers
+from src.utils import embeds
 import src.api._r2_handler as r2_handler
 import src.api.external_api as external_api
-import src.datamanager.room_db_handler as room_db_handler
+import src.datamanager.db_handlers.room_db_handler as room_db_handler
 from config.vars import RoomType, Tags
 import config.vars as vars
+from utils import utils
 
 async def _get_image_links(images: list[Optional[discord.Attachment]], brighten: bool, room_name: str) -> list[str]:
     """Process attachments and return list of image links."""
@@ -111,7 +112,7 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] 📝 Document room '{roomname}' by {interaction.user}")
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 1:
             await interaction.followup.send("❌ You do not have permission to document rooms. You need to be trial researcher or higher.", ephemeral=True)
             return
@@ -226,7 +227,7 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] 🔄 Redocument room '{roomname}' by {interaction.user}")
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 2:
             await interaction.followup.send("❌ You do not have permission to redocument rooms. You need to be novice researcher or higher.", ephemeral=True)
             return
@@ -304,7 +305,7 @@ class ResearchCommands(app_commands.Group):
         await interaction.channel.send(embed=doc_embed, files=pictures)
         await interaction.followup.send(embed=embed)
 
-        await _helpers.global_reset(roomname)
+        await utils.global_reset(roomname)
 
     @app_commands.command(name="set_description", description="Set the description of a specific room.")
     @app_commands.describe(roomname="Name of the room", description="New description for the room")
@@ -313,14 +314,14 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] 📝 Set description for '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 2:
             await interaction.followup.send("❌ You do not have permission to set room descriptions. You need to be novice researcher or higher.", ephemeral=True)
             return
         
         success = room_db_handler.set_roomdescription(roomname, description, edited_by_user_id=interaction.user.id)
         if success:
-            await _helpers.global_reset(roomname)
+            await utils.global_reset(roomname)
             
             # Export to external API after local save
             api_response = await external_api.update_room_description_api(
@@ -352,14 +353,14 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] 🚪 Set roomtype for '{roomname}' to '{roomtype}' by {interaction.user}")
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 2:
             await interaction.followup.send("❌ You do not have permission to set room types. You need to be novice researcher or higher.", ephemeral=True)
             return
         
         success = room_db_handler.set_roomtype(roomname, roomtype, edited_by_user_id=interaction.user.id)
         if success:
-            await _helpers.global_reset(roomname)
+            await utils.global_reset(roomname)
             
             # Export to external API after local save
             api_response = await external_api.update_room_roomtype_api(
@@ -407,7 +408,7 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] 🏷️ Set tags for '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 1:
             await interaction.followup.send("❌ You do not have permission to set room tags. You need to be trial researcher or higher.", ephemeral=True)
             return
@@ -434,7 +435,7 @@ class ResearchCommands(app_commands.Group):
 
         success = room_db_handler.set_roomtags(roomname, new_tags, edited_by_user_id=interaction.user.id)
         if success:
-            await _helpers.global_reset(roomname)
+            await utils.global_reset(roomname)
             
             # Export to external API after local save
             api_response = await external_api.update_room_tags_api(
@@ -466,7 +467,7 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] ➕ Add tags to '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 1:
             await interaction.followup.send("❌ You do not have permission to add room tags. You need to be trial researcher or higher.", ephemeral=True)
             return
@@ -500,7 +501,7 @@ class ResearchCommands(app_commands.Group):
 
         success = room_db_handler.set_roomtags(roomname, room_tags, edited_by_user_id=interaction.user.id)
         if success:
-            await _helpers.global_reset(roomname)
+            await utils.global_reset(roomname)
             
             # Export to external API after local save
             api_response = await external_api.update_room_tags_api(
@@ -532,7 +533,7 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] ➖ Remove tags from '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 1:
             await interaction.followup.send("❌ You do not have permission to remove room tags. You need to be trial researcher or higher.", ephemeral=True)
             return
@@ -565,7 +566,7 @@ class ResearchCommands(app_commands.Group):
         
         success = room_db_handler.set_roomtags(roomname, room_tags, edited_by_user_id=interaction.user.id)
         if success:
-            await _helpers.global_reset(roomname)
+            await utils.global_reset(roomname)
             
             # Export to external API after local save
             api_response = await external_api.update_room_tags_api(
@@ -597,14 +598,14 @@ class ResearchCommands(app_commands.Group):
         print(f"[COMMAND] 🏷️ Rename room '{roomname}' to '{newname}' by {interaction.user}")
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 3:
             await interaction.followup.send("❌ You do not have permission to rename rooms. You need to be experienced researcher or higher.", ephemeral=True)
             return
         
         success = room_db_handler.rename_room(roomname, newname, edited_by_user_id=interaction.user.id)
         if success:
-            await _helpers.global_reset(newname)
+            await utils.global_reset(newname)
             
             # Export to external API after local save
             api_response = await external_api.rename_room_api(
@@ -637,7 +638,7 @@ class ResearchCommands(app_commands.Group):
         """Delete room documentation."""
         await interaction.response.defer()
 
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 3:
             await interaction.followup.send("❌ You do not have permission to delete room documentation. You need to be experienced researcher or higher.", ephemeral=True)
             return

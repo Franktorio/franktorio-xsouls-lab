@@ -12,7 +12,7 @@ from discord.ext import tasks
 from src import shared
 from src import datamanager
 from src.utils import embeds
-from src.utils import _helpers
+from utils import utils
 
 # Configuration
 BATCH_SIZE = 100  # Number of rooms to process concurrently per server

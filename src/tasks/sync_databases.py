@@ -13,7 +13,7 @@ from src import shared
 import src.api.external_api as ext_api
 from src import datamanager
 from src.utils import embeds
-from src.utils import _helpers
+from utils import utils
 
 
 @tasks.loop(hours=1)
@@ -178,7 +178,7 @@ async def sync_databases():
             edited_by_user_id=ext_data.get("last_edited_by")
         )
 
-        await _helpers.global_reset(room_name)
+        await utils.global_reset(room_name)
         print(f"  ✅ Updated {room_name} in local database")
         
     print(f"✅ Database synchronization complete!")

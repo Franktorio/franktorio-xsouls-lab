@@ -12,23 +12,24 @@ import os
 from typing import Optional, Dict, Any
 
 # Local imports
-from .helpers import connect_db
+from ..database_manager import connect_db
 
 DB_FILE_NAME = "frd_room.db"
 
-ROOM_SCHEMA = {
-    "arg": "CREATE TABLE IF NOT EXISTS room_db",
-    "tables": [
-        "room_name TEXT PRIMARY KEY",
-        "picture_urls TEXT NOT NULL DEFAULT '[]'",
-        "description TEXT NOT NULL DEFAULT ''",
-        "tags TEXT NOT NULL DEFAULT '[]'",
-        "roomtype TEXT NOT NULL DEFAULT ''",
-        "last_updated INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))",
-        "doc_by_user_id INTEGER NOT NULL",
-        "edited_by_user_id INTEGER",
-        "edits TEXT NOT NULL DEFAULT '[]'"
-    ]
+SCHEMA = {
+    "room_db": """
+        CREATE TABLE IF NOT EXISTS room_db (
+            room_name TEXT PRIMARY KEY,
+            picture_urls TEXT NOT NULL DEFAULT '[]',
+            description TEXT NOT NULL DEFAULT '',
+            tags TEXT NOT NULL DEFAULT '[]',
+            roomtype TEXT NOT NULL DEFAULT '',
+            last_updated INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            doc_by_user_id INTEGER NOT NULL,
+            edited_by_user_id INTEGER,
+            edits TEXT NOT NULL DEFAULT '[]'
+        );
+    """,
 }
 
 def _connect_db() -> sqlite3.Connection:

@@ -15,16 +15,8 @@ from src import shared
 
 # Local imports
 from config import vars
-from src.datamanager.helpers import actions_data
-import src.datamanager.server_db_handler as server_db_handler
-
-def save_actions_json():
-    """Save the actions_data to actions.json in the databases directory."""
-    PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    DB_DIR = os.path.join(PROJECT_ROOT, "databases")
-    ACTIONS_JSON_PATH = os.path.join(DB_DIR, "actions.json")
-    with open(ACTIONS_JSON_PATH, 'w') as f:
-        json.dump(actions_data, f, indent=4)
+from src.datamanager.db_handlers.action_json_handler import actions_data, save_actions_json
+import src.datamanager.db_handlers.server_db_handler as server_db_handler
 
 async def permission_check(user: discord.User) -> int:
     """Check if a user has permission to use research commands.

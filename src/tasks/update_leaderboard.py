@@ -13,8 +13,9 @@ from discord.ext import tasks
 # Local imports
 from src import shared
 from src import datamanager
+from src.datamanager.db_handlers.action_json_handler import actions_data, save_actions_json
 from src.utils import embeds
-from src.utils import _helpers
+from utils import utils
 
 @tasks.loop(minutes=1)
 async def update_leaderboard():
@@ -32,14 +33,16 @@ async def update_leaderboard():
         if not leaderboard_channel:
             continue
 
-        message_id = datamanager.helpers.actions_data["leaderboard_messages"].get(str(guild.id))
+        message_id = actions_data.get("leaderboard_messages", {}).get(str(guild.id))
         if not message_id:
             print(f"❌ Leaderboard message ID not found in server {guild.id}. Creating a new one.")
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id
-            datamanager.helpers.actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
-            _helpers.save_actions_json()
+            if "leaderboard_messages" not in actions_data:
+                actions_data["leaderboard_messages"] = {}
+            actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
+            save_actions_json()
 
         try:
             message = await leaderboard_channel.fetch_message(message_id)
@@ -48,8 +51,10 @@ async def update_leaderboard():
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id
-            datamanager.helpers.actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
-            _helpers.save_actions_json()
+            if "leaderboard_messages" not in actions_data:
+                actions_data["leaderboard_messages"] = {}
+            actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
+            save_actions_json()
         
         rooms = datamanager.room_db_handler.jsonify_room_db()
         top_10 = {}

@@ -11,16 +11,19 @@ import os
 from typing import Optional, Dict, Any
 
 # Local imports
-from .helpers import connect_db
+from ..database_manager import connect_db
 
 DB_FILE_NAME = "frd_bot.db"
 
-SERVER_SCHEMA = {
-    "arg": "CREATE TABLE IF NOT EXISTS server_profiles",
-    "tables": ["server_id INTEGER PRIMARY KEY",
-               "leaderboard_channel_id INTEGER",
-               "documented_channel_id INTEGER",
-               "doc_msg_ids TEXT"]
+SCHEMA = {
+    "server_profiles": """
+        CREATE TABLE IF NOT EXISTS server_profiles (
+            server_id INTEGER PRIMARY KEY,
+            leaderboard_channel_id INTEGER,
+            documented_channel_id INTEGER,
+            doc_msg_ids TEXT
+        );
+    """
 }
 
 def _connect_db() -> sqlite3.Connection:

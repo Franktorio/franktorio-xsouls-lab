@@ -10,32 +10,31 @@ import os
 from typing import Optional, Dict, Any, List, Tuple
 
 # Local imports
-from .helpers import connect_db
+from ..database_manager import connect_db
 
 DB_FILE_NAME = "frd_scanner.db"
 
-# Schema for sessions table
-SESSIONS_SCHEMA = {
-    "arg": "CREATE TABLE IF NOT EXISTS sessions",
-    "tables": [
-        "session_id TEXT PRIMARY KEY",
-        "created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))",
-        "last_edited_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))",
-        "scanner_version TEXT NOT NULL",
-        "closed INTEGER NOT NULL DEFAULT 0"
-    ]
-}
-
-# Schema for encountered_rooms table
-ENCOUNTERED_ROOMS_SCHEMA = {
-    "arg": "CREATE TABLE IF NOT EXISTS encountered_rooms",
-    "tables": [
-        "event_id INTEGER PRIMARY KEY AUTOINCREMENT",
-        "session_event TEXT NOT NULL",
-        "session_id TEXT NOT NULL",
-        "room_name TEXT NOT NULL",
-        "found_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))"
-    ]
+SCHEMA = {
+    "sessions": """
+        CREATE TABLE IF NOT EXISTS sessions (
+            session_id TEXT PRIMARY KEY,
+            created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            last_edited_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            scanner_version TEXT NOT NULL,
+            closed INTEGER NOT NULL DEFAULT 0
+        );
+    """,
+    
+    "encountered_rooms": """
+        CREATE TABLE IF NOT EXISTS encountered_rooms (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_event TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            room_name TEXT NOT NULL,
+            found_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            FOREIGN KEY (session_id) REFERENCES sessions(session_id)
+        );
+    """
 }
 
 def _connect_db() -> sqlite3.Connection:

@@ -22,10 +22,10 @@ import aiohttp
 
 # Local imports
 from src import shared
-from ..utils import _helpers
+from ..utils import utils
 from src.utils import embeds
 import src.api._r2_handler as r2_handler
-import src.datamanager.room_db_handler as room_db_handler
+import src.datamanager.db_handlers.room_db_handler as room_db_handler
 from config.vars import RoomType, Tags
 import config.vars as vars
 

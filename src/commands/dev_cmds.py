@@ -20,7 +20,7 @@ from discord import app_commands
 # Local imports
 from src import shared
 from src import datamanager
-from ..utils import _helpers
+from ..utils import utils
 import config.vars as vars
 from src.api import _r2_handler
 from src.utils import embeds
@@ -34,7 +34,7 @@ class Admin(app_commands.Group):
         """Restart the bot (shuts down, service will restart it)."""
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -54,7 +54,7 @@ class Admin(app_commands.Group):
         """Bulk deletes every message in the documented channel across all servers."""
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -109,7 +109,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -188,7 +188,7 @@ class Admin(app_commands.Group):
     async def cache_all_rooms(self, interaction: discord.Interaction):
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -290,7 +290,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -443,7 +443,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -547,7 +547,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -565,7 +565,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -581,7 +581,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -596,7 +596,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -611,7 +611,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -692,7 +692,7 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return
@@ -738,7 +738,7 @@ class Admin(app_commands.Group):
         """Upload images to R2 storage for a specific room. Generates the correct CDN URLs."""
         await interaction.response.defer(ephemeral=True)
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
             return

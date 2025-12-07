@@ -30,7 +30,7 @@ shared.set_bot(FRD_bot)
 import src.commands  # Commands will auto-register via decorators
 import src.events  # Event handlers will auto-register via decorators
 
-import src.datamanager.helpers as data_manager
+import src.datamanager.database_manager as database_manager
 import src.tasks.init_tasks as init_tasks
 from src.api.research_api import app as api_app
 
@@ -39,7 +39,7 @@ def run_api_server():
     uvicorn.run(api_app, host="0.0.0.0", port=config.vars.API_PORT, log_level="info")
 
 # Initialize database
-data_manager.init_databases()
+database_manager.init_databases()
 
 @FRD_bot.event
 async def on_ready():

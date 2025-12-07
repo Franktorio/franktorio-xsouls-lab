@@ -14,7 +14,7 @@ import aiohttp
 # Local imports
 from src import shared
 from src.api import _r2_handler
-from ._helpers import get_doc_message_link
+from .utils import get_doc_message_link
 
 
 async def _get_stored_images(room_data, roomname):

@@ -13,7 +13,7 @@ from discord import app_commands
 from src import shared
 from src import datamanager
 from src.tasks.sync_databases import sync_databases
-from ..utils import _helpers
+from ..utils import utils
 import config.vars as vars
 from src.utils.embeds import create_error_embed, create_success_embed
 from src.api import external_api as ext_api
@@ -30,7 +30,7 @@ class Management(app_commands.Group):
         print(f"[COMMAND] 🔄 Manual database sync triggered by {interaction.user}")
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 4:
             embed = create_error_embed(title="Permission Denied", description="You do not have permission to use this command. You need to be a Head Researcher or higher.")
             await interaction.followup.send(embed=embed)
@@ -50,7 +50,7 @@ class Management(app_commands.Group):
         print(f"[COMMAND] 👥 Set permission level for {user} to '{role}' by {interaction.user}")
         await interaction.response.defer()
         
-        level = await _helpers.permission_check(interaction.user)
+        level = await utils.permission_check(interaction.user)
         if level < 4:
             embed = create_error_embed(title="Permission Denied", description="You do not have permission to use this command. You need to be a Head Researcher or higher.")
             await interaction.followup.send(embed=embed)

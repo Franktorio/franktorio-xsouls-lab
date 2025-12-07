@@ -11,9 +11,9 @@ from datetime import datetime
 
 # Local imports
 from config.vars import LOCAL_KEY
-from src.datamanager import server_db_handler
-from src.utils import _helpers
-from src.datamanager import room_db_handler
+from src.datamanager.db_handlers import server_db_handler
+from utils import utils
+from src.datamanager.db_handlers import room_db_handler
 from . import external_api
 
 app = FastAPI()
@@ -72,7 +72,7 @@ async def get_researcher_role(key: str, user_id: int):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    research_level = await _helpers.get_researcher_role(user_id)
+    research_level = await utils.get_researcher_role(user_id)
     return {"user_id": user_id, "research_level": research_level}
 
 @app.get("/get_user_profile")
@@ -81,7 +81,7 @@ async def get_user_profile(key: str, user_id: int):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    user_data = _helpers.get_user_profile(user_id)
+    user_data = utils.get_user_profile(user_id)
     return {
         "user_id": user_id,
         "profile_picture_url": user_data["profile_picture_url"],
@@ -140,7 +140,7 @@ async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...))
         edited_by_user_id=request.edited_by_user_id
     )
     
-    await _helpers.global_reset(request.room_name)
+    await utils.global_reset(request.room_name)
     
     return {"success": True, "message": f"Room '{request.room_name}' has been redocumented."}
 
@@ -154,7 +154,7 @@ async def set_roomtype(request: SetRoomTypeRequest, key: str = Query(...)):
     success = room_db_handler.set_roomtype(request.room_name, request.roomtype, edited_by_user_id=request.edited_by_user_id)
     
     if success:
-        await _helpers.global_reset(request.room_name)
+        await utils.global_reset(request.room_name)
         return {"success": True, "message": f"Room '{request.room_name}' has been updated to type '{request.roomtype}'."}
     else:
         return {"error": f"Room '{request.room_name}' does not exist in the database."}
@@ -179,7 +179,7 @@ async def set_tags(request: SetTagsRequest, key: str = Query(...)):
     success = room_db_handler.set_roomtags(request.room_name, room_tags, edited_by_user_id=request.edited_by_user_id)
     
     if success:
-        await _helpers.global_reset(request.room_name)
+        await utils.global_reset(request.room_name)
         return {"success": True, "message": f"Room '{request.room_name}' has been updated with tags: {', '.join(room_tags)}."}
     else:
         return {"error": f"Something went wrong while updating tags for room '{request.room_name}'."}
@@ -194,7 +194,7 @@ async def rename_room(key: str = Query(...), old_name: str = Query(...), new_nam
     success = room_db_handler.rename_room(old_name, new_name, edited_by_user_id=edited_by_user_id)
     
     if success:
-        await _helpers.global_reset(new_name)
+        await utils.global_reset(new_name)
         return {"success": True, "message": f"Room '{old_name}' has been renamed to '{new_name}'."}
     else:
         return {"error": f"Room '{old_name}' does not exist in the database."}
