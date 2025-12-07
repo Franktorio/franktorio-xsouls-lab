@@ -223,6 +223,16 @@ IP_RATE_LIMIT = 60 # Max requests per minute per IP for unauthenticated scanner 
 
 scanner_request_logs = {}  # Dictionary to track request timestamps per IP
 
+def _validate_ip(ip: str) -> bool:
+    """Helper function to validate IP address format"""
+    parts = ip.split(".")
+    if len(parts) != 4:
+        return False
+    for part in parts:
+        if not part.isdigit() or not 0 <= int(part) <= 255:
+            return False
+    return True
+
 def _log_request(ip: str):
     """Helper function to log requests per IP for rate limiting"""
     current_time = datetime.now().timestamp()
@@ -243,6 +253,9 @@ BASE_URL = "/scanner"
 async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
     """Endpoint to get room information for the scanner"""
 
+    if not _validate_ip(ip):
+        return {"error": "Invalid IP address format."}
+
     request_count = _log_request(ip)
     if request_count > IP_RATE_LIMIT:
         return {"error": "Rate limit exceeded. Please try again later."}
@@ -256,6 +269,9 @@ async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
 @app.get(f"{BASE_URL}/request_session")
 async def request_scanner_session(scanner_version: str = Query(...), ip: str = Query(...)):
     """Endpoint to request a new scanner session"""
+
+    if not _validate_ip(ip):
+        return {"error": "Invalid IP address format."}
     
     request_count = _log_request(ip)
     if request_count > IP_RATE_LIMIT:
@@ -265,8 +281,15 @@ async def request_scanner_session(scanner_version: str = Query(...), ip: str = Q
     return {"success": True, "session_id": session_id, "password": password}
 
 @app.post(f"{BASE_URL}/end_session")
-async def end_scanner_session(session_id: str = Query(...), password: str = Query(...)):
+async def end_scanner_session(session_id: str = Query(...), password: str = Query(...), ip: str = Query(...)):
     """Endpoint to end a scanner session"""
+
+    if not _validate_ip(ip):
+        return {"error": "Invalid IP address format."}
+    
+    request_count = _log_request(ip)
+    if request_count > IP_RATE_LIMIT:
+        return {"error": "Rate limit exceeded. Please try again later."}
     
     success = scanner_db_handler.end_session(session_id=session_id, session_password=password)
     if success:
@@ -275,8 +298,15 @@ async def end_scanner_session(session_id: str = Query(...), password: str = Quer
         return {"error": "Invalid session ID or password, or session already ended."}
     
 @app.post(f"{BASE_URL}/room_encountered")
-async def room_encountered(session_id: str = Query(...), password: str = Query(...), room_name: str = Query(...)):
+async def room_encountered(session_id: str = Query(...), password: str = Query(...), room_name: str = Query(...), ip: str = Query(...)):
     """Endpoint to log that a room has been encountered during a scanning session"""
+    
+    if not _validate_ip(ip):
+        return {"error": "Invalid IP address format."}
+    
+    request_count = _log_request(ip)
+    if request_count > IP_RATE_LIMIT:
+        return {"error": "Rate limit exceeded. Please try again later."}
     
     success = scanner_db_handler.log_encountered_room(session_id=session_id, session_password=password, room_name=room_name)
     if success:
