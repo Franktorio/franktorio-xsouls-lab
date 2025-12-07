@@ -125,9 +125,9 @@ class RoomCommands(app_commands.Group):
         for embed in history_embeds:
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    @app_commands.command(name="bugreport", description="Report an issue with a room.")
+    @app_commands.command(name="bug_report", description="Report an issue with a room.")
     @app_commands.describe(room_name="The name of the room to report an issue for.", issue_description="Description of the issue encountered. Be detailed (30-1000 characters).")
-    async def room_bugreport(self, interaction: discord.Interaction, room_name: str, issue_description: str):
+    async def room_bug_report(self, interaction: discord.Interaction, room_name: str, issue_description: str):
         """Report an issue with a room."""
         print(f"[COMMAND] Room bug report for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
@@ -153,9 +153,9 @@ class RoomCommands(app_commands.Group):
         embed = embeds.create_success_embed("Bug Report Submitted", f"Your bug report for room **{room_name}** has been stored with ID: `{id}`.")
         await interaction.followup.send(embed=embed)
     
-    @app_commands.command(name="view_roomreports", description="View bug reports for a specific room.")
+    @app_commands.command(name="view_room_reports", description="View bug reports for a specific room.")
     @app_commands.describe(room_name="The name of the room to view bug reports for.")
-    async def view_roomreports(self, interaction: discord.Interaction, room_name: str):
+    async def view_room_reports(self, interaction: discord.Interaction, room_name: str):
         """View bug reports for a specific room."""
         print(f"[COMMAND] View room reports for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
@@ -179,8 +179,8 @@ class RoomCommands(app_commands.Group):
         for embed in report_embeds:
             await interaction.followup.send(embed=embed, ephemeral=True)
     
-    @app_commands.command(name="view_allreports", description="View all unresolved bug reports across all rooms.")
-    async def view_allreports(self, interaction: discord.Interaction):
+    @app_commands.command(name="view_all_reports", description="View all unresolved bug reports across all rooms.")
+    async def view_all_reports(self, interaction: discord.Interaction):
         """View all unresolved bug reports."""
         print(f"[COMMAND] View all bug reports by {interaction.user}")
         await interaction.response.defer()
