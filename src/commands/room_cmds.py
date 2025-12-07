@@ -239,32 +239,7 @@ class RoomCommands(app_commands.Group):
         else:
             embed = embeds.create_error_embed("Failed to Resolve", f"Failed to mark bug report #{report_id} as resolved.")
             await interaction.followup.send(embed=embed)
-    
-    @app_commands.command(name="delete_report", description="Delete a bug report.")
-    @app_commands.describe(report_id="The ID of the bug report to delete.")
-    async def delete_report(self, interaction: discord.Interaction, report_id: int):
-        """Delete a bug report (soft delete)."""
-        print(f"[COMMAND] Delete bug report #{report_id} by {interaction.user}")
-        await interaction.response.defer()
-        
-        report = room_db_handler.get_bug_report(report_id)
-        if not report:
-            embed = embeds.create_error_embed("Report Not Found", f"No bug report found with ID: **{report_id}**")
-            await interaction.followup.send(embed=embed)
-            return
-        
-        if report['deleted']:
-            embed = embeds.create_error_embed("Already Deleted", f"Bug report #{report_id} has already been deleted.")
-            await interaction.followup.send(embed=embed)
-            return
-        
-        success = room_db_handler.delete_bug_report(report_id)
-        if success:
-            embed = embeds.create_success_embed("Report Deleted", f"Bug report #{report_id} for room **{report['room_name']}** has been deleted.")
-            await interaction.followup.send(embed=embed)
-        else:
-            embed = embeds.create_error_embed("Failed to Delete", f"Failed to delete bug report #{report_id}.")
-            await interaction.followup.send(embed=embed)
+
 
 
 
