@@ -7,6 +7,7 @@
 import sqlite3
 import threading
 
+
 # Local imports
 from ..database_manager import connect_db
 
@@ -20,6 +21,7 @@ SCHEMA = {
             session_id TEXT PRIMARY KEY,
             created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
             last_edited_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+            session_password TEXT,
             scanner_version TEXT NOT NULL,
             closed INTEGER NOT NULL DEFAULT 0
         );
@@ -28,7 +30,6 @@ SCHEMA = {
     "encountered_rooms": """
         CREATE TABLE IF NOT EXISTS encountered_rooms (
             event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_event TEXT NOT NULL,
             session_id TEXT NOT NULL,
             room_name TEXT NOT NULL,
             found_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
@@ -117,6 +118,195 @@ def start_session(session_id: str, scanner_version: str) -> None:
     conn.commit()
     conn.close()
 
+
+def end_session(session_id: str) -> None:
+    """End a scanning session."""
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE sessions
+        SET closed = 1
+        WHERE session_id = ?
+    """, (session_id,))
+    
+    conn.commit()
+    conn.close()
+
+def log_encountered_room(session_id: str, room_name: str) -> bool:
+    """
+    Log an encountered room during a scanning session.
+    
+    Args:
+        session_id: The ID of the scanning session.
+        room_name: The name of the encountered room.
+    
+    Returns:
+        True if the room was logged successfully, False otherwise.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO encountered_rooms (session_id, room_name)
+        VALUES (?, ?)
+    """, (session_id, room_name))
+
+    success = cursor.rowcount > 0
+    
+    conn.commit()
+    conn.close()
+
+    return success
+
+def get_sessions(include_closed: bool = True) -> list[tuple]:
+    """
+    Get a list of sessions in descending order by creation date (newest first).
+    
+    Returns:
+        A list of tuples containing (session_id, created_at, last_edited_at, scanner_version, closed).
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    if include_closed:
+        cursor.execute("""
+            SELECT session_id, created_at, last_edited_at, scanner_version, closed
+            FROM sessions
+            ORDER BY created_at DESC
+        """)
+    else:
+        cursor.execute("""
+            SELECT session_id, created_at, last_edited_at, scanner_version
+            FROM sessions
+            WHERE closed = 0
+            ORDER BY created_at DESC
+        """)
+    
+    sessions = cursor.fetchall()
+    conn.close()
+    
+    return sessions
+
+def get_session_rooms(session_id: str) -> list[tuple]:
+    """
+    Get a list of rooms encountered in a specific session in ascending order by the time they were found (latest first).
+    
+    Returns:
+        A list of tuples containing (room_name, found_at).
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT room_name, found_at
+        FROM encountered_rooms
+        WHERE session_id = ?
+        ORDER BY found_at ASC
+    """, (session_id,))
+    
+    encounters = cursor.fetchall()
+    conn.close()
+    
+    return encounters
+
+def get_all_encountered_rooms() -> list[tuple]:
+    """
+    Get a list of all encountered rooms across all sessions in ascending order by the time they were found (latest first).
+    
+    Returns:
+        A list of tuples containing (session_id, room_name, found_at).
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT session_id, room_name, found_at
+        FROM encountered_rooms
+        ORDER BY found_at ASC
+    """)
+    
+    encounters = cursor.fetchall()
+    conn.close()
+    
+    return encounters
+
+def jsonify_database() -> dict[str, any]:
+    """
+    Convert the entire scanner database into a JSON-serializable dictionary.
+    Returns:
+        A dictionary representation of the scanner database of structure.
+        {
+            "sessions": {
+                session_id: {
+                    "session_id": str,
+                    "created_at": int,
+                    "last_edited_at": int,
+                    "scanner_version": str,
+                    "closed": bool,
+                    "rooms": [
+                        {
+                            "event_id": int,
+                            "room_name": str,
+                            "found_at": int
+                        },
+                        ...
+                    ]
+                },
+            }
+            "encountered_rooms": [
+                {
+                    "event_id": int,
+                    "session_id": str,
+                    "room_name": str,
+                    "found_at": int
+                },
+                ...
+            ]
+        }
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    data = {
+        "sessions": {},
+        "encountered_rooms": []
+    }
+    
+    # Fetch sessions
+    cursor.execute("SELECT session_id, created_at, last_edited_at, scanner_version, closed FROM sessions")
+    sessions = cursor.fetchall()
+    for session_row in sessions:
+        data["sessions"][session_row[0]] = {
+            "session_id": session_row[0],
+            "created_at": session_row[1],
+            "last_edited_at": session_row[2],
+            "scanner_version": session_row[3],
+            "closed": bool(session_row[4]),
+            "rooms": []
+        }
+    
+    # Fetch encountered rooms
+    cursor.execute("SELECT event_id, session_id, room_name, found_at FROM encountered_rooms")
+    rooms = cursor.fetchall()
+    for room_row in rooms:
+        data["encountered_rooms"].append({
+            "event_id": room_row[0],
+            "session_id": room_row[1],
+            "room_name": room_row[2],
+            "found_at": room_row[3]
+        })
+        # Associate rooms with their respective sessions
+        session = room_row[1]
+        if session in data["sessions"]:
+            data["sessions"][session]["rooms"].append({
+                "event_id": room_row[0],
+                "room_name": room_row[2],
+                "found_at": room_row[3]
+            })
+
+    conn.close()
+    return data
 
 # Start the background task to close old sessions
 threading.Thread(target=_close_sessions_task, daemon=True).start()

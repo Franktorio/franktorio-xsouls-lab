@@ -7,17 +7,17 @@ The bot provides backend support for the [franktorio-research-scanner](https://g
 > This is not an official bot or tool. We are not affiliated with the Pressure development team or staff.
 
 ### Todo
-- Add functions to manage the scanner database table
 - Finish the scanner API located at `/src/api/research_api.py`
 - Add Discord commands to display gathered data from scanner
 - Document all API endpoints
 
 ### Current Task
-**Add functions to manage the scanner database table**
-- [ ] Create, get, close and remove sessions
-- [ ] Add and remove encountered rooms
-- [ ] Get rooms from a session
-- [ ] Get all rooms and get all sessions
+**Finish the scanner API located at `/src/api/research_api.py`**
+- Add endpoint to request a session
+- Add endpoint to close a session
+- Finish endpoint to document a room found
+- Add passwords to sessions for extra security
+
 
 ### Setup
 - Install dependencies:
