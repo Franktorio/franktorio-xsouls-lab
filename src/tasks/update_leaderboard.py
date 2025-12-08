@@ -51,7 +51,7 @@ async def update_leaderboard():
             actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
             save_actions_json()
         
-        rooms = datamanager.room_db_handler.jsonify_room_db()
+        rooms = datamanager.room_db_handler.jsonify_room_db()["room_db"]
         top_10 = {}
         for room in rooms:
             room = rooms[room]
