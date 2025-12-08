@@ -7,6 +7,7 @@
 from discord.ext import tasks
 
 # Local imports
+from config.vars import EXTERNAL_DATA_SOURCE
 from src import datamanager, shared
 from src.api import external_api
 from src.utils import embeds, utils
@@ -15,6 +16,10 @@ from src.utils import embeds, utils
 @tasks.loop(hours=1)
 async def sync_databases():
     """Background task to synchronize databases across servers."""
+    if not EXTERNAL_DATA_SOURCE:
+        print("ℹ️  Skipping database synchronization - external data source is disabled")
+        return
+    
     print("🔄 Starting database synchronization across servers.")
 
     # Export external database
