@@ -95,19 +95,19 @@ python automations/scripts/migrate_db.py
 python automations/scripts/init_dbs.py
 ```
 
-### Todo
+## Todo
 - [ ] Document external API in a .md
 - [ ] Document research & scanner API in a .md
 - [ ] Document commands in .md
 - [ ] Add commands to analyze and view scanner data
 
 ### Current Task
-**Document commands in .md**
-- [ ] Dev commands
-- [ ] Management commands
-- [ ] Research commands
-- [ ] Room commands
-- [ ] Setup commands
+- **Document commands in .md**
+ - [ ] Dev commands
+ - [ ] Management commands
+ - [ ] Research commands
+ - [ ] Room commands
+ - [ ] Setup commands
 
 
 ## Contact information
