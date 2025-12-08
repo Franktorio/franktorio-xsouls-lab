@@ -135,6 +135,9 @@ def init_scanner_extras():
     conn.commit()
     conn.close()
 
+    # Start the background task to close old sessions
+    threading.Thread(target=_close_sessions_task, daemon=True).start()
+
 
 def start_session(scanner_version: str) -> tuple[str, str]:
     """
@@ -386,6 +389,3 @@ def jsonify_database() -> dict[str, any]:
 
     print(f"[SCANNER DB] Converted database to JSON-serializable dictionary.")
     return data
-
-# Start the background task to close old sessions
-threading.Thread(target=_close_sessions_task, daemon=True).start()
