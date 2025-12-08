@@ -7,12 +7,11 @@ The bot provides backend support for the [franktorio-research-scanner](https://g
 > This is not an official bot or tool. We are not affiliated with the Pressure development team or staff.
 
 ### Todo
-- Finish the scanner API located at `/src/api/research_api.py`
 - Add Discord commands to display gathered data from scanner
 - Document all API endpoints
 
 ### Current Task
-**Document all API endpoints**
+**Document all API endpoints `src/api/research_api.py`**
 - [ ] Document research API
 - [ ] Document scanner API
 
