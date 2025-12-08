@@ -95,6 +95,14 @@ python automations/scripts/migrate_db.py
 python automations/scripts/init_dbs.py
 ```
 
+### Todo
+- [ ] Document external API in a .md
+- [ ] Document research & scanner API in a .md
+- [ ] Document commands in .md
+- [ ] Add commands to analyse and view scanner data
+
+### Current Task
+**Document commands in .md**
 
 ## Contact information
 **Franktorio** - Main Bot Developer
