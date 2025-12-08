@@ -57,7 +57,7 @@ pip install -r requirements.txt
      BOT_TOKEN = "your_discord_bot_token"
      API_PORT = 8000
      LOCAL_KEY = "your_secure_api_key"
-     # ... see vars.py.example for all options, use 
+     # ... see vars.py.example for all options (use python automations/tests/validate_config.py to validate config)
      ```
 
 4. **Initialize databases**
@@ -99,7 +99,7 @@ python automations/scripts/init_dbs.py
 - [ ] Document external API in a .md
 - [ ] Document research & scanner API in a .md
 - [ ] Document commands in .md
-- [ ] Add commands to analyse and view scanner data
+- [ ] Add commands to analyze and view scanner data
 
 ### Current Task
 **Document commands in .md**
