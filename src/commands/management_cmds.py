@@ -93,8 +93,13 @@ class Management(app_commands.Group):
 
         # Sync role to external API
         try:
-            await external_api.set_user_role_api(user.id, role)
-            embed = create_success_embed(title="Permission Level Updated", description=f"Set **{user}**'s permission level to **{role}** on both Discord and the web dashboard.")
+            api_response = await external_api.set_user_role_api(user.id, role)
+            if api_response.get("success"):
+                embed = create_success_embed(title="Permission Level Updated", description=f"Set **{user}**'s permission level to **{role}** on both Discord and the web dashboard.")
+            elif api_response.get("error") == "External data source is disabled":
+                embed = create_success_embed(title="Permission Level Updated", description=f"Set **{user}**'s permission level to **{role}** on Discord.")
+            else:
+                embed = create_success_embed(title="Permission Level Partially Updated", description=f"⚠️ Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {api_response.get('error')}\nPlease try again.")
         except Exception as e:
             embed = create_success_embed(title="Permission Level Partially Updated", description=f"⚠️ Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {str(e)}\nPlease try again.")
         

@@ -11,7 +11,7 @@ from typing import Optional, Dict, Any
 import aiohttp
 
 # Local imports
-from config.vars import API_BASE_URL, API_KEY
+from config.vars import API_BASE_URL, API_KEY, EXTERNAL_DATA_SOURCE
 
 async def export_room_to_api(
     room_name: str,
@@ -27,6 +27,9 @@ async def export_room_to_api(
     Export room data to external Pressure API.
     Returns response dict with success status.
     """
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled", "skipped": True}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -97,6 +100,9 @@ async def update_room_description_api(
     edited_by: int
 ) -> Dict[str, Any]:
     """Update room description on external API."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled", "skipped": True}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -130,6 +136,9 @@ async def update_room_tags_api(
     edited_by: int
 ) -> Dict[str, Any]:
     """Update room tags on external API."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled", "skipped": True}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -163,6 +172,9 @@ async def update_room_roomtype_api(
     edited_by: int
 ) -> Dict[str, Any]:
     """Update room type on external API."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled", "skipped": True}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -192,6 +204,9 @@ async def update_room_roomtype_api(
 
 async def delete_room_api(room_name: str) -> Dict[str, Any]:
     """Delete room from external API."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled", "skipped": True}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -219,6 +234,9 @@ async def rename_room_api(
     edited_by: int
 ) -> Dict[str, Any]:
     """Rename a room on external API."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled", "skipped": True}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -248,6 +266,9 @@ async def rename_room_api(
 
 async def get_room_info_api(room_name: str) -> Dict[str, Any]:
     """Get detailed information about a specific room (public endpoint)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -272,6 +293,9 @@ async def get_all_rooms_api(
     tag: Optional[str] = None
 ) -> Dict[str, Any]:
     """Get paginated list of all rooms (public endpoint)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -303,6 +327,9 @@ async def search_rooms_api(
     per_page: int = 20
 ) -> Dict[str, Any]:
     """Search rooms by text query and/or tags (public endpoint)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -331,6 +358,9 @@ async def search_rooms_api(
 
 async def get_stats_api() -> Dict[str, Any]:
     """Get database statistics and top contributors (public endpoint)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -351,6 +381,9 @@ async def get_stats_api() -> Dict[str, Any]:
 
 async def get_user_rooms_api(user_id: int) -> Dict[str, Any]:
     """Get all rooms documented by a specific user (public endpoint)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -371,6 +404,9 @@ async def get_user_rooms_api(user_id: int) -> Dict[str, Any]:
 
 async def export_database_api() -> Dict[str, Any]:
     """Export the complete database (requires auth)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -394,6 +430,9 @@ async def export_database_api() -> Dict[str, Any]:
 
 async def get_bot_roles_api() -> Dict[str, Any]:
     """Get all available roles from external API (BOT endpoint)."""
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
@@ -431,6 +470,9 @@ async def set_user_role_api(user_id: int, role_name: str) -> Dict[str, Any]:
         Cannot assign "Superadmin" role via API
         Cannot modify hardcoded superadmin users
     """
+    if not EXTERNAL_DATA_SOURCE:
+        return {"success": False, "error": "External data source is disabled"}
+    
     if not API_KEY or not API_BASE_URL:
         return {"success": False, "error": "API not configured"}
     
