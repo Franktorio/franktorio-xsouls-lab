@@ -12,11 +12,9 @@ The bot provides backend support for the [franktorio-research-scanner](https://g
 - Document all API endpoints
 
 ### Current Task
-**Finish the scanner API located at `/src/api/research_api.py`**
-- [x] Add endpoint to request a session
-- [x] Add endpoint to close a session
-- [x] Finish endpoint to document a room found
-- [x] Add passwords to sessions for extra security
+**Document all API endpoints**
+- [ ] Document research API
+- [ ] Document scanner API
 
 
 ### Setup
