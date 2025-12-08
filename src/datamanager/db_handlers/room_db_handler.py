@@ -742,13 +742,13 @@ def get_room_bug_reports(room_name: str, include_deleted: bool = False) -> list:
     cursor = conn.cursor()
     if include_deleted:
         cursor.execute("""
-            SELECT report_id, report_text, reported_by_user_id, timestamp, resolved
+            SELECT report_id, report_text, reported_by_user_id, timestamp, resolved, deleted
             FROM room_bug_reports
             WHERE LOWER(room_name) = LOWER(?)
         """, (room_name,))
     else:
         cursor.execute("""
-            SELECT report_id, report_text, reported_by_user_id, timestamp, resolved
+            SELECT report_id, report_text, reported_by_user_id, timestamp, resolved, deleted
             FROM room_bug_reports
             WHERE LOWER(room_name) = LOWER(?) AND deleted = 0
         """, (room_name,))
@@ -760,5 +760,6 @@ def get_room_bug_reports(room_name: str, include_deleted: bool = False) -> list:
         'report_text': row[1],
         'reported_by_user_id': row[2],
         'timestamp': row[3],
-        'resolved': bool(row[4])
+        'resolved': bool(row[4]),
+        'deleted': bool(row[5])
     } for row in rows]

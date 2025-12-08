@@ -136,14 +136,14 @@ def init_scanner_extras():
     conn.close()
 
 
-def start_session(scanner_version: str) -> None:
+def start_session(scanner_version: str) -> tuple[str, str]:
     """
     Start a new scanning session.
     
     Args:
         scanner_version: The version of the scanner software.
     Returns:
-        A tuple containing the session ID and session password.
+        A tuple containing (session_id, password).
     """
     conn = _connect_db()
     cursor = conn.cursor()
@@ -162,8 +162,12 @@ def start_session(scanner_version: str) -> None:
     print(f"[SCANNER DB] Started new session {session_id} with scanner version {scanner_version}.")
     return session_id, password
 
-def end_session(session_id: str, session_password: str) -> None:
-    """End a scanning session."""
+def end_session(session_id: str, session_password: str) -> bool:
+    """End a scanning session.
+    
+    Returns:
+        True if the session was ended successfully, False otherwise.
+    """
     conn = _connect_db()
     cursor = conn.cursor()
 
@@ -188,6 +192,7 @@ def end_session(session_id: str, session_password: str) -> None:
     print(f"[SCANNER DB] Ended session {session_id}.")
     conn.commit()
     conn.close()
+    return True
 
 def log_encountered_room(session_id: str, room_name: str, session_password: str) -> bool:
     """
@@ -246,7 +251,7 @@ def get_sessions(include_closed: bool = True) -> list[tuple]:
         """)
     else:
         cursor.execute("""
-            SELECT session_id, created_at, last_edited_at, scanner_version
+            SELECT session_id, created_at, last_edited_at, scanner_version, closed
             FROM sessions
             WHERE closed = 0
             ORDER BY created_at DESC
