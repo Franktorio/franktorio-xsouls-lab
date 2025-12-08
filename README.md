@@ -103,6 +103,12 @@ python automations/scripts/init_dbs.py
 
 ### Current Task
 **Document commands in .md**
+- [ ] Dev commands
+- [ ] Management commands
+- [ ] Research commands
+- [ ] Room commands
+- [ ] Setup commands
+
 
 ## Contact information
 **Franktorio** - Main Bot Developer
