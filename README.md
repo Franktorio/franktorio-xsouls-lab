@@ -77,6 +77,18 @@ The bot will:
 - Sync slash commands
 - Begin background tasks
 
+## Documentation
+
+Documentation for each module is available in their respective folder. (WIP)
+
+### Commands Documentation
+```bash
+src\commands\_CMDS_DOCS.md
+```
+Includes:
+- Description of each slash command
+- Command parameters and expected types
+- The permission levels of each
 
 ## Development
 
@@ -95,19 +107,30 @@ python automations/scripts/migrate_db.py
 python automations/scripts/init_dbs.py
 ```
 
-## Todo
-- [ ] Document external API in a .md
-- [ ] Document research & scanner API in a .md
-- [ ] Document commands in .md
-- [ ] Add commands to analyze and view scanner data
+## Todo — December 08 to December 14
 
-### Current Task
-- **Document commands in .md**
- - [x] Dev commands
- - [x] Management commands
- - [x] Research commands
- - [x] Room commands
- - [x] Setup commands
+- [ ] Implement automated backups for databases  
+- [ ] Implement automated tests for data management  
+- [ ] Implement automated tests for Discord features  
+- [ ] Document external API in a `.md` file  
+- [ ] Document research & scanner API in a `.md` file  
+- [x] Document commands in a `.md` file  
+- [ ] Add commands to analyze and view scanner data  
+
+### Current Task: **Automated Database Backups**  
+I will use a snapshot and replication system approach
+- [ ] Add configuration variables for backups:
+  - Backup interval (e.g., every 30 minutes)
+  - Replica interval (e.g., every 5 minutes)
+  - Retention period (e.g., 7 days)  
+- [ ] Create a dedicated module: `src/datamanager/backup_manager.py`  
+- [ ] Implement a background thread or scheduler to:
+  - Run at predefined times to prevent multiple files created when restarted
+  - Create backups of all databases
+- [ ] Implement a rollover system to automatically delete backups older than the retention period
+- [ ] Implement replica databases for each primary database:
+  - Periodically replace replica database after each interval
+  - Ensure databases are ready incase of a failover 
 
 
 ## Contact information
