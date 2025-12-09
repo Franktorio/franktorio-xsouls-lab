@@ -119,11 +119,11 @@ python automations/scripts/init_dbs.py
 
 ### Current Task: **Automated Database Backups**  
 I will use a snapshot and replication system approach
-- [ ] Add configuration variables for backups:
+- [x] Add configuration variables for backups:
   - Backup interval (e.g., every 30 minutes)
   - Replica interval (e.g., every 5 minutes)
   - Retention period (e.g., 7 days)  
-- [ ] Create a dedicated module: `src/datamanager/backup_manager.py`  
+- [x] Create a dedicated module: `src/datamanager/backup_manager.py`  
 - [ ] Implement a background thread or scheduler to:
   - Run at predefined times to prevent multiple files created when restarted
   - Create backups of all databases
