@@ -103,11 +103,11 @@ python automations/scripts/init_dbs.py
 
 ### Current Task
 - **Document commands in .md**
- - [ ] Dev commands
- - [ ] Management commands
- - [ ] Research commands
- - [ ] Room commands
- - [ ] Setup commands
+ - [x] Dev commands
+ - [x] Management commands
+ - [x] Research commands
+ - [x] Room commands
+ - [x] Setup commands
 
 
 ## Contact information
