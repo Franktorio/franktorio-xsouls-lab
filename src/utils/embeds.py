@@ -21,6 +21,7 @@ from .utils import get_doc_message_link
 
 async def _get_stored_images(room_data, roomname):
     """Get images from R2 URLs (cached locally)"""
+    import io
     files = []
     images_urls = room_data.get("picture_urls", [])
     
@@ -30,7 +31,12 @@ async def _get_stored_images(room_data, roomname):
                 # Get cached image path (downloads if not cached) with room name for traceability
                 cache_path = await _r2_handler.get_cached_image_path(img_url)
                 if cache_path:
-                    file = discord.File(fp=cache_path, filename=f"{roomname}_image_{i+1}.jpg")
+                    # Read file content into memory and create BytesIO object
+                    # This ensures the file descriptor is closed immediately after reading
+                    with open(cache_path, 'rb') as f:
+                        file_data = f.read()
+                    # Pass BytesIO object to discord.File so no file descriptor is kept open
+                    file = discord.File(fp=io.BytesIO(file_data), filename=f"{roomname}_image_{i+1}.jpg")
                     files.append(file)
             except Exception as e:
                 print(f"[{PRINT_PREFIX}] Error loading image {i+1} for {roomname}: {e}")

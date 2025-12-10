@@ -17,7 +17,7 @@ from src import datamanager, shared
 from src.utils import embeds
 
 # Configuration
-BATCH_SIZE = 100  # Number of rooms to process concurrently per server
+BATCH_SIZE = 50  # Number of rooms to process concurrently per server
 currently_running_builds = []
 
 _force_fetch_iterations = 0

@@ -229,7 +229,10 @@ class Admin(app_commands.Group):
             return
         
         db_path = datamanager.room_db_handler.DB_PATH
-        db_file = discord.File(fp=open(db_path, 'rb'), filename="frd_room.db")
+        # Read file content into memory to avoid keeping file descriptor open
+        with open(db_path, 'rb') as f:
+            file_data = f.read()
+        db_file = discord.File(fp=io.BytesIO(file_data), filename="frd_room.db")
         await interaction.followup.send(file=db_file, ephemeral=True)
     
 
