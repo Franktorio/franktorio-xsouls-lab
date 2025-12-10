@@ -136,6 +136,22 @@ async def sync_databases():
         if len(valid_urls) < 4:
             print(f"  ⏭️  Skipped {room_name}: Only {len(valid_urls)} valid HTTP URLs (need at least 4)")
             print(f"  ⚠️  Keeping external version to avoid data loss")
+            
+            # Download from external to fix discrepancy
+            ext_room_data = ext_database.get(room_name)
+            if ext_room_data:
+                datamanager.room_db_handler.replace_doc(
+                    room_name=room_name,
+                    roomtype=ext_room_data.get("roomtype", "Unclassified"),
+                    picture_urls=[url for url in ext_room_data.get("images", []) if url.startswith(("http://", "https://"))],
+                    description=ext_room_data.get("description", ""),
+                    doc_by_user_id=ext_room_data.get("documented_by", 0),
+                    tags=ext_room_data.get("tags", []),
+                    timestamp=ext_room_data.get("last_edited", 0),
+                    edited_by_user_id=ext_room_data.get("last_edited_by")
+                )
+                await utils.global_reset(room_name)
+                print(f"  ✅ Reverted local {room_name} to external version")
             continue
         
         upload_result = await external_api.export_room_to_api(

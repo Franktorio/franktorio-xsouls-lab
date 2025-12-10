@@ -52,7 +52,7 @@ def create_snapshot(db_file_name: str) -> bool:
 
     try:
         with open(os.path.join(DB_DIR, db_file_name), 'rb') as src_file:
-            with open(os.path.join(SNAPSHOT_DIR, db_file_name+f"_snapshot_{datetime.datetime.timestamp(datetime.datetime.now())}.db"), 'wb') as dest_file:
+            with open(os.path.join(SNAPSHOT_DIR, db_file_name+f"_snapshot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.db"), 'wb') as dest_file:
                 dest_file.write(src_file.read())
     except Exception as e:
         print(f"[BACKUPS] Failed to create snapshot for {db_file_name}: {e}")
