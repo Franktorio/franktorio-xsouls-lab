@@ -8,6 +8,7 @@ PRINT_PREFIX = "EMBEDS"
 # Standard library imports
 import time
 import urllib.parse
+import io
 from datetime import datetime, timezone
 
 # Third-party imports
@@ -21,21 +22,18 @@ from .utils import get_doc_message_link
 
 async def _get_stored_images(room_data, roomname):
     """Get images from R2 URLs (cached locally)"""
-    import io
     files = []
     images_urls = room_data.get("picture_urls", [])
     
     if images_urls:
         for i, img_url in enumerate(images_urls):
             try:
-                # Get cached image path (downloads if not cached) with room name for traceability
+                # Get cached image path
                 cache_path = await _r2_handler.get_cached_image_path(img_url)
                 if cache_path:
-                    # Read file content into memory and create BytesIO object
-                    # This ensures the file descriptor is closed immediately after reading
+                    # Read image into memory
                     with open(cache_path, 'rb') as f:
                         file_data = f.read()
-                    # Pass BytesIO object to discord.File so no file descriptor is kept open
                     file = discord.File(fp=io.BytesIO(file_data), filename=f"{roomname}_image_{i+1}.jpg")
                     files.append(file)
             except Exception as e:
@@ -105,7 +103,7 @@ async def send_room_documentation_embed(channel: discord.TextChannel, room_data:
 
 
 def create_leaderboard_embed(leaderboard_data: dict):
-    """Create a science-themed Research Leaderboard embed for Franktorio’s & xSoul’s Lab."""
+    """Create a science-themed Research Leaderboard embed for Franktorio's & xSoul's Lab."""
 
     embed = discord.Embed(
         title="⚗️ Franktorio & xSoul's Research Division 🧬",
