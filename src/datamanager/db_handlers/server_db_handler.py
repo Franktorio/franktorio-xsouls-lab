@@ -61,7 +61,7 @@ def get_server_profile(server_id: int) -> Optional[Dict[str, Any]]:
     if row:
         return {
             'server_id': row[0],
-            'leaderboard_channel_id': row[1],
+            'leaderboard_channel_id': None if row[1] == 0 else row[1],
             'documented_channel_id': None if row[2] == 0 else row[2],
             'doc_msg_ids': json.loads(row[3]) if row[3] else {}
         }
