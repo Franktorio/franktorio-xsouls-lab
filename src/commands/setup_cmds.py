@@ -90,6 +90,7 @@ class Setup(app_commands.Group):
                 "research-leaderboard", reason="FXL Bot Setup",
                 category=category
             )
+            print(f"[{PRINT_PREFIX}] Created setup channels in {interaction.guild.name}")
         except discord.Forbidden:
             embed = embeds.create_error_embed(
                 "Permission Denied",
@@ -98,6 +99,7 @@ class Setup(app_commands.Group):
             await interaction.followup.send(embed=embed)
             return
         except Exception as e:
+            print(f"[{PRINT_PREFIX}] Error while creating setup channels: {e}")
             embed = embeds.create_error_embed(
                 "Setup Failed",
                 f"An error occurred while creating channels: {str(e)}"
@@ -133,6 +135,7 @@ class Setup(app_commands.Group):
                 read_message_history=True,
                 reason="FRD Bot Setup - Bot permissions"
             )
+            print(f"[{PRINT_PREFIX}] Set channel permissions in {interaction.guild.name}")
         except discord.Forbidden:
             embed = embeds.create_error_embed(
                 "Permission Denied",
@@ -159,7 +162,8 @@ class Setup(app_commands.Group):
                 "Building documentation channel now. This may take a few hours depending on the number of rooms."
             )
         )
-
+        
+        print(f"[{PRINT_PREFIX}] Setup complete for {interaction.guild.name}")
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="leaderboard", description="Reset and rebuild the research leaderboard.")
@@ -232,7 +236,7 @@ class Setup(app_commands.Group):
                     f"{new_channel.mention}\n\n"
                 )
             )
-
+            print(f"[{PRINT_PREFIX}] Leaderboard reset complete for {interaction.guild.name}")
             await interaction.followup.send(embed=embed)
         
         except Exception as e:
@@ -319,7 +323,7 @@ class Setup(app_commands.Group):
                     "Building documentation channel now. This may take a few hours depending on the number of rooms."
                 )
             )
-
+            print(f"[{PRINT_PREFIX}] Documented channel reset complete for {interaction.guild.name}")
             await interaction.followup.send(embed=embed)
         
         except Exception as e:

@@ -62,7 +62,8 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
         # Get server profile
         profile = datamanager.server_db_handler.get_server_profile(server_id)
         if not profile or not profile.get('documented_channel_id'):
-            print(f"[{PRINT_PREFIX}] No documented channel configured for {guild.name}")
+            # Commented out because it clogs logs unnecessarily
+            # print(f"[{PRINT_PREFIX}] No documented channel configured for {guild.name}")
             return
         
         # Store the initial channel ID to detect if setup runs again mid-sync
