@@ -3,6 +3,8 @@
 # November 7th, 2025
 # On message event handler
 
+PRINT_PREFIX = "MESSAGE EVENTS"
+
 # Standard library imports
 import io
 import json

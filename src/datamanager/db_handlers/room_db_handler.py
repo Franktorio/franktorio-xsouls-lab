@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Room documentation database handler
 
+PRINT_PREFIX = "ROOM DB"
+
 # Standard library imports
 import datetime
 import json
@@ -105,6 +107,7 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
             INSERT INTO room_db (room_name, picture_urls, description, doc_by_user_id, edits, tags, roomtype, last_updated, edited_by_user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, timestamp, None))
+        print(f"[{PRINT_PREFIX}] Documented new room: '{room_name}'")
 
     conn.commit()
     success = cursor.rowcount > 0
@@ -207,6 +210,7 @@ def rename_room(old_name: str, new_name: str, edited_by_user_id: int) -> bool:
     
     if not row:
         conn.close()
+        print(f"[{PRINT_PREFIX}] Failed to rename room: '{old_name}' not found")
         return False
     
     # Parse existing data
@@ -241,6 +245,10 @@ def rename_room(old_name: str, new_name: str, edited_by_user_id: int) -> bool:
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()
+    
+    if success:
+        print(f"[{PRINT_PREFIX}] Renamed room: '{old_name}' -> '{new_name}'")
+    
     return success
 
 def set_roomtype(room_name: str, roomtype: str, edited_by_user_id: int) -> bool:

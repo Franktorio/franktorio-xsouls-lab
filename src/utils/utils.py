@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Command helper functions
 
+PRINT_PREFIX = "UTILS"
+
 # Standard library imports
 import asyncio
 

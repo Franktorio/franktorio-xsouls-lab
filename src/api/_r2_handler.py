@@ -3,6 +3,8 @@
 # November 7th, 2025
 # API handler for Cloudflare R2 image storage
 
+PRINT_PREFIX = "R2 HANDLER"
+
 # Standard library imports
 import asyncio
 import os
@@ -87,13 +89,13 @@ async def _download_and_cache(url: str) -> str:
                 # Write to cache
                 with open(cache_path, 'wb') as f:
                     f.write(data)
-                print(f"[R2 IMAGES] ✅ Cached image: {cache_path}")
+                print(f"[{PRINT_PREFIX}] Cached image: {cache_path}")
                 return cache_path
             else:
-                print(f"❌ Failed to download image from {url}: Status {response.status_code}")
+                print(f"[{PRINT_PREFIX}] Failed to download image from {url}: Status {response.status_code}")
                 return None
         except requests.exceptions.RequestException as e:
-            print(f"❌ Error downloading image from {url}: {e}")
+            print(f"[{PRINT_PREFIX}] Error downloading image from {url}: {e}")
             return None
     
     return await loop.run_in_executor(None, _sync_download)
@@ -107,7 +109,7 @@ async def remove_cached_image(url: str) -> bool:
             return True
         return False
     except Exception as e:
-        print(f"❌ Error removing cached image {cache_path}: {e}")
+        print(f"[{PRINT_PREFIX}] Error removing cached image {cache_path}: {e}")
         return False
 
 async def get_cached_image_path(url: str) -> str:
@@ -120,7 +122,7 @@ async def get_cached_image_path(url: str) -> str:
     if _is_cached(url):
         return _get_cache_path(url)
     else:
-        print("[R2 IMAGES] ⬇️ Downloading and caching image")
+        print("[{PRINT_PREFIX}] Downloading and caching image")
         return await _download_and_cache(url)
 
 
@@ -137,7 +139,7 @@ async def upload_to_r2(image_data, room_name: str, image_index: int = 1):
         Public URL of uploaded image or None if failed
     """
     if not R2_ACCESS_KEY_ID or not R2_SECRET_ACCESS_KEY:
-        print("❌ R2 credentials not set in config/vars.py")
+        print(f"[{PRINT_PREFIX}] R2 credentials not set in config/vars.py")
         return None
     
     try:
@@ -177,7 +179,7 @@ async def upload_to_r2(image_data, room_name: str, image_index: int = 1):
         return pub_url
         
     except Exception as e:
-        print(f"❌ R2 upload failed: {e}")
+        print(f"[{PRINT_PREFIX}] R2 upload failed: {e}")
         return None
 
 async def delete_room_images(room_name: str) -> bool:
@@ -192,7 +194,7 @@ async def delete_room_images(room_name: str) -> bool:
         True if any images were deleted, False otherwise
     """
     if not R2_ACCESS_KEY_ID or not R2_SECRET_ACCESS_KEY:
-        print("❌ R2 credentials not set")
+        print(f"[{PRINT_PREFIX}] R2 credentials not set")
         return False
     
     try:
@@ -237,22 +239,22 @@ async def delete_room_images(room_name: str) -> bool:
                             Key=filename
                         )
                         deleted_count += 1
-                        print(f"✅ Deleted R2 image: {filename}")
+                        print(f"[{PRINT_PREFIX}] Deleted R2 image: {filename}")
                         
                         # Remove cached image
                         url = f"{R2_PUBLIC_URL}/{filename}"
                         cache_removed = await remove_cached_image(url)
                         if cache_removed:
-                            print(f"✅ Removed cached image for: {filename}")
+                            print(f"[{PRINT_PREFIX}] Removed cached image for: {filename}")
                     except Exception as e:
-                        print(f"❌ Failed to delete {filename}: {e}")
+                        print(f"[{PRINT_PREFIX}] Failed to delete {filename}: {e}")
         except Exception as e:
-            print(f"❌ Failed to list objects for room {room_name}: {e}")
+            print(f"[{PRINT_PREFIX}] Failed to list objects for room {room_name}: {e}")
         
         return deleted_count > 0
         
     except Exception as e:
-        print(f"❌ R2 room image cleanup failed: {e}")
+        print(f"[{PRINT_PREFIX}] R2 room image cleanup failed: {e}")
         return False
 
 
@@ -267,7 +269,7 @@ async def delete_r2_images(image_urls):
         True if any images were deleted, False otherwise
     """
     if not R2_ACCESS_KEY_ID or not R2_SECRET_ACCESS_KEY:
-        print("❌ R2 credentials not set")
+        print(f"[{PRINT_PREFIX}] R2 credentials not set")
         return False
     
     try:
@@ -309,19 +311,19 @@ async def delete_r2_images(image_urls):
                         Key=filename
                     )
                     deleted_count += 1
-                    print(f"✅ Deleted R2 image: {filename}")
+                    print(f"[{PRINT_PREFIX}] Deleted R2 image: {filename}")
                     
                     # Remove cached image
                     cache_removed = await remove_cached_image(url)
                     if cache_removed:
-                        print(f"✅ Removed cached image for: {filename}")
+                        print(f"[{PRINT_PREFIX}] Removed cached image for: {filename}")
                 except Exception as e:
-                    print(f"❌ Failed to delete {filename}: {e}")
+                    print(f"[{PRINT_PREFIX}] Failed to delete {filename}: {e}")
         
         return deleted_count > 0
         
     except Exception as e:
-        print(f"❌ R2 cleanup failed: {e}")
+        print(f"[{PRINT_PREFIX}] R2 cleanup failed: {e}")
         return False
     
 

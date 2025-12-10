@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Embed utilities for documentation messages
 
+PRINT_PREFIX = "EMBEDS"
+
 # Standard library imports
 import time
 import urllib.parse
@@ -31,7 +33,7 @@ async def _get_stored_images(room_data, roomname):
                     file = discord.File(fp=cache_path, filename=f"{roomname}_image_{i+1}.jpg")
                     files.append(file)
             except Exception as e:
-                print(f"❌ Error loading image {i+1} for {roomname}: {e}")
+                print(f"[{PRINT_PREFIX}] Error loading image {i+1} for {roomname}: {e}")
                 continue
     
     return files
@@ -102,7 +104,7 @@ def create_leaderboard_embed(leaderboard_data: dict):
     embed = discord.Embed(
         title="⚗️ Franktorio & xSoul's Research Division 🧬",
         description=(
-            "🏆 **Research Leaderboard** 🏆\n"
+            "**Research Leaderboard** 🏆\n"
             "🔬 Top-10 users with the most documented rooms! 🔬"
         ),
         color=discord.Color.from_rgb(52, 152, 219),  # Science blue
@@ -139,7 +141,7 @@ def create_leaderboard_embed(leaderboard_data: dict):
 def create_success_embed(title: str, description: str) -> discord.Embed:
     """Create a standardized success embed."""
     embed = discord.Embed(
-        title=f"✅ {title}",
+        title=f"{title}",
         description=description,
         color=discord.Color.green(),
         timestamp=datetime.now(timezone.utc)
@@ -153,7 +155,7 @@ def create_success_embed(title: str, description: str) -> discord.Embed:
 def create_error_embed(title: str, description: str) -> discord.Embed:
     """Create a standardized error embed."""
     embed = discord.Embed(
-        title=f"❌ {title}",
+        title=f"{title}",
         description=description,
         color=discord.Color.red(),
         timestamp=datetime.now(timezone.utc)
@@ -171,9 +173,9 @@ def create_search_result_embed(search_type: str, query: str, results: list, serv
     # No results
     if not results:
         embed = discord.Embed(
-            title=f"🔍 {search_type.capitalize()} Search Results for **{query}**",
+            title=f"{search_type.capitalize()} Search Results for **{query}**",
             color=discord.Color.blurple(),
-            description="### ❌ No rooms found\nTry refining your search query — Page 1",
+            description="### No rooms found\nTry refining your search query — Page 1",
             timestamp=datetime.now(timezone.utc)
         )
         embed.set_footer(
@@ -186,7 +188,7 @@ def create_search_result_embed(search_type: str, query: str, results: list, serv
 
     # Base embed template
     def new_embed(page: int | None = None):
-        title = f"🔍 {search_type.capitalize()} Results for **{query} - Results found: {len(results)}**"
+        title = f"{search_type.capitalize()} Results for **{query} - Results found: {len(results)}**"
         if page is not None:
             title += f" | Page {page}"
         else:
@@ -216,7 +218,7 @@ def create_search_result_embed(search_type: str, query: str, results: list, serv
         field_value = (
             f"**Tags:** `{tag_text}`\n"
             f"**Local Docs:** {doc_link}\n"
-            f"[🌐 Website Docs](https://pressure.xsoul.org/rooms/{urllib.parse.quote(room['room_name'])})"
+            f"[Website Docs](https://pressure.xsoul.org/rooms/{urllib.parse.quote(room['room_name'])})"
         )
 
         embed.add_field(name=field_name, value=field_value, inline=False)
@@ -245,7 +247,7 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
         embed = discord.Embed(
             title=f"📜 Edit History for **{room_name}**",
             color=discord.Color.blurple(),
-            description="### ℹ️ No edit history\nThis room has never been edited since initial documentation.",
+            description="### No edit history\nThis room has never been edited since initial documentation.",
             timestamp=datetime.now(timezone.utc)
         )
         embed.set_footer(
@@ -314,7 +316,7 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
         
         # Check description change
         if i == 0 and current_state['description'] != prev_desc:
-            changes.append("📝 Description")
+            changes.append("Description")
         
         # Check tags change
         if i == 0 and set(current_state['tags']) != set(prev_tags):
@@ -329,7 +331,7 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
         
         # Check roomtype change
         if i == 0 and current_state['roomtype'] != prev_type:
-            changes.append(f"🚪 Type: `{prev_type}` → `{current_state['roomtype']}`")
+            changes.append(f"Type: `{prev_type}` → `{current_state['roomtype']}`")
         
         # Check image changes
         if i == 0 and len(current_state['picture_urls']) != len(prev_imgs):
@@ -340,7 +342,7 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
                 changes.append(f"🖼️ Images Removed: `{img_diff}`")
         
         if not changes:
-            changes.append("📊 Data Updated")
+            changes.append("Data Updated")
         
         editor_id = edit.get('edited_by_user_id')
         timestamp = edit.get('timestamp', 0)

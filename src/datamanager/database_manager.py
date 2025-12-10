@@ -3,6 +3,8 @@
 # December 6th 2025
 # Database Manager - Handles initialization of all databases
 
+PRINT_PREFIX = "DATABASE INIT"
+
 # Standard library imports
 import os
 import sqlite3
@@ -66,20 +68,20 @@ def init_databases() -> None:
     # Initialize server database
     _init_tables_from_schema(server_db_handler.SCHEMA, server_db_handler.DB_FILE_NAME)
     databases[server_db_handler.DB_FILE_NAME] = server_db_handler
-    print("[DB INIT] Server database initialized")
+    print(f"[{PRINT_PREFIX}] Server database initialized")
     
     # Initialize room database
     _init_tables_from_schema(room_db_handler.SCHEMA, room_db_handler.DB_FILE_NAME)
     databases[room_db_handler.DB_FILE_NAME] = room_db_handler
-    print("[DB INIT] Room database initialized")
+    print(f"[{PRINT_PREFIX}] Room database initialized")
     
     # Initialize scanner database
     _init_tables_from_schema(scanner_db_handler.SCHEMA, scanner_db_handler.DB_FILE_NAME)
     scanner_db_handler.init_scanner_extras()
     databases[scanner_db_handler.DB_FILE_NAME] = scanner_db_handler
-    print("[DB INIT] Scanner database initialized")
+    print(f"[{PRINT_PREFIX}] Scanner database initialized")
     
-    print("[DB INIT] All databases initialized successfully")
+    print(f"[{PRINT_PREFIX}] All databases initialized successfully")
 
 def migrate_db(db_file_name: str) -> None:
     if db_file_name not in databases:

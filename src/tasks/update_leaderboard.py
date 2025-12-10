@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Background task to build documented channels
 
+PRINT_PREFIX = "LEADERBOARD SYNC"
+
 # Third-party imports
 import discord
 from discord.ext import tasks
@@ -30,7 +32,7 @@ async def update_leaderboard():
 
         message_id = actions_data.get("leaderboard_messages", {}).get(str(guild.id))
         if not message_id:
-            print(f"❌ Leaderboard message ID not found in server {guild.id}. Creating a new one.")
+            print(f"[{PRINT_PREFIX}] Leaderboard message ID not found in server {guild.id}. Creating a new one.")
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id
@@ -42,7 +44,7 @@ async def update_leaderboard():
         try:
             message = await leaderboard_channel.fetch_message(message_id)
         except discord.NotFound:
-            print(f"❌ Leaderboard message not found in server {guild.id}. Creating a new one.")
+            print(f"[{PRINT_PREFIX}] Leaderboard message not found in server {guild.id}. Creating a new one.")
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id

@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Admin commands
 
+PRINT_PREFIX = "DEV COMMANDS"
+
 # Standard library imports
 import asyncio
 import io
@@ -32,7 +34,7 @@ class Admin(app_commands.Group):
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
-            await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
         
         embed = embeds.create_success_embed(
@@ -52,7 +54,7 @@ class Admin(app_commands.Group):
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
-            await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
         
         total_deleted = 0
@@ -73,13 +75,13 @@ class Admin(app_commands.Group):
                 def is_bot_message(message):
                     return message.author.id == shared.FRD_bot.user.id
                 
-                print(f"🗑️ Clearing documented channel in guild {guild.name} ({guild.id})")
+                print(f"[{PRINT_PREFIX}] Clearing documented channel in guild {guild.name} ({guild.id})")
                 deleted = await channel.purge(check=is_bot_message, limit=None)
                 datamanager.server_db_handler.clear_doc_ids(guild.id)
-                print(f"✅ Cleared {len(deleted)} messages in guild {guild.name}")
+                print(f"[{PRINT_PREFIX}] Cleared {len(deleted)} messages in guild {guild.name}")
                 return len(deleted)
             except Exception as e:
-                print(f"❌ Failed to clear documented channel in guild {guild.name} ({guild.id}): {e}")
+                print(f"[{PRINT_PREFIX}] Failed to clear documented channel in guild {guild.name} ({guild.id}): {e}")
                 failed_servers.append(guild.name)
                 return 0
 
@@ -88,9 +90,9 @@ class Admin(app_commands.Group):
         results = await asyncio.gather(*tasks)
         total_deleted = sum(results)
 
-        embed_desc = f"✅ Successfully deleted a total of {total_deleted} messages from documented channels across {len(shared.FRD_bot.guilds)} server(s)."
+        embed_desc = f"Successfully deleted a total of {total_deleted} messages from documented channels across {len(shared.FRD_bot.guilds)} server(s)."
         if failed_servers:
-            embed_desc += f"\n⚠️ Failed to clear documented channels in the following servers: {', '.join(failed_servers)}"
+            embed_desc += f"\nFailed to clear documented channels in the following servers: {', '.join(failed_servers)}"
 
         embed = embeds.create_success_embed(
             title="Global Documented Channel Reset Complete",
@@ -104,7 +106,7 @@ class Admin(app_commands.Group):
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
-            await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
         
         
@@ -129,9 +131,9 @@ class Admin(app_commands.Group):
                 timestamp=discord.utils.utcnow()
             )
             embed.add_field(name="📦 Total Rooms", value=str(total_rooms), inline=False)
-            embed.add_field(name="✅ Cached", value=str(cached_rooms), inline=False)
-            embed.add_field(name="❌ Failed", value=str(cached_failed_rooms), inline=False)
-            embed.add_field(name="⏳ Progress", value=f"{((cached_rooms+cached_failed_rooms)/total_rooms)*100:.2f}%", inline=False)
+            embed.add_field(name="Cached", value=str(cached_rooms), inline=False)
+            embed.add_field(name="Failed", value=str(cached_failed_rooms), inline=False)
+            embed.add_field(name="Progress", value=f"{((cached_rooms+cached_failed_rooms)/total_rooms)*100:.2f}%", inline=False)
             embed.add_field(name="🖼️ Images Cached", value=str(cached), inline=True)
             embed.add_field(name="🛑 Images Failed", value=str(failed), inline=True)
             embed.set_footer(text="Franktorio's & xSoul's Research Division", icon_url=shared.FRD_bot.user.display_avatar.url)
@@ -145,7 +147,7 @@ class Admin(app_commands.Group):
                 return message_id
             
         r_embed = discord.Embed(
-            title="✅ Caching Started",
+            title="Caching Started",
             description=f"Starting caching of {total_rooms} rooms from database.",
             color=discord.Color.green(),
             timestamp=discord.utils.utcnow()
@@ -162,7 +164,7 @@ class Admin(app_commands.Group):
                     message_id = await _edit_or_send_embed(message_id)
                     edit_cd = 0
             except Exception as e:
-                print(f"❌ Error updating cache progress message: {e}")
+                print(f"[{PRINT_PREFIX}] Error updating cache progress message: {e}")
 
             cache_failed = False
             for url in image_urls:
@@ -188,9 +190,9 @@ class Admin(app_commands.Group):
             f"**Total Rooms:** {total_rooms}\n**Cached:** {cached}\n**Failed:** {failed}"
         )
         if failed_rooms and cached_failed_rooms <= 10:
-            final_embed.add_field(name="⚠️ Failed Rooms", value=", ".join(failed_rooms), inline=False)
+            final_embed.add_field(name="Failed Rooms", value=", ".join(failed_rooms), inline=False)
         elif cached_failed_rooms > 10:
-            final_embed.add_field(name="⚠️ Failed Rooms", value="❌ Too many to list.", inline=False)
+            final_embed.add_field(name="Failed Rooms", value="Too many to list.", inline=False)
 
         msg = await channel.fetch_message(message_id)
         await msg.edit(embed=final_embed)
@@ -205,7 +207,7 @@ class Admin(app_commands.Group):
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
-            await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
         
         room_data = datamanager.room_db_handler.jsonify_room_db()
@@ -223,7 +225,7 @@ class Admin(app_commands.Group):
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
-            await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
         
         db_path = datamanager.room_db_handler.DB_PATH
@@ -240,12 +242,12 @@ class Admin(app_commands.Group):
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
-            await interaction.followup.send("❌ You do not have permission to use this command.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
             return
         
         room_data = datamanager.room_db_handler.get_roominfo(room_name)
         if not room_data:
-            await interaction.followup.send(f"❌ Room '{room_name}' not found in the database.", ephemeral=True)
+            await interaction.followup.send(f"Room '{room_name}' not found in the database.", ephemeral=True)
             return
         
         # Send room data as a json file

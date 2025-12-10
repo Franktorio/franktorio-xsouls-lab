@@ -3,6 +3,8 @@
 # November 7th, 2025
 # On guild add event handler
 
+PRINT_PREFIX = "GUILD EVENTS"
+
 # Standard library imports
 import io
 import json
@@ -19,6 +21,8 @@ from src import shared
 @shared.FRD_bot.event
 async def on_guild_join(guild: discord.Guild):
     """Event handler for when the bot joins a new guild."""
+    print(f"[{PRINT_PREFIX}] Bot joined new guild: {guild.name} (ID: {guild.id})")
+    print(f"[{PRINT_PREFIX}] Total guilds: {len(shared.FRD_bot.guilds)}")
     
     owner = guild.owner
     if owner:
@@ -62,4 +66,4 @@ async def on_guild_join(guild: discord.Guild):
             perms_needed_embed.set_footer(text="Franktorio & xSoul's Research Division", icon_url=shared.FRD_bot.user.display_avatar.url)
             await owner.send(embed=perms_needed_embed)
         except Exception as e:
-            print(f"❌ Could not send welcome message to guild owner: {e}")
+            print(f"[{PRINT_PREFIX}] Could not send welcome message to guild owner: {e}")

@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Server setup command
 
+PRINT_PREFIX = "SETUP COMMANDS"
+
 # Standard library imports
 import asyncio
 
@@ -29,7 +31,7 @@ class Setup(app_commands.Group):
     @app_commands.command(name="init", description="Setup the bot in this server.")
     async def setup_init(self, interaction: discord.Interaction):
         """Setup command to initialize the bot in a server."""
-        print(f"[COMMAND] ⚙️ Server setup initiated by {interaction.user} in {interaction.guild.name}")
+        print(f"[{PRINT_PREFIX}] Server setup initiated by {interaction.user} in {interaction.guild.name}")
         bot = shared.get_bot()
         
         await interaction.response.defer()
@@ -41,11 +43,11 @@ class Setup(app_commands.Group):
         if profile:
             # Ask for confirmation before overwriting
             embed = discord.Embed(
-                title="⚠️ Server Already Set Up",
+                title="Server Already Set Up",
                 description=(
                     "This server is already set up with the bot. "
                     "Running setup again will forget the existing channels and rebuild them.\n\n"
-                    "React with ✅ to confirm and proceed, or ❌ to cancel."
+                    "React with to confirm and proceed, or to cancel."
                 ),
                 color=discord.Color.orange(),
                 timestamp=discord.utils.utcnow()
@@ -71,7 +73,7 @@ class Setup(app_commands.Group):
                 await msg.edit(content="Setup cancelled.")
                 return
             else:
-                await msg.edit(content="✅ Re-initializing server setup.", embed=None)
+                await msg.edit(content="Re-initializing server setup.", embed=None)
 
         try:
             # Create a category for research channels
@@ -152,9 +154,9 @@ class Setup(app_commands.Group):
             "Setup Complete",
             (
                 "The bot has been successfully set up in this server!\n\n"
-                f"📚 Research Channel: {researched_channel.mention}\n"
-                f"🏆 Leaderboard Channel: {leaderboard_channel.mention}\n\n"
-                "⏳ Building documentation channel now. This may take a few hours depending on the number of rooms."
+                f"Research Channel: {researched_channel.mention}\n"
+                f"Leaderboard Channel: {leaderboard_channel.mention}\n\n"
+                "Building documentation channel now. This may take a few hours depending on the number of rooms."
             )
         )
 
@@ -163,7 +165,7 @@ class Setup(app_commands.Group):
     @app_commands.command(name="leaderboard", description="Reset and rebuild the research leaderboard.")
     async def reset_leaderboard(self, interaction: discord.Interaction):
         """Reset and rebuild the research leaderboard."""
-        print(f"[COMMAND] 🏆 Reset leaderboard by {interaction.user} in {interaction.guild.name}")
+        print(f"[{PRINT_PREFIX}] Reset leaderboard by {interaction.user} in {interaction.guild.name}")
         await interaction.response.defer()
         
         try:
@@ -171,7 +173,7 @@ class Setup(app_commands.Group):
 
             if not profile:
                 await interaction.followup.send(
-                    "❌ This server is not set up yet. Please run `/setup init` first.",
+                    "This server is not set up yet. Please run `/setup init` first.",
                     ephemeral=True
                 )
                 return
@@ -189,7 +191,7 @@ class Setup(app_commands.Group):
                     await interaction.followup.send(embed=embed)
                     return
                 except Exception as e:
-                    print(f"[SETUP] Error while trying to delete leaderboard channel: {e}")
+                    print(f"[{PRINT_PREFIX}] Error while trying to delete leaderboard channel: {e}")
 
             try:
                 new_channel = await interaction.guild.create_text_channel(
@@ -227,7 +229,7 @@ class Setup(app_commands.Group):
                 "Leaderboard Reset",
                 (
                     "The research leaderboard has been reset and a new channel has been created:\n"
-                    f"🏆 {new_channel.mention}\n\n"
+                    f"{new_channel.mention}\n\n"
                 )
             )
 
@@ -239,12 +241,12 @@ class Setup(app_commands.Group):
                 f"An unexpected error occurred: {str(e)}"
             )
             await interaction.followup.send(embed=embed)
-            print(f"[SETUP] Error in reset_leaderboard: {e}")
+            print(f"[{PRINT_PREFIX}] Error in reset_leaderboard: {e}")
 
     @app_commands.command(name="documented", description="Reset and rebuild the research documentation channel.")
     async def reset_documented(self, interaction: discord.Interaction):
         """Reset and rebuild the research documentation channel."""
-        print(f"[COMMAND] 📚 Reset documented channel by {interaction.user} in {interaction.guild.name}")
+        print(f"[{PRINT_PREFIX}] Reset documented channel by {interaction.user} in {interaction.guild.name}")
         await interaction.response.defer()
         
         try:
@@ -252,7 +254,7 @@ class Setup(app_commands.Group):
 
             if not profile:
                 await interaction.followup.send(
-                    "❌ This server is not set up yet. Please run `/setup init` first.",
+                    "This server is not set up yet. Please run `/setup init` first.",
                     ephemeral=True
                 )
                 return
@@ -270,7 +272,7 @@ class Setup(app_commands.Group):
                     await interaction.followup.send(embed=embed)
                     return
                 except Exception as e:
-                    print(f"[SETUP] Error while trying to delete documented channel: {e}")
+                    print(f"[{PRINT_PREFIX}] Error while trying to delete documented channel: {e}")
 
             try:
                 new_channel = await interaction.guild.create_text_channel(
@@ -313,8 +315,8 @@ class Setup(app_commands.Group):
                 "Documented Channel Reset",
                 (
                     "The research documentation channel has been reset and a new channel has been created:\n"
-                    f"📚 {new_channel.mention}\n\n"
-                    "⏳ Building documentation channel now. This may take a few hours depending on the number of rooms."
+                    f"{new_channel.mention}\n\n"
+                    "Building documentation channel now. This may take a few hours depending on the number of rooms."
                 )
             )
 
@@ -326,7 +328,7 @@ class Setup(app_commands.Group):
                 f"An unexpected error occurred: {str(e)}"
             )
             await interaction.followup.send(embed=embed)
-            print(f"[SETUP] Error in reset_documented: {e}")
+            print(f"[{PRINT_PREFIX}] Error in reset_documented: {e}")
 
 
 shared.FRD_bot.tree.add_command(Setup())

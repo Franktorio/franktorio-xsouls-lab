@@ -3,6 +3,8 @@
 # November 7th, 2025
 # API handler for internal research operations
 
+PRINT_PREFIX = "RESEARCH API"
+
 # Standard library imports
 from datetime import datetime
 from typing import Optional
@@ -96,6 +98,8 @@ async def document_room(request: DocumentRoomRequest, key: str = Query(...)):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
+    print(f"[{PRINT_PREFIX}] Received document_room request for '{request.room_name}'")
+    
     room_profile = room_db_handler.get_roominfo(request.room_name)
     if room_profile:
         return {"error": "Room already documented, use the redocumentation endpoint."}
@@ -113,6 +117,7 @@ async def document_room(request: DocumentRoomRequest, key: str = Query(...)):
         timestamp=timestamp
     )
     
+    print(f"[{PRINT_PREFIX}] Successfully documented '{request.room_name}'")
     return {"success": True, "message": f"Room '{request.room_name}' has been documented."}
 
 
@@ -121,6 +126,8 @@ async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...))
     """Endpoint to redocument an existing room"""
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
+    
+    print(f"[{PRINT_PREFIX}] Received redocument_room request for '{request.room_name}'")
     
     room_profile = room_db_handler.get_roominfo(request.room_name)
     if not room_profile:
@@ -142,6 +149,7 @@ async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...))
     
     await utils.global_reset(request.room_name)
     
+    print(f"[{PRINT_PREFIX}] Successfully redocumented '{request.room_name}'")
     return {"success": True, "message": f"Room '{request.room_name}' has been redocumented."}
 
 
@@ -151,10 +159,13 @@ async def set_roomtype(request: SetRoomTypeRequest, key: str = Query(...)):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
+    print(f"[{PRINT_PREFIX}] Received set_roomtype request for '{request.room_name}'")
+    
     success = room_db_handler.set_roomtype(request.room_name, request.roomtype, edited_by_user_id=request.edited_by_user_id)
     
     if success:
         await utils.global_reset(request.room_name)
+        print(f"[{PRINT_PREFIX}] Updated roomtype for '{request.room_name}' to '{request.roomtype}'")
         return {"success": True, "message": f"Room '{request.room_name}' has been updated to type '{request.roomtype}'."}
     else:
         return {"error": f"Room '{request.room_name}' does not exist in the database."}

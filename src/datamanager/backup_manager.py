@@ -4,6 +4,9 @@
 # Backup Manager - Handles backup and restoration of databases
 
 
+PRINT_PREFIX = "BACKUP MANAGER"
+
+
 # Standard library imports
 import os
 import sqlite3
@@ -25,7 +28,7 @@ def init_backup_manager():
     Initializes and starts the backup manager thread if database backups are enabled.
     """
     if not vars.DATABASE_BACKUPS_ENABLED:
-        print("[BACKUPS] Database backups are disabled in configuration.")
+        print(f"[{PRINT_PREFIX}] Database backups are disabled in configuration.")
     else:
         global BACKUP_DIR, SNAPSHOT_DIR, REPLICA_DIR
 
@@ -40,6 +43,7 @@ def init_backup_manager():
 
         backup_thread = threading.Thread(target=backup_manager, daemon=True)
         backup_thread.start()
+        print(f"[{PRINT_PREFIX}] Backup manager initialization complete")
 
 def create_snapshot(db_file_name: str) -> bool:
     """
@@ -55,7 +59,7 @@ def create_snapshot(db_file_name: str) -> bool:
             with open(os.path.join(SNAPSHOT_DIR, db_file_name+f"_snapshot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.db"), 'wb') as dest_file:
                 dest_file.write(src_file.read())
     except Exception as e:
-        print(f"[BACKUPS] Failed to create snapshot for {db_file_name}: {e}")
+        print(f"[{PRINT_PREFIX}] Failed to create snapshot for {db_file_name}: {e}")
         return False
     return True
 
@@ -73,7 +77,7 @@ def create_replica(db_file_name: str) -> bool:
             with open(os.path.join(REPLICA_DIR, db_file_name), 'wb') as dest_file:
                 dest_file.write(src_file.read())
     except Exception as e:
-        print(f"[BACKUPS] Failed to create replica for {db_file_name}: {e}")
+        print(f"[{PRINT_PREFIX}] Failed to create replica for {db_file_name}: {e}")
         return False
     return True
 
@@ -91,7 +95,7 @@ def restore_from_replica(db_file_name: str) -> bool:
             with open(os.path.join(DB_DIR, db_file_name), 'wb') as dest_file:
                 dest_file.write(src_file.read())
     except Exception as e:
-        print(f"[BACKUPS] Failed to restore {db_file_name} from replica: {e}")
+        print(f"[{PRINT_PREFIX}] Failed to restore {db_file_name} from replica: {e}")
         return False
     return True
 
@@ -112,7 +116,7 @@ def restore_from_snapshot(db_file_name: str, index: int) -> bool:
         snapshots.sort(key=lambda x: os.path.getmtime(os.path.join(SNAPSHOT_DIR, x)), reverse=True)
 
         if index >= len(snapshots):
-            print(f"[BACKUPS] No snapshot available at index {index} for {db_file_name}.")
+            print(f"[{PRINT_PREFIX}] No snapshot available at index {index} for {db_file_name}.")
             return False
 
         snapshot_file = snapshots[index]
@@ -121,7 +125,7 @@ def restore_from_snapshot(db_file_name: str, index: int) -> bool:
             with open(os.path.join(DB_DIR, db_file_name), 'wb') as dest_file:
                 dest_file.write(src_file.read())
     except Exception as e:
-        print(f"[BACKUPS] Failed to restore {db_file_name} from snapshot: {e}")
+        print(f"[{PRINT_PREFIX}] Failed to restore {db_file_name} from snapshot: {e}")
         return False
     return True
 
@@ -143,7 +147,7 @@ def db_integrity_check(db_file_name: str) -> bool:
         conn.close()
         return result[0] == "ok"
     except sqlite3.DatabaseError as e:
-        print(f"[BACKUPS] Database integrity check failed for {db_file_name}: {e}")
+        print(f"[{PRINT_PREFIX}] Database integrity check failed for {db_file_name}: {e}")
         return False
 
 def backup_manager(interval: int = 10): # Runs every 10 seconds
@@ -170,18 +174,18 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
             if check:
                 continue
 
-            print(f"[BACKUPS] Integrity check failed for {db_file}. Attempting restoration.")
+            print(f"[{PRINT_PREFIX}] Integrity check failed for {db_file}. Attempting restoration.")
 
             # Try restoring from replica
             replica_success = restore_from_replica(db_file)
             if replica_success and db_integrity_check(db_file):
-                print(f"[BACKUPS] Successfully restored {db_file} from replica.")
+                print(f"[{PRINT_PREFIX}] Successfully restored {db_file} from replica.")
                 continue
             
             for i in range(3): # Try up to 3 snapshots
                 snapshot_success = restore_from_snapshot(db_file, i)
                 if snapshot_success and db_integrity_check(db_file):
-                    print(f"[BACKUPS] Successfully restored {db_file} from snapshot index {i}.")
+                    print(f"[{PRINT_PREFIX}] Successfully restored {db_file} from snapshot index {i}.")
                     break
         
         # Create snapshot if interval met
@@ -189,7 +193,7 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
             for db_file in databases:
                 snapshot_success = create_snapshot(db_file)
                 if snapshot_success:
-                    print(f"[BACKUPS] Created snapshot for {db_file}.")
+                    print(f"[{PRINT_PREFIX}] Created snapshot for {db_file}.")
             action_json_handler.set_action("last_snapshot_time", time_now)
         
         # Create replica if interval met
@@ -197,7 +201,7 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
             for db_file in databases:
                 replica_success = create_replica(db_file)
                 if replica_success:
-                    print(f"[BACKUPS] Created replica for {db_file}.")
+                    print(f"[{PRINT_PREFIX}] Created replica for {db_file}.")
             action_json_handler.set_action("last_replica_time", time_now)
         
         # Delete old snapshots beyond retention period
@@ -207,9 +211,10 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
             if time_now - time_created >= vars.DATABASE_ROLLOVER_MAX_AGE:
                 try:
                     os.remove(snapshot_path)
-                    print(f"[BACKUPS] Deleted old snapshot: {snapshot_file}.")
+                    print(f"[{PRINT_PREFIX}] Deleted old snapshot: {snapshot_file}.")
                 except Exception as e:
-                    print(f"[BACKUPS] Failed to delete old snapshot {snapshot_file}: {e}")
+                    print(f"[{PRINT_PREFIX}] Failed to delete old snapshot {snapshot_file}: {e}")
+    
     
         threading.Event().wait(interval)
 

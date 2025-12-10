@@ -48,24 +48,31 @@ async def on_ready():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Print startup information
-    print("🟢 Bot is online.")
-    print(f"🕒 Time: {now}")
-    print(f"👤 Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
-    print("")
+    print("="*50)
+    print("Bot is online")
+    print(f"Time: {now}")
+    print(f"Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
+    print(f"Connected to {len(FRD_bot.guilds)} guild(s)")
+    print("="*50)
     
     # Start API server in a separate thread
+    print("Starting API server...")
     api_thread = threading.Thread(target=run_api_server, daemon=True)
     api_thread.start()
-    print(f"🌐 API server started on http://0.0.0.0:{config.vars.API_PORT}")
+    print(f"API server started on http://0.0.0.0:{config.vars.API_PORT}")
     
     # Start background tasks
     init_tasks.start_all_tasks()
     
     # Sync command tree
+    print("Syncing command tree...")
     try:
         synced = await FRD_bot.tree.sync()
-        print(f"✅ Synced {len(synced)} command(s)")
+        print(f"Successfully synced {len(synced)} command(s)")
     except Exception as e:
-        print(f"❌ Failed to sync commands: {e}")
+        print(f"Failed to sync commands: {e}")
+        print("Bot will continue running but slash commands may not be available")
 
+print("="*50)
+print("Starting bot connection to Discord...")
 FRD_bot.run(config.vars.BOT_TOKEN)

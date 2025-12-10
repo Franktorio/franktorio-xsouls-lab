@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Background task to build documented channels
 
+PRINT_PREFIX = "DOCUMENTED BUILDER"
+
 # Standard library imports
 import asyncio
 
@@ -26,10 +28,12 @@ async def build_documented_channels():
     """Background task to sync documented channels with room database."""
     global _force_fetch_iterations
     
+    print(f"[{PRINT_PREFIX}] Starting documented channel sync cycle")
     # Get all rooms from database
     all_rooms = datamanager.room_db_handler.get_all_room_names(sort_by="last_updated")
     
     if not all_rooms:
+        print(f"[{PRINT_PREFIX}] No rooms found in database, skipping sync")
         return
     
     # Forcefully load guilds to ensure cache is populated
@@ -39,6 +43,7 @@ async def build_documented_channels():
         async for _ in shared.FRD_bot.fetch_guilds():
             pass
     
+    print(f"[{PRINT_PREFIX}] Processing {len(shared.FRD_bot.guilds)} guild(s) for sync")
     for guild in shared.FRD_bot.guilds:
         asyncio.create_task(_sync_server_documentation(guild, all_rooms))
     
@@ -57,6 +62,7 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
         # Get server profile
         profile = datamanager.server_db_handler.get_server_profile(server_id)
         if not profile or not profile.get('documented_channel_id'):
+            print(f"[{PRINT_PREFIX}] No documented channel configured for {guild.name}")
             return
         
         # Store the initial channel ID to detect if setup runs again mid-sync
@@ -69,14 +75,15 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
                 documented_channel = await guild.fetch_channel(profile['documented_channel_id'])
             except discord.NotFound:
                 # Clear the channel ID and doc IDs but keep the profile (preserves leaderboard channel, etc.)
+                print(f"[{PRINT_PREFIX}] Documented channel not found for {guild.name}, clearing configuration")
                 datamanager.server_db_handler.update_server_profile(
                     server_id=server_id,
-                    documented_channel_id=None,
+                    documented_channel_id=0,
                     doc_msg_ids={}
                 )
                 return  # Stop processing this server immediately
             except Exception as e:
-                print(f"[DOCUMENTED BUILDER] ❌ Error fetching channel in server {guild.name}: {e}")
+                print(f"[{PRINT_PREFIX}] Error fetching channel in server {guild.name}: {e}")
                 return  # Stop processing this server immediately
         
         # Get current documented rooms in this server
@@ -110,18 +117,18 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
         if not rooms_to_process:
             return  # Nothing to update
         
-        print(f"[DOCUMENTED BUILDER] 📝 Found {len(rooms_to_process)} new rooms to document in {guild.name}")
+        print(f"[{PRINT_PREFIX}] Found {len(rooms_to_process)} new rooms to document in {guild.name}")
         
         # Process rooms in batches
         for i in range(0, len(rooms_to_process), BATCH_SIZE):
             # Double-check profile still exists and channel ID hasn't changed (in case setup was run again)
             current_profile = datamanager.server_db_handler.get_server_profile(server_id)
             if not current_profile:
-                print(f"[DOCUMENTED BUILDER] ⚠️ Server profile deleted mid-sync for {guild.name}, stopping.")
+                print(f"[{PRINT_PREFIX}] Server profile deleted mid-sync for {guild.name}, stopping.")
                 return
             
             if current_profile.get('documented_channel_id') != initial_channel_id:
-                print(f"[DOCUMENTED BUILDER] ⚠️ Channel ID changed mid-sync for {guild.name} (setup was run again), stopping old sync.")
+                print(f"[{PRINT_PREFIX}] Channel ID changed mid-sync for {guild.name} (setup was run again), stopping old sync.")
                 return
             
             batch = rooms_to_process[i:i+BATCH_SIZE] if len(rooms_to_process) > BATCH_SIZE else rooms_to_process[i:]
@@ -139,10 +146,10 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
             # Process batch concurrently
             await asyncio.gather(*tasks_to_run, return_exceptions=True)
         
-        print(f"[DOCUMENTED BUILDER] ✅ Completed sync for {guild.name}")
+        print(f"[{PRINT_PREFIX}] Completed sync for {guild.name}")
         
     except Exception as e:
-        print(f"[DOCUMENTED BUILDER] ❌ Error syncing server {guild.name}: {e}")
+        print(f"[{PRINT_PREFIX}] Error syncing server {guild.name}: {e}")
     finally:
         # Always remove from running builds list
         if server_id in currently_running_builds:
@@ -157,14 +164,14 @@ async def _delete_room_documentation(room_name: str, documented_channel: discord
             try:
                 message = await documented_channel.fetch_message(msg_id)
                 await message.delete()
-                print(f"[DOCUMENTED BUILDER] 🗑️ Deleted '{room_name}' from server {guild.name} ({server_id})")
+                print(f"[{PRINT_PREFIX}] Deleted '{room_name}' from server {guild.name} ({server_id})")
             except discord.NotFound:
-                print(f"[DOCUMENTED BUILDER] ⚠️ Message for '{room_name}' already deleted in {guild.name}")
+                print(f"[{PRINT_PREFIX}] Message for '{room_name}' already deleted in {guild.name}")
             
             # Remove from server profile
             datamanager.server_db_handler.remove_doc_id(server_id, room_name)
     except Exception as e:
-        print(f"[DOCUMENTED BUILDER] ❌ Error deleting '{room_name}' from server {server_id}: {e}")
+        print(f"[{PRINT_PREFIX}] Error deleting '{room_name}' from server {server_id}: {e}")
 
 
 async def _process_single_room(room_name: str, documented_channel: discord.TextChannel, server_id: int, guild: discord.Guild) -> bool:
@@ -173,7 +180,7 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
         # Get room info from database
         room_info = datamanager.room_db_handler.get_roominfo(room_name)
         if not room_info:
-            print(f"[DOCUMENTED BUILDER] ⚠️ Room '{room_name}' not found in database")
+            print(f"[{PRINT_PREFIX}] Room '{room_name}' not found in database")
             return True  # Remove from queue anyway
         
         if not datamanager.server_db_handler.get_server_profile(server_id):
@@ -203,7 +210,7 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
                 message_id = await embeds.send_room_documentation_embed(documented_channel, room_data)
                 datamanager.server_db_handler.add_doc_id(server_id, room_name, message_id)
                 
-                print(f"[DOCUMENTED BUILDER] 🔄 Updated '{room_name}' in server {guild.name} ({server_id})")
+                print(f"[{PRINT_PREFIX}] Updated '{room_name}' in server {guild.name} ({server_id})")
                 return True
                 
             except discord.NotFound:
@@ -228,12 +235,12 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
         # Store message ID in server profile
         datamanager.server_db_handler.add_doc_id(server_id, room_name, message_id)
         
-        print(f"[DOCUMENTED BUILDER] ✅ Documented '{room_name}' in server {guild.name} ({server_id})")
+        print(f"[{PRINT_PREFIX}] Documented '{room_name}' in server {guild.name} ({server_id})")
         return True
     
     except discord.NotFound:
-        print(f"[DOCUMENTED BUILDER] ❌ Channel not found when documenting '{room_name}' in server {guild.name} ({server_id})")
-        print(f"[DOCUMENTED BUILDER] 💡 Channel was deleted during sync. Clearing channel ID.")
+        print(f"[{PRINT_PREFIX}] Channel not found when documenting '{room_name}' in server {guild.name} ({server_id})")
+        print(f"[{PRINT_PREFIX}] 💡 Channel was deleted during sync. Clearing channel ID.")
         # Clear the channel reference but keep the profile
         datamanager.server_db_handler.update_server_profile(
             server_id=server_id,
@@ -243,5 +250,5 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
         return True  # Still mark as processed to avoid infinite retry
         
     except Exception as e:
-        print(f"[DOCUMENTED BUILDER] ❌ Error documenting '{room_name}' in server {server_id}: {e}")
+        print(f"[{PRINT_PREFIX}] Error documenting '{room_name}' in server {server_id}: {e}")
         return True  # Still mark as processed to avoid infinite retry

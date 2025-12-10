@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Server Profile Manager - stores per-server configuration
 
+PRINT_PREFIX = "SERVER DB"
+
 # Standard library imports
 import re
 import sqlite3
@@ -60,7 +62,7 @@ def get_server_profile(server_id: int) -> Optional[Dict[str, Any]]:
         return {
             'server_id': row[0],
             'leaderboard_channel_id': row[1],
-            'documented_channel_id': row[2],
+            'documented_channel_id': None if row[2] == 0 else row[2],
             'doc_msg_ids': json.loads(row[3]) if row[3] else {}
         }
     return None
@@ -97,6 +99,10 @@ def create_server_profile(server_id: int, leaderboard_channel_id: int = None,
 
         conn.commit()
         conn.close()
+        print(f"[{PRINT_PREFIX}] Created/updated server profile for guild {server_id}")
+    except Exception as e:
+        print(f"[{PRINT_PREFIX}] Error creating server profile for guild {server_id}: {e}")
+        raise
         return True
     except sqlite3.IntegrityError:
         conn.close()

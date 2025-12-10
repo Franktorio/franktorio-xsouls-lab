@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Management Commands (head researcher+ only commands)
 
+PRINT_PREFIX = "MANAGEMENT COMMANDS"
+
 # Standard library imports
 from typing import Literal
 
@@ -29,7 +31,7 @@ class Management(app_commands.Group):
     @app_commands.command(name="sync", description="Manually trigger database synchronization across servers.")
     async def sync_databases(self, interaction: discord.Interaction):
         """Manually trigger database synchronization across servers."""
-        print(f"[COMMAND] 🔄 Manual database sync triggered by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Manual database sync triggered by {interaction.user}")
         await interaction.response.defer()
         
         level = await utils.permission_check(interaction.user)
@@ -39,17 +41,17 @@ class Management(app_commands.Group):
             return
         try:
             sync_databases.restart()
-            embed = create_success_embed(title="✅ Database Synchronization Triggered", description="Database synchronization across servers has been manually triggered.")
+            embed = create_success_embed(title="Database Synchronization Triggered", description="Database synchronization across servers has been manually triggered.")
             await interaction.followup.send(embed=embed)
         except Exception as e:
-            embed = create_error_embed(title="❌ Synchronization Failed", description=f"An error occurred while triggering synchronization: {str(e)}")
+            embed = create_error_embed(title="Synchronization Failed", description=f"An error occurred while triggering synchronization: {str(e)}")
             await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="role", description="Set the role of an user.")
     @app_commands.describe(user="The user to set the permission level for.", role="The permission role to assign.")
     async def set_permission_level(self, interaction: discord.Interaction, user: discord.User, role: Literal["Viewer", "Trial Researcher", "Novice Researcher", "Experienced Researcher", "Head Researcher"]):
         """Set the permission level of a user."""
-        print(f"[COMMAND] 👥 Set permission level for {user} to '{role}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Set permission level for {user} to '{role}' by {interaction.user}")
         await interaction.response.defer()
         
         level = await utils.permission_check(interaction.user)
@@ -99,9 +101,9 @@ class Management(app_commands.Group):
             elif api_response.get("error") == "External data source is disabled":
                 embed = create_success_embed(title="Permission Level Updated", description=f"Set **{user}**'s permission level to **{role}** on Discord.")
             else:
-                embed = create_success_embed(title="Permission Level Partially Updated", description=f"⚠️ Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {api_response.get('error')}\nPlease try again.")
+                embed = create_success_embed(title="Permission Level Partially Updated", description=f"Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {api_response.get('error')}\nPlease try again.")
         except Exception as e:
-            embed = create_success_embed(title="Permission Level Partially Updated", description=f"⚠️ Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {str(e)}\nPlease try again.")
+            embed = create_success_embed(title="Permission Level Partially Updated", description=f"Set **{user}**'s permission level to **{role}** on Discord, but failed to sync to web dashboard: {str(e)}\nPlease try again.")
         
         await interaction.followup.send(embed=embed)
     
@@ -109,7 +111,7 @@ class Management(app_commands.Group):
     @app_commands.describe(report_id="The ID of the bug report to delete.")
     async def delete_report(self, interaction: discord.Interaction, report_id: int):
         """Delete a bug report (soft delete)."""
-        print(f"[COMMAND] Delete bug report #{report_id} by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Delete bug report #{report_id} by {interaction.user}")
         await interaction.response.defer()
         
         report = room_db_handler.get_bug_report(report_id)
@@ -135,7 +137,7 @@ class Management(app_commands.Group):
     @app_commands.describe(report_id="The ID of the bug report to resolve.")
     async def resolve_report(self, interaction: discord.Interaction, report_id: int):
         """Mark a bug report as resolved."""
-        print(f"[COMMAND] Resolve bug report #{report_id} by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Resolve bug report #{report_id} by {interaction.user}")
         await interaction.response.defer()
         
         report = room_db_handler.get_bug_report(report_id)

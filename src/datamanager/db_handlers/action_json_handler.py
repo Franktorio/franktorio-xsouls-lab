@@ -3,6 +3,8 @@
 # December 6th 2025
 # Action JSON Handler - Manages actions.json file
 
+PRINT_PREFIX = "ACTION JSON"
+
 # Standard library imports
 import json
 import os

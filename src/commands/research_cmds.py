@@ -3,6 +3,8 @@
 # November 7th, 2025
 # Research Commands
 
+PRINT_PREFIX = "RESEARCH COMMANDS"
+
 # Standard library imports
 import asyncio
 import io
@@ -54,7 +56,7 @@ async def _get_image_links(images: list[Optional[discord.Attachment]], brighten:
                         if r2_url:
                             image_links.append(r2_url)
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                print(f"❌ Error downloading image {i}: {e}")
+                print(f"[{PRINT_PREFIX}] Error downloading image {i}: {e}")
                 continue
     
     return image_links
@@ -102,17 +104,22 @@ class ResearchCommands(app_commands.Group):
     pss: Optional[bool] = False,
     brighten: Optional[bool] = True):
         """Document a room with images and description."""
-        print(f"[COMMAND] 📝 Document room '{roomname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Document room '{roomname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Room type: {roomtype}, Images provided: {sum([1 for img in [image1, image2, image3, image4, image5, image6, image7, image8, image9, image10] if img])}")
         await interaction.response.defer()
         
+        print(f"[{PRINT_PREFIX}] Checking permissions for user {interaction.user}")
         level = await utils.permission_check(interaction.user)
         if level < 1:
-            await interaction.followup.send("❌ You do not have permission to document rooms. You need to be trial researcher or higher.", ephemeral=True)
+            print(f"[{PRINT_PREFIX}] Permission denied for user {interaction.user} (level: {level})")
+            await interaction.followup.send("You do not have permission to document rooms. You need to be trial researcher or higher.", ephemeral=True)
             return
         
         # Check if room was already documented
+        print(f"[{PRINT_PREFIX}] Checking if room '{roomname}' already exists")
         existing_room = room_db_handler.get_roominfo(roomname)
         if existing_room:
+            print(f"[{PRINT_PREFIX}] Room '{roomname}' already documented, rejecting duplicate")
             await interaction.followup.send(f"The room '{roomname}' has already been documented.")
             return
         
@@ -155,9 +162,9 @@ class ResearchCommands(app_commands.Group):
         
         if not api_response.get("success"):
             if api_response.get("skipped"):
-                print(f"ℹ️ Skipped external API export for '{roomname}': {api_response.get('error')}")
+                print(f"[{PRINT_PREFIX}] Skipped external API export for '{roomname}': {api_response.get('error')}")
             else:
-                print(f"⚠️ Failed to export room '{roomname}' to external API: {api_response.get('error')}")
+                print(f"[{PRINT_PREFIX}] Failed to export room '{roomname}' to external API: {api_response.get('error')}")
 
         embed = embeds.create_success_embed(
             "Room Documented",
@@ -217,12 +224,12 @@ class ResearchCommands(app_commands.Group):
     pss: Optional[bool] = False,
     brighten: Optional[bool] = True):
         """Redocument an existing room with new images and description."""
-        print(f"[COMMAND] 🔄 Redocument room '{roomname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Redocument room '{roomname}' by {interaction.user}")
         await interaction.response.defer()
         
         level = await utils.permission_check(interaction.user)
         if level < 2:
-            await interaction.followup.send("❌ You do not have permission to redocument rooms. You need to be novice researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to redocument rooms. You need to be novice researcher or higher.", ephemeral=True)
             return
         
         # Check if room exists
@@ -275,9 +282,9 @@ class ResearchCommands(app_commands.Group):
         
         if not api_response.get("success"):
             if api_response.get("skipped"):
-                print(f"ℹ️ Skipped external API export for '{roomname}': {api_response.get('error')}")
+                print(f"[{PRINT_PREFIX}] Skipped external API export for '{roomname}': {api_response.get('error')}")
             else:
-                print(f"⚠️ Failed to export room '{roomname}' to external API: {api_response.get('error')}")
+                print(f"[{PRINT_PREFIX}] Failed to export room '{roomname}' to external API: {api_response.get('error')}")
 
         embed = embeds.create_success_embed(
             "Room Redocumented",
@@ -304,12 +311,12 @@ class ResearchCommands(app_commands.Group):
     @app_commands.describe(roomname="Name of the room", description="New description for the room")
     async def set_description(self, interaction: discord.Interaction, roomname: str, description: str):
         """Set the description of a specific room."""
-        print(f"[COMMAND] 📝 Set description for '{roomname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Set description for '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
         level = await utils.permission_check(interaction.user)
         if level < 2:
-            await interaction.followup.send("❌ You do not have permission to set room descriptions. You need to be novice researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to set room descriptions. You need to be novice researcher or higher.", ephemeral=True)
             return
         
         success = room_db_handler.set_roomdescription(roomname, description, edited_by_user_id=interaction.user.id)
@@ -325,7 +332,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to update description for '{roomname}' on external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to update description for '{roomname}' on external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Description Updated",
@@ -343,12 +350,12 @@ class ResearchCommands(app_commands.Group):
     @app_commands.describe(roomname="Name of the room", roomtype="Type of the room")
     async def set_roomtype(self, interaction: discord.Interaction, roomname: str, roomtype: RoomType):
         """Set the type of a specific room."""
-        print(f"[COMMAND] 🚪 Set roomtype for '{roomname}' to '{roomtype}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Set roomtype for '{roomname}' to '{roomtype}' by {interaction.user}")
         await interaction.response.defer()
 
         level = await utils.permission_check(interaction.user)
         if level < 2:
-            await interaction.followup.send("❌ You do not have permission to set room types. You need to be novice researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to set room types. You need to be novice researcher or higher.", ephemeral=True)
             return
         
         success = room_db_handler.set_roomtype(roomname, roomtype, edited_by_user_id=interaction.user.id)
@@ -364,7 +371,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to update roomtype for '{roomname}' on external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to update roomtype for '{roomname}' on external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Room Type Updated",
@@ -397,13 +404,13 @@ class ResearchCommands(app_commands.Group):
         tag9: Optional[Tags] = None,
         tag10: Optional[Tags] = None
     ):
-        """Set/replace all tags for a room (replaces existing tags)."""
-        print(f"[COMMAND] 🏷️ Set tags for '{roomname}' by {interaction.user}")
+        """Set tags for a room (replaces existing tags)."""
+        print(f"[{PRINT_PREFIX}] Set tags for '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
         level = await utils.permission_check(interaction.user)
         if level < 1:
-            await interaction.followup.send("❌ You do not have permission to set room tags. You need to be trial researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to set room tags. You need to be trial researcher or higher.", ephemeral=True)
             return
         
         roomdata = room_db_handler.get_roominfo(roomname)
@@ -439,7 +446,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to update tags for '{roomname}' on external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to update tags for '{roomname}' on external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Room Tags Replaced",
@@ -457,12 +464,12 @@ class ResearchCommands(app_commands.Group):
     @app_commands.describe(roomname="Name of the room")
     async def add_tags(self, interaction: discord.Interaction, roomname: str, tag1: Tags, tag2: Optional[Tags] = None, tag3: Optional[Tags] = None):
         """Add tags to a room (keeps existing tags)."""
-        print(f"[COMMAND] ➕ Add tags to '{roomname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Add tags to '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
         level = await utils.permission_check(interaction.user)
         if level < 1:
-            await interaction.followup.send("❌ You do not have permission to add room tags. You need to be trial researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to add room tags. You need to be trial researcher or higher.", ephemeral=True)
             return
         
         roomdata = room_db_handler.get_roominfo(roomname)
@@ -505,7 +512,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to update tags for '{roomname}' on external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to update tags for '{roomname}' on external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Room Tags Added",
@@ -523,12 +530,12 @@ class ResearchCommands(app_commands.Group):
     @app_commands.describe(roomname="Name of the room")
     async def remove_tags(self, interaction: discord.Interaction, roomname: str, tag1: Tags, tag2: Optional[Tags] = None, tag3: Optional[Tags] = None):
         """Remove tags from a specific room."""
-        print(f"[COMMAND] ➖ Remove tags from '{roomname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Remove tags from '{roomname}' by {interaction.user}")
         await interaction.response.defer()
 
         level = await utils.permission_check(interaction.user)
         if level < 1:
-            await interaction.followup.send("❌ You do not have permission to remove room tags. You need to be trial researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to remove room tags. You need to be trial researcher or higher.", ephemeral=True)
             return
         
         roomdata = room_db_handler.get_roominfo(roomname)
@@ -570,7 +577,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to update tags for '{roomname}' on external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to update tags for '{roomname}' on external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Room Tags Updated",
@@ -588,12 +595,12 @@ class ResearchCommands(app_commands.Group):
     @app_commands.describe(roomname="Current name of the room", newname="New name for the room")
     async def rename(self, interaction: discord.Interaction, roomname: str, newname: str):
         """Rename a specific room."""
-        print(f"[COMMAND] 🏷️ Rename room '{roomname}' to '{newname}' by {interaction.user}")
+        print(f"[{PRINT_PREFIX}] Rename room '{roomname}' to '{newname}' by {interaction.user}")
         await interaction.response.defer()
 
         level = await utils.permission_check(interaction.user)
         if level < 3:
-            await interaction.followup.send("❌ You do not have permission to rename rooms. You need to be experienced researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to rename rooms. You need to be experienced researcher or higher.", ephemeral=True)
             return
         
         success = room_db_handler.rename_room(roomname, newname, edited_by_user_id=interaction.user.id)
@@ -609,7 +616,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to rename room '{roomname}' to '{newname}' on external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to rename room '{roomname}' to '{newname}' on external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Room Renamed",
@@ -633,7 +640,7 @@ class ResearchCommands(app_commands.Group):
 
         level = await utils.permission_check(interaction.user)
         if level < 3:
-            await interaction.followup.send("❌ You do not have permission to delete room documentation. You need to be experienced researcher or higher.", ephemeral=True)
+            await interaction.followup.send("You do not have permission to delete room documentation. You need to be experienced researcher or higher.", ephemeral=True)
             return
         
         # Delete the room images from R2 and cache before deleting from database
@@ -647,7 +654,7 @@ class ResearchCommands(app_commands.Group):
             
             if not api_response.get("success"):
                 if not api_response.get("skipped"):
-                    print(f"⚠️ Failed to delete room '{roomname}' from external API: {api_response.get('error')}")
+                    print(f"[{PRINT_PREFIX}] Failed to delete room '{roomname}' from external API: {api_response.get('error')}")
             
             embed = embeds.create_success_embed(
                 "Documentation Deleted",
