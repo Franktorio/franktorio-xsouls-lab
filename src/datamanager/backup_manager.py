@@ -15,18 +15,31 @@ import config.vars as vars
 from .db_handlers import action_json_handler
 from .database_manager import DB_DIR, databases, connect_db
 
+# Directories for backups
+BACKUP_DIR = ""
+SNAPSHOT_DIR = ""
+REPLICA_DIR = ""
 
-if not vars.DATABASE_BACKUPS_ENABLED:
-    print("[BACKUPS] Database backups are disabled in configuration.")
-else:
-    BACKUP_DIR = os.path.join(DB_DIR, "backups")
-    SNAPSHOT_DIR = os.path.join(BACKUP_DIR, "snapshots")
-    REPLICA_DIR = os.path.join(BACKUP_DIR, "replicas")
+def init_backup_manager():
+    """
+    Initializes and starts the backup manager thread if database backups are enabled.
+    """
+    if not vars.DATABASE_BACKUPS_ENABLED:
+        print("[BACKUPS] Database backups are disabled in configuration.")
+    else:
+        global BACKUP_DIR, SNAPSHOT_DIR, REPLICA_DIR
 
-    # Ensure database backups directory exists
-    os.makedirs(BACKUP_DIR, exist_ok=True)
-    os.makedirs(SNAPSHOT_DIR, exist_ok=True)
-    os.makedirs(REPLICA_DIR, exist_ok=True)
+        BACKUP_DIR = os.path.join(DB_DIR, "backups")
+        SNAPSHOT_DIR = os.path.join(BACKUP_DIR, "snapshots")
+        REPLICA_DIR = os.path.join(BACKUP_DIR, "replicas")
+
+        # Ensure database backups directory exists
+        os.makedirs(BACKUP_DIR, exist_ok=True)
+        os.makedirs(SNAPSHOT_DIR, exist_ok=True)
+        os.makedirs(REPLICA_DIR, exist_ok=True)
+
+        backup_thread = threading.Thread(target=backup_manager, daemon=True)
+        backup_thread.start()
 
 def create_snapshot(db_file_name: str) -> bool:
     """
@@ -191,9 +204,4 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
     
         threading.Event().wait(interval)
 
-def start_backup_manager():
-    """
-    Start the backup manager in a separate thread.
-    """
-    backup_thread = threading.Thread(target=backup_manager, daemon=True)
-    backup_thread.start()
+
