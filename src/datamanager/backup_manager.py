@@ -12,7 +12,7 @@ import threading
 
 # Local imports
 import config.vars as vars
-from datamanager.db_handlers import action_json_handler
+from .db_handlers import action_json_handler
 from .database_manager import DB_DIR, databases, connect_db
 
 
@@ -20,11 +20,13 @@ if not vars.DATABASE_BACKUPS_ENABLED:
     print("[BACKUPS] Database backups are disabled in configuration.")
 else:
     BACKUP_DIR = os.path.join(DB_DIR, "backups")
-    SNAPSHOT_DIR = os.path.join(DB_DIR, "snapshots")
-    REPLICA_DIR = os.path.join(DB_DIR, "replicas")
+    SNAPSHOT_DIR = os.path.join(BACKUP_DIR, "snapshots")
+    REPLICA_DIR = os.path.join(BACKUP_DIR, "replicas")
 
     # Ensure database backups directory exists
     os.makedirs(BACKUP_DIR, exist_ok=True)
+    os.makedirs(SNAPSHOT_DIR, exist_ok=True)
+    os.makedirs(REPLICA_DIR, exist_ok=True)
 
 def create_snapshot(db_file_name: str) -> bool:
     """
@@ -131,7 +133,7 @@ def db_integrity_check(db_file_name: str) -> bool:
         print(f"[BACKUPS] Database integrity check failed for {db_file_name}: {e}")
         return False
 
-def backup_manager(interval: 10): # Runs every 10 seconds
+def backup_manager(interval: int = 10): # Runs every 10 seconds
     """
     Runs every few seconds to create snapshots and replicas of databases when their interval is met.
     It will:
@@ -195,7 +197,3 @@ def start_backup_manager():
     """
     backup_thread = threading.Thread(target=backup_manager, daemon=True)
     backup_thread.start()
-
-if vars.DATABASE_BACKUPS_ENABLED:
-    start_backup_manager()
-    print("[BACKUPS] Database backup manager started.")

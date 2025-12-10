@@ -34,6 +34,7 @@ def connect_db(db_file_name: str, read_only: bool = False) -> sqlite3.Connection
         conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
     else:
         conn = sqlite3.connect(db_path)
+    return conn
 
 def _init_tables_from_schema(schema: Dict[str, str], db_file_name: str) -> None:
     """

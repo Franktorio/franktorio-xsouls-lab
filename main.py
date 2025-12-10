@@ -40,6 +40,7 @@ def run_api_server():
 
 # Initialize database
 database_manager.init_databases()
+backup_manager.start_backup_manager()
 
 @FRD_bot.event
 async def on_ready():
