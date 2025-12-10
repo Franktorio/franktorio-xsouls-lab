@@ -30,6 +30,7 @@ async def update_leaderboard():
         if not leaderboard_channel:
             print(f"[{PRINT_PREFIX}] Leaderboard channel not found in server {guild.name}, clearing configuration")
             datamanager.server_db_handler.update_server_profile(
+                server_id=guild.id,
                 leaderboard_channel_id=0
             )
             continue
