@@ -195,3 +195,7 @@ def start_backup_manager():
     """
     backup_thread = threading.Thread(target=backup_manager, daemon=True)
     backup_thread.start()
+
+if vars.DATABASE_BACKUPS_ENABLED:
+    start_backup_manager()
+    print("[BACKUPS] Database backup manager started.")
