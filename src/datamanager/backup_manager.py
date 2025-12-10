@@ -168,7 +168,6 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
             check = db_integrity_check(db_file)
 
             if check:
-                print(f"[BACKUPS] Integrity check passed for {db_file}.")
                 continue
 
             print(f"[BACKUPS] Integrity check failed for {db_file}. Attempting restoration.")
