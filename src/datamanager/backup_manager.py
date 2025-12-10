@@ -200,7 +200,17 @@ def backup_manager(interval: int = 10): # Runs every 10 seconds
                 if replica_success:
                     print(f"[BACKUPS] Created replica for {db_file}.")
             action_json_handler.set_action("last_replica_time", time_now)
-
+        
+        # Delete old snapshots beyond retention period
+        for snapshot_file in os.listdir(SNAPSHOT_DIR):
+            snapshot_path = os.path.join(SNAPSHOT_DIR, snapshot_file)
+            time_created = os.path.getmtime(snapshot_path)
+            if time_now - time_created >= vars.DATABASE_ROLLOVER_MAX_AGE:
+                try:
+                    os.remove(snapshot_path)
+                    print(f"[BACKUPS] Deleted old snapshot: {snapshot_file}.")
+                except Exception as e:
+                    print(f"[BACKUPS] Failed to delete old snapshot {snapshot_file}: {e}")
     
         threading.Event().wait(interval)
 
