@@ -32,7 +32,7 @@ async def sync_databases():
         return
     
     ext_database = ext_export.get("rooms", {})
-    db_json = datamanager.room_db_handler.jsonify_room_db()
+    db_json = datamanager.room_db_handler.jsonify_room_db()["room_db"]
 
     print(f"[{PRINT_PREFIX}] Comparing {len(ext_database)} external rooms with {len(db_json)} local rooms")
     # Compare each last updated timestamp and update external/internal as needed

@@ -557,7 +557,21 @@ def jsonify_room_db() -> Dict[str, Any]:
     Export the entire room database as a JSON-serializable dictionary.
 
     Returns:
-        A dictionary where keys are room names and values are room information.
+        A dictionary containing all room documentation and bug reports.
+    
+    Structure:
+    {
+        "room_db": {
+            "room_name_1": {...},
+            "room_name_2": {...},
+            ...
+        },
+        "room_bug_reports": {
+            "report_id_1": {...},
+            "report_id_2": {...},
+            ...
+        }
+    }
     """
     
     conn = _connect_db()
