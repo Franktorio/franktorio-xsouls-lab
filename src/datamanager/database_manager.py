@@ -17,7 +17,7 @@ databases = {}
 # Ensure databases directory exists
 os.makedirs(DB_DIR, exist_ok=True)
 
-def connect_db(db_file_name: str) -> sqlite3.Connection:
+def connect_db(db_file_name: str, read_only: bool = False) -> sqlite3.Connection:
     """
     Connect to a database and return the connection.
     Automatically creates the database directory and file if they don't exist.
@@ -30,7 +30,10 @@ def connect_db(db_file_name: str) -> sqlite3.Connection:
     """
     db_path = os.path.join(DB_DIR, db_file_name)
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    return sqlite3.connect(db_path)
+    if read_only:
+        conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
+    else:
+        conn = sqlite3.connect(db_path)
 
 def _init_tables_from_schema(schema: Dict[str, str], db_file_name: str) -> None:
     """

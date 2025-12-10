@@ -124,13 +124,14 @@ I will use a snapshot and replication system approach
   - Replica interval (e.g., every 5 minutes)
   - Retention period (e.g., 7 days)  
 - [x] Create a dedicated module: `src/datamanager/backup_manager.py`  
-- [ ] Implement a background thread or scheduler to:
+- [x] Implement a background thread or scheduler to:
   - Run at predefined times to prevent multiple files created when restarted
   - Create backups of all databases
 - [ ] Implement a rollover system to automatically delete backups older than the retention period
 - [ ] Implement replica databases for each primary database:
   - Periodically replace replica database after each interval
   - Ensure databases are ready incase of a failover 
+- [ ] Create json and handler to store audit and incident logs for DB changes
 
 
 ## Contact information
