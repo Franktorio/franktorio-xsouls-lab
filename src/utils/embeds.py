@@ -19,6 +19,7 @@ from src import shared
 from src.api import _r2_handler
 from .utils import get_doc_message_link
 
+IMAGE_MEMORY_CACHE = {}
 
 async def _get_stored_images(room_data, roomname):
     """Get images from R2 URLs (cached locally)"""
@@ -32,9 +33,11 @@ async def _get_stored_images(room_data, roomname):
                 cache_path = await _r2_handler.get_cached_image_path(img_url)
                 if cache_path:
                     # Read image into memory
-                    with open(cache_path, 'rb') as f:
-                        file_data = f.read()
-                    file = discord.File(fp=io.BytesIO(file_data), filename=f"{roomname}_image_{i+1}.jpg")
+                    if not str(cache_path) in IMAGE_MEMORY_CACHE:
+                        with open(cache_path, 'rb') as f:
+                            file_data = f.read()
+                            IMAGE_MEMORY_CACHE[str(cache_path)] = io.BytesIO(file_data)
+                    file = discord.File(fp=IMAGE_MEMORY_CACHE[str(cache_path)], filename=f"{roomname}_image_{i+1}.jpg")
                     files.append(file)
                     print(f"[DEBUG] [{PRINT_PREFIX}] Loaded image {i+1} for room '{roomname}'")
                 else:
