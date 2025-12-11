@@ -25,16 +25,19 @@ async def permission_check(user: discord.User) -> int:
     """
     # Owner always has permission
     if user.id == vars.OWNER_ID:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Level 5 (Owner)")
         return 5
 
     # Get guild from cache only (no fetch)
     home_guild = shared.FRD_bot.get_guild(vars.HOME_GUILD_ID)
     if home_guild is None:
+        print(f"[WARN] [{PRINT_PREFIX}] Permission check failed: Home guild not found in cache")
         return 0
 
     # Get member from cache only (no fetch)
     member = home_guild.get_member(user.id)
     if member is None:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Not a member of home guild")
         return 0
 
     # Use cached roles directly
@@ -42,14 +45,19 @@ async def permission_check(user: discord.User) -> int:
 
     # Check roles in priority order
     if vars.HEAD_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Level 4 (Head Researcher)")
         return 4
     if vars.EXPERIENCED_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Level 3 (Experienced Researcher)")
         return 3
     if vars.NOVICE_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Level 2 (Novice Researcher)")
         return 2
     if vars.TRIAL_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Level 1 (Trial Researcher)")
         return 1
 
+    print(f"[DEBUG] [{PRINT_PREFIX}] Permission check for user {user.id}: Level 0 (No permission)")
     return 0
 
 async def get_researcher_role(user_id: int) -> str:
@@ -75,14 +83,19 @@ async def get_researcher_role(user_id: int) -> str:
 
     # Check roles in priority order
     if vars.HEAD_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} has role: Head Researcher")
         return "Head Researcher"
     if vars.EXPERIENCED_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} has role: Experienced Researcher")
         return "Experienced Researcher"
     if vars.NOVICE_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} has role: Novice Researcher")
         return "Novice Researcher"
     if vars.TRIAL_RESEARCHER in role_ids:
+        print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} has role: Trial Researcher")
         return "Trial Researcher"
 
+    print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} has no research role")
     return "No Research Role"
 
 async def global_reset(room_name: str):
@@ -90,6 +103,7 @@ async def global_reset(room_name: str):
     Deletes the documentation message and its ID from all server profiles.
     Used when a room is modified in any way.
     """
+    print(f"[INFO] [{PRINT_PREFIX}] Starting global reset for room '{room_name}'")
     async def _delete_message(guild, message_id, room_name):
         """Helper to delete a single message."""
         profile = server_db_handler.get_server_profile(guild.id)
@@ -103,7 +117,9 @@ async def global_reset(room_name: str):
         try:
             message = await documented_channel.fetch_message(message_id)
             await message.delete()
+            print(f"[INFO] [{PRINT_PREFIX}] Deleted documentation message for room '{room_name}' in guild {guild.id}")
         except discord.NotFound:
+            print(f"[DEBUG] [{PRINT_PREFIX}] Documentation message for room '{room_name}' in guild {guild.id} already deleted")
             pass  # Message already deleted
         
         # Remove message ID from profile
@@ -145,12 +161,14 @@ def get_user_profile(user_id: int) -> dict:
     if user is None:
         # Return empty data if user is not in cache
         # We can't use fetch_user from FastAPI context due to event loop conflicts
+        print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} not found in cache")
         return {
             "profile_picture_url": "",
             "username": "",
             "display_name": ""
         }
     
+    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved profile for user {user_id} from cache")
     return {
         "profile_picture_url": str(user.display_avatar.url),
         "username": str(user.name),
@@ -167,14 +185,18 @@ def get_doc_message_link(server_id: int, room_name: str) -> str:
     """
     profile = server_db_handler.get_server_profile(server_id)
     if not profile or not profile.get('documented_channel_id'):
+        print(f"[DEBUG] [{PRINT_PREFIX}] No documented channel found for server {server_id}")
         return ""
     
     documented_channel = shared.FRD_bot.get_channel(profile['documented_channel_id'])
     if not documented_channel:
+        print(f"[WARN] [{PRINT_PREFIX}] Documented channel {profile['documented_channel_id']} not found in cache for server {server_id}")
         return ""
     
     message_id = server_db_handler.get_doc_message_id(server_id, room_name)
     if not message_id:
+        print(f"[DEBUG] [{PRINT_PREFIX}] No doc message ID found for room '{room_name}' in server {server_id}")
         return ""
     
+    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved doc message link for room '{room_name}' in server {server_id}")
     return f"https://discord.com/channels/{server_id}/{documented_channel.id}/{message_id}"

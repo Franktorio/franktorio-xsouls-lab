@@ -28,7 +28,7 @@ async def update_leaderboard():
 
         leaderboard_channel = guild.get_channel(profile['leaderboard_channel_id'])
         if not leaderboard_channel:
-            print(f"[{PRINT_PREFIX}] Leaderboard channel not found in server {guild.name}, clearing configuration")
+            print(f"[WARNING] [{PRINT_PREFIX}] Leaderboard channel not found in server {guild.name}, clearing configuration")
             datamanager.server_db_handler.update_server_profile(
                 server_id=guild.id,
                 leaderboard_channel_id=0
@@ -37,7 +37,7 @@ async def update_leaderboard():
 
         message_id = actions_data.get("leaderboard_messages", {}).get(str(guild.id))
         if not message_id:
-            print(f"[{PRINT_PREFIX}] Leaderboard message ID not found in server {guild.id}. Creating a new one.")
+            print(f"[INFO] [{PRINT_PREFIX}] Leaderboard message ID not found in server {guild.id}. Creating a new one.")
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id
@@ -49,7 +49,7 @@ async def update_leaderboard():
         try:
             message = await leaderboard_channel.fetch_message(message_id)
         except discord.NotFound:
-            print(f"[{PRINT_PREFIX}] Leaderboard message not found in server {guild.id}. Creating a new one.")
+            print(f"[INFO] [{PRINT_PREFIX}] Leaderboard message not found in server {guild.id}. Creating a new one.")
             # Send initial leaderboard message
             message = await leaderboard_channel.send("Initializing leaderboard...")
             message_id = message.id

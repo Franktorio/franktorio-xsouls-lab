@@ -31,7 +31,7 @@ class Setup(app_commands.Group):
     @app_commands.command(name="init", description="Setup the bot in this server.")
     async def setup_init(self, interaction: discord.Interaction):
         """Setup command to initialize the bot in a server."""
-        print(f"[{PRINT_PREFIX}] Server setup initiated by {interaction.user} in {interaction.guild.name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Server setup initiated by {interaction.user} in {interaction.guild.name}")
         bot = shared.get_bot()
         
         await interaction.response.defer()
@@ -90,7 +90,7 @@ class Setup(app_commands.Group):
                 "research-leaderboard", reason="FXL Bot Setup",
                 category=category
             )
-            print(f"[{PRINT_PREFIX}] Created setup channels in {interaction.guild.name}")
+            print(f"[INFO] [{PRINT_PREFIX}] Created setup channels in {interaction.guild.name}")
         except discord.Forbidden:
             embed = embeds.create_error_embed(
                 "Permission Denied",
@@ -99,7 +99,7 @@ class Setup(app_commands.Group):
             await interaction.followup.send(embed=embed)
             return
         except Exception as e:
-            print(f"[{PRINT_PREFIX}] Error while creating setup channels: {e}")
+            print(f"[ERROR] [{PRINT_PREFIX}] Error while creating setup channels: {e}")
             embed = embeds.create_error_embed(
                 "Setup Failed",
                 f"An error occurred while creating channels: {str(e)}"
@@ -135,7 +135,7 @@ class Setup(app_commands.Group):
                 read_message_history=True,
                 reason="FRD Bot Setup - Bot permissions"
             )
-            print(f"[{PRINT_PREFIX}] Set channel permissions in {interaction.guild.name}")
+            print(f"[INFO] [{PRINT_PREFIX}] Set channel permissions in {interaction.guild.name}")
         except discord.Forbidden:
             embed = embeds.create_error_embed(
                 "Permission Denied",
@@ -163,13 +163,13 @@ class Setup(app_commands.Group):
             )
         )
         
-        print(f"[{PRINT_PREFIX}] Setup complete for {interaction.guild.name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Setup complete for {interaction.guild.name}")
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="leaderboard", description="Reset and rebuild the research leaderboard.")
     async def reset_leaderboard(self, interaction: discord.Interaction):
         """Reset and rebuild the research leaderboard."""
-        print(f"[{PRINT_PREFIX}] Reset leaderboard by {interaction.user} in {interaction.guild.name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Reset leaderboard by {interaction.user} in {interaction.guild.name}")
         await interaction.response.defer()
         
         try:
@@ -236,7 +236,7 @@ class Setup(app_commands.Group):
                     f"{new_channel.mention}\n\n"
                 )
             )
-            print(f"[{PRINT_PREFIX}] Leaderboard reset complete for {interaction.guild.name}")
+            print(f"[INFO] [{PRINT_PREFIX}] Leaderboard reset complete for {interaction.guild.name}")
             await interaction.followup.send(embed=embed)
         
         except Exception as e:
@@ -245,12 +245,12 @@ class Setup(app_commands.Group):
                 f"An unexpected error occurred: {str(e)}"
             )
             await interaction.followup.send(embed=embed)
-            print(f"[{PRINT_PREFIX}] Error in reset_leaderboard: {e}")
+            print(f"[ERROR] [{PRINT_PREFIX}] Error in reset_leaderboard: {e}")
 
     @app_commands.command(name="documented", description="Reset and rebuild the research documentation channel.")
     async def reset_documented(self, interaction: discord.Interaction):
         """Reset and rebuild the research documentation channel."""
-        print(f"[{PRINT_PREFIX}] Reset documented channel by {interaction.user} in {interaction.guild.name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Reset documented channel by {interaction.user} in {interaction.guild.name}")
         await interaction.response.defer()
         
         try:
@@ -276,7 +276,7 @@ class Setup(app_commands.Group):
                     await interaction.followup.send(embed=embed)
                     return
                 except Exception as e:
-                    print(f"[{PRINT_PREFIX}] Error while trying to delete documented channel: {e}")
+                    print(f"[ERROR] [{PRINT_PREFIX}] Error while trying to delete documented channel: {e}")
 
             try:
                 new_channel = await interaction.guild.create_text_channel(
@@ -323,7 +323,7 @@ class Setup(app_commands.Group):
                     "Building documentation channel now. This may take a few hours depending on the number of rooms."
                 )
             )
-            print(f"[{PRINT_PREFIX}] Documented channel reset complete for {interaction.guild.name}")
+            print(f"[INFO] [{PRINT_PREFIX}] Documented channel reset complete for {interaction.guild.name}")
             await interaction.followup.send(embed=embed)
         
         except Exception as e:
@@ -332,7 +332,7 @@ class Setup(app_commands.Group):
                 f"An unexpected error occurred: {str(e)}"
             )
             await interaction.followup.send(embed=embed)
-            print(f"[{PRINT_PREFIX}] Error in reset_documented: {e}")
+            print(f"[ERROR] [{PRINT_PREFIX}] Error in reset_documented: {e}")
 
 
 shared.FRD_bot.tree.add_command(Setup())

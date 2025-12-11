@@ -30,12 +30,15 @@ def save_actions_json() -> None:
     """Save the actions_data dictionary to actions.json file."""
     with open(ACTIONS_JSON_PATH, 'w') as f:
         json.dump(actions_data, f, indent=2)
+    print(f"[DEBUG] [{PRINT_PREFIX}] actions.json saved")
 
 def get_action(key: str, default=None):
     """Get an action value from actions_data."""
+    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieving action for key: {key}")
     return actions_data.get(key, default)
 
 def set_action(key: str, value) -> None:
     """Set an action value in actions_data and save to file."""
+    print(f"[DEBUG] [{PRINT_PREFIX}] Setting action for key: {key} to value: {value}")
     actions_data[key] = value
     save_actions_json()

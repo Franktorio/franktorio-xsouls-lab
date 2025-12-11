@@ -36,8 +36,11 @@ async def _get_stored_images(room_data, roomname):
                         file_data = f.read()
                     file = discord.File(fp=io.BytesIO(file_data), filename=f"{roomname}_image_{i+1}.jpg")
                     files.append(file)
+                    print(f"[DEBUG] [{PRINT_PREFIX}] Loaded image {i+1} for room '{roomname}'")
+                else:
+                    print(f"[WARN] [{PRINT_PREFIX}] Cache path not found for image {i+1} of room '{roomname}'")
             except Exception as e:
-                print(f"[{PRINT_PREFIX}] Error loading image {i+1} for {roomname}: {e}")
+                print(f"[ERROR] [{PRINT_PREFIX}] Error loading image {i+1} for {roomname}: {e}")
                 continue
     
     return files
@@ -95,9 +98,11 @@ async def send_room_documentation_embed(channel: discord.TextChannel, room_data:
     image_files = image_files[:10]
 
     if return_embed:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Created room documentation embed for '{roomname}' (return mode)")
         return embed, image_files
     else:
         message = await channel.send(embed=embed, files=image_files)
+        print(f"[INFO] [{PRINT_PREFIX}] Sent room documentation embed for '{roomname}' to channel {channel.id}")
 
     return message.id
 
@@ -139,6 +144,8 @@ def create_leaderboard_embed(leaderboard_data: dict):
 
     embed.add_field(name="Want to contribute?", value="Join https://discord.gg/nightfalldiv and become a researcher!", inline=False)
 
+    # Commented out to keep logs cleaner
+    # print(f"[DEBUG] [{PRINT_PREFIX}] Created leaderboard embed with {len(leaderboard_data)} entries")
     return embed
 
 
@@ -154,6 +161,7 @@ def create_success_embed(title: str, description: str) -> discord.Embed:
         text="Franktorio & xSoul's Research Division",
         icon_url=shared.FRD_bot.user.display_avatar.url,
     )
+    print(f"[DEBUG] [{PRINT_PREFIX}] Created success embed: '{title}'")
     return embed
 
 def create_error_embed(title: str, description: str) -> discord.Embed:
@@ -168,6 +176,7 @@ def create_error_embed(title: str, description: str) -> discord.Embed:
         text="Franktorio & xSoul's Research Division",
         icon_url=shared.FRD_bot.user.display_avatar.url,
     )
+    print(f"[DEBUG] [{PRINT_PREFIX}] Created error embed: '{title}'")
     return embed
 
 def create_search_result_embed(search_type: str, query: str, results: list, server_id: int) -> list:
@@ -239,6 +248,7 @@ def create_search_result_embed(search_type: str, query: str, results: list, serv
     if field_count > 0:
         embeds.append(embed)
 
+    print(f"[INFO] [{PRINT_PREFIX}] Created {len(embeds)} search result embed(s) for query '{query}' ({len(results)} results)")
     return embeds
 
 
@@ -372,6 +382,7 @@ def create_edit_history_embed(room_name: str, room_data: dict) -> list:
     if field_count > 0:
         embeds.append(embed)
     
+    print(f"[INFO] [{PRINT_PREFIX}] Created {len(embeds)} edit history embed(s) for room '{room_name}' ({len(edits)} edits)")
     return embeds
 
 def create_bug_report_embed(room_name: str, reports: list, room_data: dict = None) -> list:
@@ -443,6 +454,7 @@ def create_bug_report_embed(room_name: str, reports: list, room_data: dict = Non
     if report_count > 0:
         embeds.append(embed)
     
+    print(f"[INFO] [{PRINT_PREFIX}] Created {len(embeds)} bug report embed(s) for room '{room_name}' ({len(reports)} reports)")
     return embeds
 
 
@@ -521,6 +533,7 @@ def create_all_bug_reports_embed(reports: list) -> list:
     if report_count > 0:
         embeds.append(embed)
     
+    print(f"[INFO] [{PRINT_PREFIX}] Created {len(embeds)} embed(s) for all bug reports ({len(reports)} total reports)")
     return embeds
 
 def create_single_bug_report_embed(report: dict) -> discord.Embed:

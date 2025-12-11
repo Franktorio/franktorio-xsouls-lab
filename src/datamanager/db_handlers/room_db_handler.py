@@ -101,13 +101,14 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
             SET picture_urls = ?, description = ?, last_updated = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?, last_updated = ?
             WHERE room_name = ?
         """, (json.dumps(picture_urls), description, datetime.datetime.now().timestamp(), json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id if edited_by_user_id else doc_by_user_id, timestamp, room_name))
+        print(f"[INFO] [{PRINT_PREFIX}] Updated room: '{room_name}'")
     else:
         # Insert new record
         cursor.execute("""
             INSERT INTO room_db (room_name, picture_urls, description, doc_by_user_id, edits, tags, roomtype, last_updated, edited_by_user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, timestamp, None))
-        print(f"[{PRINT_PREFIX}] Documented new room: '{room_name}'")
+        print(f"[INFO] [{PRINT_PREFIX}] Documented new room: '{room_name}'")
 
     conn.commit()
     success = cursor.rowcount > 0
@@ -155,12 +156,14 @@ def replace_doc(room_name: str, picture_urls: list, description: str, doc_by_use
             SET picture_urls = ?, description = ?, last_updated = ?, doc_by_user_id = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?
             WHERE room_name = ?
         """, (json.dumps(picture_urls), description, timestamp, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id, room_name))
+        print(f"[INFO] [{PRINT_PREFIX}] Replaced documentation for room: '{room_name}'")
     else:
         # Insert new record
         cursor.execute("""
             INSERT INTO room_db (room_name, picture_urls, description, doc_by_user_id, edits, tags, roomtype, last_updated, edited_by_user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, timestamp, edited_by_user_id))
+        print(f"[INFO] [{PRINT_PREFIX}] Created new room via replace_doc: '{room_name}'")
 
     conn.commit()
     success = cursor.rowcount > 0
@@ -186,6 +189,10 @@ def replace_imgs(room_name: str, picture_urls: list) -> bool:
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Replaced images for room: '{room_name}'")
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to replace images for room: '{room_name}' (room not found)")
     return success
 
 def rename_room(old_name: str, new_name: str, edited_by_user_id: int) -> bool:
@@ -210,7 +217,7 @@ def rename_room(old_name: str, new_name: str, edited_by_user_id: int) -> bool:
     
     if not row:
         conn.close()
-        print(f"[{PRINT_PREFIX}] Failed to rename room: '{old_name}' not found")
+        print(f"[ERROR] [{PRINT_PREFIX}] Failed to rename room: '{old_name}' not found")
         return False
     
     # Parse existing data
@@ -247,7 +254,7 @@ def rename_room(old_name: str, new_name: str, edited_by_user_id: int) -> bool:
     conn.close()
     
     if success:
-        print(f"[{PRINT_PREFIX}] Renamed room: '{old_name}' -> '{new_name}'")
+        print(f"[INFO] [{PRINT_PREFIX}] Renamed room: '{old_name}' -> '{new_name}'")
     
     return success
 
@@ -286,6 +293,7 @@ def set_roomtags(room_name: str, tags: list, edited_by_user_id: int) -> bool:
 
     room_data = get_roominfo(room_name)
     if not room_data:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to set room tags: Room '{room_name}' not found")
         return False
     
     document_room(room_name=room_name,
@@ -309,6 +317,7 @@ def set_roomdescription(room_name: str, description: str, edited_by_user_id: int
 
     room_data = get_roominfo(room_name)
     if not room_data:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to set room description: Room '{room_name}' not found")
         return False
     
     document_room(room_name=room_name,
@@ -369,6 +378,10 @@ def delete_room(room_name: str) -> bool:
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Deleted room: '{room_name}'")
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to delete room: '{room_name}' not found")
     return success
 
 def search_rooms_by_tag(tag: str) -> list:
@@ -518,6 +531,7 @@ def clear_room_db():
     cursor.execute("DELETE FROM room_db")
     conn.commit()
     conn.close()
+    print(f"[INFO] [{PRINT_PREFIX}] Cleared all entries from room_db")
 
 def get_documented_by_user(user_id: int) -> list:
     """
@@ -637,6 +651,8 @@ def report_room_bug(room_name: str, report_text: str, reported_by_user_id: int) 
     last_id = cursor.lastrowid
     success = cursor.rowcount > 0
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Created bug report #{last_id} for room: '{room_name}'")
     return success, last_id
 
 def mark_bug_report_resolved(report_id: int) -> bool:
@@ -658,6 +674,10 @@ def mark_bug_report_resolved(report_id: int) -> bool:
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Marked bug report #{report_id} as resolved")
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to mark bug report #{report_id} as resolved (not found)")
     return success
 
 def delete_bug_report(report_id: int) -> bool:
@@ -679,6 +699,10 @@ def delete_bug_report(report_id: int) -> bool:
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Soft-deleted bug report #{report_id}")
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to delete bug report #{report_id} (not found)")
     return success
 
 def get_bug_report(report_id: int, include_deleted: bool = False) -> Optional[Dict[str, Any]]:

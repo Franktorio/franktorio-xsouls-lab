@@ -98,7 +98,7 @@ async def document_room(request: DocumentRoomRequest, key: str = Query(...)):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    print(f"[{PRINT_PREFIX}] Received document_room request for '{request.room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Received document_room request for '{request.room_name}'")
     
     room_profile = room_db_handler.get_roominfo(request.room_name)
     if room_profile:
@@ -117,7 +117,7 @@ async def document_room(request: DocumentRoomRequest, key: str = Query(...)):
         timestamp=timestamp
     )
     
-    print(f"[{PRINT_PREFIX}] Successfully documented '{request.room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Successfully documented '{request.room_name}'")
     return {"success": True, "message": f"Room '{request.room_name}' has been documented."}
 
 
@@ -127,7 +127,7 @@ async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...))
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    print(f"[{PRINT_PREFIX}] Received redocument_room request for '{request.room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Received redocument_room request for '{request.room_name}'")
     
     room_profile = room_db_handler.get_roominfo(request.room_name)
     if not room_profile:
@@ -149,7 +149,7 @@ async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...))
     
     await utils.global_reset(request.room_name)
     
-    print(f"[{PRINT_PREFIX}] Successfully redocumented '{request.room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Successfully redocumented '{request.room_name}'")
     return {"success": True, "message": f"Room '{request.room_name}' has been redocumented."}
 
 
@@ -159,13 +159,13 @@ async def set_roomtype(request: SetRoomTypeRequest, key: str = Query(...)):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    print(f"[{PRINT_PREFIX}] Received set_roomtype request for '{request.room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Received set_roomtype request for '{request.room_name}'")
     
     success = room_db_handler.set_roomtype(request.room_name, request.roomtype, edited_by_user_id=request.edited_by_user_id)
     
     if success:
         await utils.global_reset(request.room_name)
-        print(f"[{PRINT_PREFIX}] Updated roomtype for '{request.room_name}' to '{request.roomtype}'")
+        print(f"[INFO] [{PRINT_PREFIX}] Updated roomtype for '{request.room_name}' to '{request.roomtype}'")
         return {"success": True, "message": f"Room '{request.room_name}' has been updated to type '{request.roomtype}'."}
     else:
         return {"error": f"Room '{request.room_name}' does not exist in the database."}
@@ -176,6 +176,8 @@ async def set_tags(request: SetTagsRequest, key: str = Query(...)):
     """Endpoint to set tags for a room"""
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
+    
+    print(f"[INFO] [{PRINT_PREFIX}] Received set_tags request for '{request.room_name}'")
     
     roomdata = room_db_handler.get_roominfo(request.room_name)
     if not roomdata:
@@ -191,6 +193,7 @@ async def set_tags(request: SetTagsRequest, key: str = Query(...)):
     
     if success:
         await utils.global_reset(request.room_name)
+        print(f"[INFO] [{PRINT_PREFIX}] Updated tags for '{request.room_name}': {', '.join(room_tags)}")
         return {"success": True, "message": f"Room '{request.room_name}' has been updated with tags: {', '.join(room_tags)}."}
     else:
         return {"error": f"Something went wrong while updating tags for room '{request.room_name}'."}
@@ -202,10 +205,13 @@ async def rename_room(key: str = Query(...), old_name: str = Query(...), new_nam
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
+    print(f"[INFO] [{PRINT_PREFIX}] Received rename_room request: '{old_name}' -> '{new_name}'")
+    
     success = room_db_handler.rename_room(old_name, new_name, edited_by_user_id=edited_by_user_id)
     
     if success:
         await utils.global_reset(new_name)
+        print(f"[INFO] [{PRINT_PREFIX}] Successfully renamed room: '{old_name}' -> '{new_name}'")
         return {"success": True, "message": f"Room '{old_name}' has been renamed to '{new_name}'."}
     else:
         return {"error": f"Room '{old_name}' does not exist in the database."}
@@ -217,9 +223,12 @@ async def deletedoc(key: str = Query(...), room_name: str = Query(...)):
     if key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
+    print(f"[INFO] [{PRINT_PREFIX}] Received deletedoc request for '{room_name}'")
+    
     success = room_db_handler.delete_room(room_name)
     
     if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Successfully deleted documentation for room '{room_name}'")
         return {"success": True, "message": f"Documentation for room '{room_name}' has been deleted."}
     else:
         return {"error": f"Room '{room_name}' does not exist in the database."}
@@ -271,6 +280,8 @@ async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
     if request_count > IP_RATE_LIMIT:
         return {"error": "Rate limit exceeded. Please try again later."}
     
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner requesting room info for '{room_name}' from IP: {ip}")
+    
     room_profile = room_db_handler.get_roominfo(room_name)
     if not room_profile:
         return {"error": f"Room '{room_name}' does not exist in the database."}
@@ -288,6 +299,8 @@ async def request_scanner_session(scanner_version: str = Query(...), ip: str = Q
     if request_count > IP_RATE_LIMIT:
         return {"error": "Rate limit exceeded. Please try again later."}
     
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner session requested from IP: {ip} (version: {scanner_version})")
+    
     session_id, password = scanner_db_handler.start_session(scanner_version=scanner_version)
     return {"success": True, "session_id": session_id, "password": password}
 
@@ -302,8 +315,11 @@ async def end_scanner_session(session_id: str = Query(...), password: str = Quer
     if request_count > IP_RATE_LIMIT:
         return {"error": "Rate limit exceeded. Please try again later."}
     
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner session end requested: {session_id} from IP: {ip}")
+    
     success = scanner_db_handler.end_session(session_id=session_id, session_password=password)
     if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Scanner session ended: {session_id}")
         return {"success": True, "message": f"Session '{session_id}' has been ended."}
     else:
         return {"error": "Invalid session ID or password, or session already ended."}
@@ -319,8 +335,11 @@ async def room_encountered(session_id: str = Query(...), password: str = Query(.
     if request_count > IP_RATE_LIMIT:
         return {"error": "Rate limit exceeded. Please try again later."}
     
+    print(f"[INFO] [{PRINT_PREFIX}] Room encountered in session {session_id}: '{room_name}'")
+    
     success = scanner_db_handler.log_encountered_room(session_id=session_id, session_password=password, room_name=room_name)
     if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Logged room '{room_name}' for session {session_id}")
         return {"success": True, "message": f"Room '{room_name}' has been logged for session '{session_id}'."}
     else:
         return {"error": "Invalid session ID or password, or session has ended."}

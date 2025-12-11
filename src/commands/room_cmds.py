@@ -27,7 +27,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(room_name="The name of the room to get information about.")
     async def room_info(self, interaction: discord.Interaction, room_name: str):
         """Fetch and display information about a specific room."""
-        print(f"[{PRINT_PREFIX}] Room info requested for '{room_name}' by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Room info requested for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
         
         room = room_db_handler.get_roominfo(room_name)
@@ -43,7 +43,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(name="The search query for room names.", tag="Tag to filter rooms by.", roomtype="Type of room to filter by.")
     async def room_search(self, interaction: discord.Interaction, name: Optional[str] = None, tag: Optional[Tags] = None, roomtype: Optional[RoomType] = None):
         """Search for rooms by name."""
-        print(f"[{PRINT_PREFIX}] Room search by {interaction.user} - name:{name}, tag:{tag}, type:{roomtype}")
+        print(f"[INFO] [{PRINT_PREFIX}] Room search by {interaction.user} - name:{name}, tag:{tag}, type:{roomtype}")
         await interaction.response.defer()
         
         if not name and not tag and not roomtype:
@@ -110,7 +110,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(room_name="The name of the room to view history for.")
     async def room_history(self, interaction: discord.Interaction, room_name: str):
         """View the edit history of a room."""
-        print(f"[{PRINT_PREFIX}] Room history requested for '{room_name}' by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Room history requested for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
         
         room = room_db_handler.get_roominfo(room_name)
@@ -130,7 +130,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(room_name="The name of the room to report an issue for.", issue_description="Description of the issue encountered. Be detailed (30-1000 characters).")
     async def room_bug_report(self, interaction: discord.Interaction, room_name: str, issue_description: str):
         """Report an issue with a room."""
-        print(f"[{PRINT_PREFIX}] Room bug report for '{room_name}' by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Room bug report for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
 
         issue_description = issue_description[:1000]  # Limit to 1000 characters
@@ -158,7 +158,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(room_name="The name of the room to view bug reports for.")
     async def view_room_reports(self, interaction: discord.Interaction, room_name: str):
         """View bug reports for a specific room."""
-        print(f"[{PRINT_PREFIX}] View room reports for '{room_name}' by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] View room reports for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
         
         room = room_db_handler.get_roominfo(room_name)
@@ -183,7 +183,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.command(name="view_all_reports", description="View all bug reports across all rooms.")
     async def view_all_reports(self, interaction: discord.Interaction, include_resolved: Optional[bool] = True):
         """View all bug reports."""
-        print(f"[{PRINT_PREFIX}] View all bug reports by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] View all bug reports by {interaction.user}")
         await interaction.response.defer()
         
         reports = room_db_handler.get_all_bug_reports(include_resolved=include_resolved)
@@ -203,7 +203,7 @@ class RoomCommands(app_commands.Group):
     @app_commands.describe(report_id="The ID of the bug report to view.")
     async def view_report(self, interaction: discord.Interaction, report_id: int):
         """View a specific bug report by its ID."""
-        print(f"[{PRINT_PREFIX}] View bug report #{report_id} by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] View bug report #{report_id} by {interaction.user}")
         await interaction.response.defer()
         
         report = room_db_handler.get_bug_report(report_id)

@@ -99,9 +99,9 @@ def create_server_profile(server_id: int, leaderboard_channel_id: int = None,
 
         conn.commit()
         conn.close()
-        print(f"[{PRINT_PREFIX}] Created/updated server profile for guild {server_id}")
+        print(f"[INFO] [{PRINT_PREFIX}] Created/updated server profile for guild {server_id}")
     except Exception as e:
-        print(f"[{PRINT_PREFIX}] Error creating server profile for guild {server_id}: {e}")
+        print(f"[ERROR] [{PRINT_PREFIX}] Error creating server profile for guild {server_id}: {e}")
         raise
         return True
     except sqlite3.IntegrityError:
@@ -153,6 +153,10 @@ def update_server_profile(server_id: int, leaderboard_channel_id: int = None,
     success = cursor.rowcount > 0
     conn.commit()
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Updated server profile for guild {server_id}")
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to update server profile: guild {server_id} not found")
     return success
 
 
@@ -160,8 +164,12 @@ def set_leaderboard_channel(server_id: int, channel_id: int) -> bool:
     """Set the leaderboard channel for a server."""
     profile = get_server_profile(server_id)
     if profile:
-        return update_server_profile(server_id, leaderboard_channel_id=channel_id)
+        success = update_server_profile(server_id, leaderboard_channel_id=channel_id)
+        if success:
+            print(f"[INFO] [{PRINT_PREFIX}] Set leaderboard channel to {channel_id} for guild {server_id}")
+        return success
     else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to set leaderboard channel: guild {server_id} profile not found")
         return False
 
 
@@ -169,8 +177,12 @@ def set_documented_channel(server_id: int, channel_id: int) -> bool:
     """Set the documented channel for a server."""
     profile = get_server_profile(server_id)
     if profile:
-        return update_server_profile(server_id, documented_channel_id=channel_id)
+        success = update_server_profile(server_id, documented_channel_id=channel_id)
+        if success:
+            print(f"[INFO] [{PRINT_PREFIX}] Set documented channel to {channel_id} for guild {server_id}")
+        return success
     else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to set documented channel: guild {server_id} profile not found")
         return False
 
 
@@ -190,8 +202,12 @@ def add_doc_id(server_id: int, room_name: str, message_id: int) -> bool:
     if profile:
         doc_msg_ids = profile['doc_msg_ids'].copy()
         doc_msg_ids[room_name] = message_id
-        return update_server_profile(server_id, doc_msg_ids=doc_msg_ids)
+        success = update_server_profile(server_id, doc_msg_ids=doc_msg_ids)
+        if success:
+            print(f"[INFO] [{PRINT_PREFIX}] Added doc message ID {message_id} for room '{room_name}' in guild {server_id}")
+        return success
     else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to add doc ID: guild {server_id} profile not found")
         return False
 
 
@@ -210,7 +226,11 @@ def remove_doc_id(server_id: int, room_name: str) -> bool:
     if profile and room_name in profile['doc_msg_ids']:
         doc_msg_ids = profile['doc_msg_ids'].copy()
         del doc_msg_ids[room_name]
-        return update_server_profile(server_id, doc_msg_ids=doc_msg_ids)
+        success = update_server_profile(server_id, doc_msg_ids=doc_msg_ids)
+        if success:
+            print(f"[INFO] [{PRINT_PREFIX}] Removed doc message ID for room '{room_name}' in guild {server_id}")
+        return success
+    print(f"[WARN] [{PRINT_PREFIX}] Failed to remove doc ID: room '{room_name}' not found in guild {server_id}")
     return False
 
 def clear_doc_ids(server_id: int) -> bool:
@@ -219,7 +239,11 @@ def clear_doc_ids(server_id: int) -> bool:
     """
     profile = get_server_profile(server_id)
     if profile:
-        return update_server_profile(server_id, doc_msg_ids={})
+        success = update_server_profile(server_id, doc_msg_ids={})
+        if success:
+            print(f"[INFO] [{PRINT_PREFIX}] Cleared all doc message IDs for guild {server_id}")
+        return success
+    print(f"[WARN] [{PRINT_PREFIX}] Failed to clear doc IDs: guild {server_id} profile not found")
     return False
 
 def get_doc_message_id(server_id: int, room_name: str) -> Optional[int]:
@@ -255,6 +279,10 @@ def delete_server_profile(server_id: int) -> bool:
     success = cursor.rowcount > 0
     conn.commit()
     conn.close()
+    if success:
+        print(f"[INFO] [{PRINT_PREFIX}] Deleted server profile for guild {server_id}")
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to delete server profile: guild {server_id} not found")
     return success
 
 def clear_server_profiles():
@@ -264,6 +292,7 @@ def clear_server_profiles():
     cursor.execute("DELETE FROM server_profiles")
     conn.commit()
     conn.close()
+    print(f"[INFO] [{PRINT_PREFIX}] Cleared all server profiles")
 
 def get_all_server_profiles() -> list:
     """

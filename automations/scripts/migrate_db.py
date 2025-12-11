@@ -11,6 +11,7 @@
 
 if __name__ == "__main__": # Main entry point enforcement, ensures the script is run directly and not imported on accident.
     from src.datamanager import database_manager
+    import src.log_manager  # Ensure logging is set up
 
     # Get argument for which database to migrate
     import sys
@@ -25,8 +26,8 @@ if __name__ == "__main__": # Main entry point enforcement, ensures the script is
     # Migrate the specified database
     try:
         database_manager.migrate_db(db_name)
-        print(f"[SCRIPT MIGRATE DB] Database '{db_name}' migrated successfully.")
+        print(f"[INFO] [SCRIPT MIGRATE DB] Database '{db_name}' migrated successfully.")
         exit(0)
     except Exception as e:
-        print(f"[SCRIPT MIGRATE DB] Failed to migrate database '{db_name}': {e}")
+        print(f"[ERROR] [SCRIPT MIGRATE DB] Failed to migrate database '{db_name}': {e}")
         exit(1)

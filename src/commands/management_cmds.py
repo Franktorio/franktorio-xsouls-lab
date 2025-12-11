@@ -31,7 +31,7 @@ class Management(app_commands.Group):
     @app_commands.command(name="sync", description="Manually trigger database synchronization across servers.")
     async def sync_databases(self, interaction: discord.Interaction):
         """Manually trigger database synchronization across servers."""
-        print(f"[{PRINT_PREFIX}] Manual database sync triggered by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Manual database sync triggered by {interaction.user}")
         await interaction.response.defer()
         
         level = await utils.permission_check(interaction.user)
@@ -51,7 +51,7 @@ class Management(app_commands.Group):
     @app_commands.describe(user="The user to set the permission level for.", role="The permission role to assign.")
     async def set_permission_level(self, interaction: discord.Interaction, user: discord.User, role: Literal["Viewer", "Trial Researcher", "Novice Researcher", "Experienced Researcher", "Head Researcher"]):
         """Set the permission level of a user."""
-        print(f"[{PRINT_PREFIX}] Set permission level for {user} to '{role}' by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Set permission level for {user} to '{role}' by {interaction.user}")
         await interaction.response.defer()
         
         level = await utils.permission_check(interaction.user)
@@ -111,7 +111,7 @@ class Management(app_commands.Group):
     @app_commands.describe(report_id="The ID of the bug report to delete.")
     async def delete_report(self, interaction: discord.Interaction, report_id: int):
         """Delete a bug report (soft delete)."""
-        print(f"[{PRINT_PREFIX}] Delete bug report #{report_id} by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Delete bug report #{report_id} by {interaction.user}")
         await interaction.response.defer()
         
         report = room_db_handler.get_bug_report(report_id)
@@ -137,7 +137,7 @@ class Management(app_commands.Group):
     @app_commands.describe(report_id="The ID of the bug report to resolve.")
     async def resolve_report(self, interaction: discord.Interaction, report_id: int):
         """Mark a bug report as resolved."""
-        print(f"[{PRINT_PREFIX}] Resolve bug report #{report_id} by {interaction.user}")
+        print(f"[INFO] [{PRINT_PREFIX}] Resolve bug report #{report_id} by {interaction.user}")
         await interaction.response.defer()
         
         report = room_db_handler.get_bug_report(report_id)

@@ -19,22 +19,21 @@ from src.utils import embeds, utils
 async def sync_databases():
     """Background task to synchronize databases across servers."""
     if not EXTERNAL_DATA_SOURCE:
-        print(f"[{PRINT_PREFIX}] Skipping database synchronization - external data source is disabled")
+        print(f"[INFO] [{PRINT_PREFIX}] Skipping database synchronization - external data source is disabled")
         return
     
-    print(f"[{PRINT_PREFIX}] Starting database synchronization across servers")
-    print(f"[{PRINT_PREFIX}] Fetching external database export...")
-
+    print(f"[INFO] [{PRINT_PREFIX}] Starting database synchronization across servers")
+    print(f"[INFO] [{PRINT_PREFIX}] Fetching external database export...")
     # Export external database
     ext_export = await external_api.export_database_api()
     if not ext_export.get("success"):
-        print(f"[{PRINT_PREFIX}] Failed to export external database: {ext_export.get('error')}")
+        print(f"[ERROR] [{PRINT_PREFIX}] Failed to get external database: {ext_export.get('error')}")
         return
     
     ext_database = ext_export.get("rooms", {})
     db_json = datamanager.room_db_handler.jsonify_room_db()["room_db"]
 
-    print(f"[{PRINT_PREFIX}] Comparing {len(ext_database)} external rooms with {len(db_json)} local rooms")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Comparing {len(ext_database)} external rooms with {len(db_json)} local rooms")
     # Compare each last updated timestamp and update external/internal as needed
     missing_locally = []
     missing_externally = []
@@ -62,24 +61,24 @@ async def sync_databases():
             if local_room_data:
                 missing_externally.append((room_name, local_room_data))
 
-    print(f"[{PRINT_PREFIX}] Rooms missing locally: {len(missing_locally)}")
-    print(f"[{PRINT_PREFIX}] Rooms missing externally: {len(missing_externally)}")
-    print(f"[{PRINT_PREFIX}] Rooms newer locally: {len(newer_locally)}")
-    print(f"[{PRINT_PREFIX}] Rooms newer externally: {len(newer_externally)}")
+    print(f"[INFO] [{PRINT_PREFIX}] Rooms missing locally: {len(missing_locally)}")
+    print(f"[INFO] [{PRINT_PREFIX}] Rooms missing externally: {len(missing_externally)}")
+    print(f"[INFO] [{PRINT_PREFIX}] Rooms newer locally: {len(newer_locally)}")
+    print(f"[INFO] [{PRINT_PREFIX}] Rooms newer externally: {len(newer_externally)}")
 
     # Process missing externally - upload to external API
     for room_name, local_data in missing_externally:
-        print(f"[{PRINT_PREFIX}] Uploading missing room to external API: {room_name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Uploading missing room to external API: {room_name}")
         
         # Validate image URLs - filter out file paths
         picture_urls = local_data.get("picture_urls", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
         if len(valid_urls) < len(picture_urls):
-            print(f"[{PRINT_PREFIX}]    Filtered out {len(picture_urls) - len(valid_urls)} invalid URLs (file paths)")
+            print(f"[WARNING] [{PRINT_PREFIX}]    Filtered out {len(picture_urls) - len(valid_urls)} invalid URLs (file paths)")
         
         if len(valid_urls) < 4:
-            print(f"[{PRINT_PREFIX}]   Skipped {room_name}: Only {len(valid_urls)} valid HTTP URLs (need at least 4)")
+            print(f"[WARNING] [{PRINT_PREFIX}]   Skipped {room_name}: Only {len(valid_urls)} valid HTTP URLs (need at least 4)")
             continue
         
         result = await external_api.export_room_to_api(
@@ -93,20 +92,20 @@ async def sync_databases():
             timestamp=local_data.get("last_updated", 0)
         )
         if not result.get("success"):
-            print(f"[{PRINT_PREFIX}]   Failed to upload {room_name}: {result.get('error')}")
+            print(f"[ERROR] [{PRINT_PREFIX}]   Failed to upload {room_name}: {result.get('error')}")
         else:
-            print(f"[{PRINT_PREFIX}]   Uploaded {room_name}")
+            print(f"[INFO] [{PRINT_PREFIX}]   Uploaded {room_name}")
 
     # Process missing locally, download from external API
     for room_name, ext_data in missing_locally:
-        print(f"[{PRINT_PREFIX}] Downloading missing room from external API: {room_name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Downloading missing room from external API: {room_name}")
         
         # Validate image URLs from external API: filter out file paths
         picture_urls = ext_data.get("images", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
         if len(valid_urls) < len(picture_urls):
-            print(f"[{PRINT_PREFIX}]    External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
+            print(f"[WARNING] [{PRINT_PREFIX}]    External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
         
         # Get existing local data to preserve edit history
         local_room = datamanager.room_db_handler.get_roominfo(room_name)
@@ -124,22 +123,22 @@ async def sync_databases():
             edited_by_user_id=ext_data.get("last_edited_by"),
             edits=existing_edits  # Preserve existing edit history
         )
-        print(f"[{PRINT_PREFIX}]   Downloaded {room_name}")
+        print(f"[INFO] [{PRINT_PREFIX}]   Downloaded {room_name}")
 
     # Process newer locally: upload to external API
     for room_name, local_data in newer_locally:
-        print(f"[{PRINT_PREFIX}] Updating external API (local is newer): {room_name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Updating external API (local is newer): {room_name}")
         
         # Validate image URLs: filter out file paths
         picture_urls = local_data.get("picture_urls", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
         if len(valid_urls) < len(picture_urls):
-            print(f"[{PRINT_PREFIX}]    Filtered out {len(picture_urls) - len(valid_urls)} invalid URLs (file paths)")
+            print(f"[WARNING] [{PRINT_PREFIX}]    Filtered out {len(picture_urls) - len(valid_urls)} invalid URLs (file paths)")
         
         if len(valid_urls) < 4:
-            print(f"[{PRINT_PREFIX}]   Skipped {room_name}: Only {len(valid_urls)} valid HTTP URLs (need at least 4)")
-            print(f"[{PRINT_PREFIX}]    Keeping external version to avoid data loss")
+            print(f"[WARNING] [{PRINT_PREFIX}]   Skipped {room_name}: Only {len(valid_urls)} valid HTTP URLs (need at least 4)")
+            print(f"[WARNING] [{PRINT_PREFIX}]    Keeping external version to avoid data loss")
             
             # Download from external to fix discrepancy
             ext_room_data = ext_database.get(room_name)
@@ -155,7 +154,7 @@ async def sync_databases():
                     edited_by_user_id=ext_room_data.get("last_edited_by")
                 )
                 await utils.global_reset(room_name)
-                print(f"[{PRINT_PREFIX}]   Reverted local {room_name} to external version")
+                print(f"[INFO] [{PRINT_PREFIX}]   Reverted local {room_name} to external version")
             continue
         
         upload_result = await external_api.export_room_to_api(
@@ -171,22 +170,22 @@ async def sync_databases():
         
         if not upload_result.get("success"):
             # Check if this is a skippable error (like not enough images)
-            print(f"[{PRINT_PREFIX}]   Failed to upload {room_name}: {upload_result.get('error')}")
-            print(f"[{PRINT_PREFIX}]    Keeping external version to avoid data loss")
+            print(f"[ERROR] [{PRINT_PREFIX}]   Failed to upload {room_name}: {upload_result.get('error')}")
+            print(f"[ERROR] [{PRINT_PREFIX}]    Keeping external version to avoid data loss")
             continue
         
-        print(f"[{PRINT_PREFIX}]   Updated {room_name} in external database")
+        print(f"[INFO] [{PRINT_PREFIX}]   Updated {room_name} in external database")
 
     # Process newer externally: update local database
     for room_name, ext_data in newer_externally:
-        print(f"[{PRINT_PREFIX}] Updating local database (external is newer): {room_name}")
+        print(f"[INFO] [{PRINT_PREFIX}] Updating local database (external is newer): {room_name}")
         
         # Validate image URLs from external API: filter out file paths
         picture_urls = ext_data.get("images", [])
         valid_urls = [url for url in picture_urls if url.startswith(("http://", "https://"))]
         
         if len(valid_urls) < len(picture_urls):
-            print(f"[{PRINT_PREFIX}]    External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
+            print(f"[WARNING] [{PRINT_PREFIX}]    External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
         
         datamanager.room_db_handler.document_room(
             room_name=room_name,
@@ -200,11 +199,10 @@ async def sync_databases():
         )
 
         await utils.global_reset(room_name)
-        print(f"[{PRINT_PREFIX}]   Updated {room_name} in local database")
+        print(f"[INFO] [{PRINT_PREFIX}]   Updated {room_name} in local database")
         
-    print(f"[{PRINT_PREFIX}] Database synchronization complete!")
-    print(f"[{PRINT_PREFIX}]    Uploaded: {len(missing_externally)} rooms")
-    print(f"[{PRINT_PREFIX}]    Downloaded: {len(missing_locally)} rooms")
-    print(f"[{PRINT_PREFIX}]    Updated externally: {len(newer_locally)} rooms")
-    print(f"[{PRINT_PREFIX}]    Updated locally: {len(newer_externally)} rooms")
-
+    print(f"[INFO] [{PRINT_PREFIX}] Database synchronization complete!")
+    print(f"[INFO] [{PRINT_PREFIX}]    Uploaded: {len(missing_externally)} rooms")
+    print(f"[INFO] [{PRINT_PREFIX}]    Downloaded: {len(missing_locally)} rooms")
+    print(f"[INFO] [{PRINT_PREFIX}]    Updated externally: {len(newer_locally)} rooms")
+    print(f"[INFO] [{PRINT_PREFIX}]    Updated locally: {len(newer_externally)} rooms")

@@ -13,6 +13,13 @@ from discord.ext import commands
 import config
 import src.shared as shared
 
+# Override print function to log outputs to file
+import src.log_manager as log_manager # This module overrides the print function
+
+if log_manager.DEBUG_ENABLED:
+    print("[INFO] [MAIN] Debug logging is ENABLED")
+else:
+    print("[INFO] [MAIN] Debug logging is DISABLED")
 
 # Bot intents
 intents = discord.Intents.default()
@@ -39,7 +46,9 @@ def run_api_server():
     uvicorn.run(api_app, host="0.0.0.0", port=config.vars.API_PORT, log_level="info")
 
 # Initialize database
+print("[INFO] [MAIN] Initializing databases...")
 database_manager.init_databases()
+print("[INFO] [MAIN] Initializing backup manager...")
 backup_manager.init_backup_manager()
 
 @FRD_bot.event
@@ -49,30 +58,30 @@ async def on_ready():
 
     # Print startup information
     print("="*50)
-    print("Bot is online")
-    print(f"Time: {now}")
-    print(f"Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
-    print(f"Connected to {len(FRD_bot.guilds)} guild(s)")
+    print("[INFO] [MAIN] Bot is online")
+    print(f"[INFO] [MAIN] Time: {now}")
+    print(f"[INFO] [MAIN] Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
+    print(f"[INFO] [MAIN] Connected to {len(FRD_bot.guilds)} guild(s)")
     print("="*50)
     
     # Start API server in a separate thread
-    print("Starting API server...")
+    print("[INFO] [MAIN] Starting API server...")
     api_thread = threading.Thread(target=run_api_server, daemon=True)
     api_thread.start()
-    print(f"API server started on http://0.0.0.0:{config.vars.API_PORT}")
+    print(f"[INFO] [MAIN] API server started on http://0.0.0.0:{config.vars.API_PORT}")
     
     # Start background tasks
     init_tasks.start_all_tasks()
     
     # Sync command tree
-    print("Syncing command tree...")
+    print("[INFO] [MAIN] Syncing command tree...")
     try:
         synced = await FRD_bot.tree.sync()
-        print(f"Successfully synced {len(synced)} command(s)")
+        print(f"[INFO] [MAIN] Successfully synced {len(synced)} command(s)")
     except Exception as e:
-        print(f"Failed to sync commands: {e}")
-        print("Bot will continue running but slash commands may not be available")
+        print(f"[ERROR] [MAIN] Failed to sync commands: {e}")
+        print("[WARNING] [MAIN] Bot will continue running but slash commands may not be available")
 
 print("="*50)
-print("Starting bot connection to Discord...")
+print("[INFO] [MAIN] Starting bot connection to Discord...")
 FRD_bot.run(config.vars.BOT_TOKEN)

@@ -30,13 +30,17 @@ def connect_db(db_file_name: str, read_only: bool = False) -> sqlite3.Connection
     Returns:
         sqlite3.Connection: Database connection
     """
-    db_path = os.path.join(DB_DIR, db_file_name)
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    if read_only:
-        conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
-    else:
-        conn = sqlite3.connect(db_path)
-    return conn
+    try:
+        db_path = os.path.join(DB_DIR, db_file_name)
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        if read_only:
+            conn = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True)
+        else:
+            conn = sqlite3.connect(db_path)
+        return conn
+    except Exception as e:
+        print(f"[ERROR] [{PRINT_PREFIX}] Failed to connect to database '{db_file_name}': {e}")
+        raise e
 
 def _init_tables_from_schema(schema: Dict[str, str], db_file_name: str) -> None:
     """
@@ -51,9 +55,11 @@ def _init_tables_from_schema(schema: Dict[str, str], db_file_name: str) -> None:
     
     for table_name, create_statement in schema.items():
         cursor.execute(create_statement)
+        print(f"[DEBUG] [{PRINT_PREFIX}] Created/verified table '{table_name}' in '{db_file_name}'")
     
     conn.commit()
     conn.close()
+    print(f"[INFO] [{PRINT_PREFIX}] Initialized tables in '{db_file_name}'")
 
 def init_databases() -> None:
     """
@@ -68,35 +74,39 @@ def init_databases() -> None:
     # Initialize server database
     _init_tables_from_schema(server_db_handler.SCHEMA, server_db_handler.DB_FILE_NAME)
     databases[server_db_handler.DB_FILE_NAME] = server_db_handler
-    print(f"[{PRINT_PREFIX}] Server database initialized")
+    print(f"[INFO] [{PRINT_PREFIX}] Server database initialized")
     
     # Initialize room database
     _init_tables_from_schema(room_db_handler.SCHEMA, room_db_handler.DB_FILE_NAME)
     databases[room_db_handler.DB_FILE_NAME] = room_db_handler
-    print(f"[{PRINT_PREFIX}] Room database initialized")
+    print(f"[INFO] [{PRINT_PREFIX}] Room database initialized")
     
     # Initialize scanner database
     _init_tables_from_schema(scanner_db_handler.SCHEMA, scanner_db_handler.DB_FILE_NAME)
     scanner_db_handler.init_scanner_extras()
     databases[scanner_db_handler.DB_FILE_NAME] = scanner_db_handler
-    print(f"[{PRINT_PREFIX}] Scanner database initialized")
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner database initialized")
     
-    print(f"[{PRINT_PREFIX}] All databases initialized successfully")
+    print(f"[INFO] [{PRINT_PREFIX}] All databases initialized successfully")
 
 def migrate_db(db_file_name: str) -> None:
     if db_file_name not in databases:
+        print(f"[ERROR] [{PRINT_PREFIX}] Migration failed: Unknown database file '{db_file_name}'")
         raise ValueError(f"Unknown database file: {db_file_name}")
 
+    print(f"[INFO] [{PRINT_PREFIX}] Starting migration for database '{db_file_name}'")
     desired_schema = databases[db_file_name].SCHEMA
     old_db_path = os.path.join(DB_DIR, db_file_name)
 
     temp_db_path = os.path.join(DB_DIR, f"temp_{db_file_name}")
     temp_conn = sqlite3.connect(temp_db_path)
     temp_cursor = temp_conn.cursor()
+    print(f"[DEBUG] [{PRINT_PREFIX}] Created temporary database for migration")
 
     # Initialize desired schema onto the new temp database
     for ddl in desired_schema.values():
         temp_cursor.execute(ddl)
+    print(f"[DEBUG] [{PRINT_PREFIX}] Applied new schema to temporary database")
 
     # Load old database into the connection
     temp_cursor.execute(f"ATTACH DATABASE '{old_db_path}' AS olddb")
@@ -116,6 +126,7 @@ def migrate_db(db_file_name: str) -> None:
         # Determine common columns
         common_columns = old_columns.intersection(new_columns)
         if not common_columns:
+            print(f"[WARN] [{PRINT_PREFIX}] No common columns found for table '{table_name}', skipping data copy")
             continue  # No common columns to copy
 
         columns_str = ", ".join(common_columns)
@@ -125,6 +136,7 @@ def migrate_db(db_file_name: str) -> None:
             INSERT INTO {table_name} ({columns_str})
             SELECT {columns_str} FROM olddb.{table_name}
         """)
+        print(f"[DEBUG] [{PRINT_PREFIX}] Migrated data for table '{table_name}' ({len(common_columns)} columns)")
 
 
 
@@ -132,3 +144,4 @@ def migrate_db(db_file_name: str) -> None:
     temp_conn.commit()
     temp_conn.close()
     os.replace(temp_db_path, old_db_path)
+    print(f"[INFO] [{PRINT_PREFIX}] Migration completed successfully for database '{db_file_name}'")

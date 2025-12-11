@@ -13,7 +13,6 @@ import os
 from typing import Optional
 
 # Third-party imports
-import aiohttp
 import discord
 from discord import app_commands
 
@@ -32,6 +31,8 @@ class Admin(app_commands.Group):
         """Restart the bot (shuts down, service will restart it)."""
         await interaction.response.defer()
         
+        print(f"[INFO] [{PRINT_PREFIX}] Restart command invoked by {interaction.user}")
+        
         level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
@@ -43,6 +44,8 @@ class Admin(app_commands.Group):
         )
         await interaction.followup.send(embed=embed)
         
+        print(f"[INFO] [{PRINT_PREFIX}] Shutting down bot for restart")
+        
         # Shutdown the bot
         await shared.FRD_bot.close()
         os._exit(0)
@@ -51,6 +54,8 @@ class Admin(app_commands.Group):
     async def global_reset_documented(self, interaction: discord.Interaction):
         """Bulk deletes every message in the documented channel across all servers."""
         await interaction.response.defer()
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Global reset documented invoked by {interaction.user}")
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
@@ -75,13 +80,13 @@ class Admin(app_commands.Group):
                 def is_bot_message(message):
                     return message.author.id == shared.FRD_bot.user.id
                 
-                print(f"[{PRINT_PREFIX}] Clearing documented channel in guild {guild.name} ({guild.id})")
+                print(f"[INFO] [{PRINT_PREFIX}] Clearing documented channel in guild {guild.name} ({guild.id})")
                 deleted = await channel.purge(check=is_bot_message, limit=None)
                 datamanager.server_db_handler.clear_doc_ids(guild.id)
-                print(f"[{PRINT_PREFIX}] Cleared {len(deleted)} messages in guild {guild.name}")
+                print(f"[INFO] [{PRINT_PREFIX}] Cleared {len(deleted)} messages in guild {guild.name}")
                 return len(deleted)
             except Exception as e:
-                print(f"[{PRINT_PREFIX}] Failed to clear documented channel in guild {guild.name} ({guild.id}): {e}")
+                print(f"[ERROR] [{PRINT_PREFIX}] Failed to clear documented channel in guild {guild.name} ({guild.id}): {e}")
                 failed_servers.append(guild.name)
                 return 0
 
@@ -98,11 +103,14 @@ class Admin(app_commands.Group):
             title="Global Documented Channel Reset Complete",
             description=embed_desc
         )
+        print(f"[INFO] [{PRINT_PREFIX}] Global documented reset complete: {total_deleted} messages deleted")
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="cache_all_rooms", description="Cache all rooms from the database to R2")
     async def cache_all_rooms(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Cache all rooms invoked by {interaction.user}")
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
@@ -153,6 +161,8 @@ class Admin(app_commands.Group):
             timestamp=discord.utils.utcnow()
         )
         await interaction.followup.send(embed=r_embed)
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Starting cache loop for {total_rooms} rooms")
 
         for room_name in rooms:
             room_info = datamanager.room_db_handler.get_roominfo(room_name)
@@ -164,7 +174,7 @@ class Admin(app_commands.Group):
                     message_id = await _edit_or_send_embed(message_id)
                     edit_cd = 0
             except Exception as e:
-                print(f"[{PRINT_PREFIX}] Error updating cache progress message: {e}")
+                print(f"[ERROR] [{PRINT_PREFIX}] Error updating cache progress message: {e}")
 
             cache_failed = False
             for url in image_urls:
@@ -194,6 +204,8 @@ class Admin(app_commands.Group):
         elif cached_failed_rooms > 10:
             final_embed.add_field(name="Failed Rooms", value="Too many to list.", inline=False)
 
+        print(f"[INFO] [{PRINT_PREFIX}] Cache complete: {cached} cached, {failed} failed")
+        
         msg = await channel.fetch_message(message_id)
         await msg.edit(embed=final_embed)
 
@@ -205,6 +217,8 @@ class Admin(app_commands.Group):
         """
         await interaction.response.defer(ephemeral=True)
         
+        print(f"[INFO] [{PRINT_PREFIX}] Get room JSON requested by {interaction.user}")
+        
         level = await utils.permission_check(interaction.user)
         if level < 5:
             await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
@@ -214,6 +228,7 @@ class Admin(app_commands.Group):
         
         # Send room data as a json file
         json_file = discord.File(fp=io.BytesIO(json.dumps(room_data, indent=4).encode()), filename="frd_room_db.json")
+        print(f"[INFO] [{PRINT_PREFIX}] Room database JSON exported to {interaction.user}")
         await interaction.followup.send(file=json_file, ephemeral=True)
     
     @app_commands.command(name="get_room_db", description="Get the raw database file")
@@ -222,6 +237,8 @@ class Admin(app_commands.Group):
         Get the raw database file.
         """
         await interaction.response.defer(ephemeral=True)
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Get room DB requested by {interaction.user}")
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
@@ -233,6 +250,7 @@ class Admin(app_commands.Group):
         with open(db_path, 'rb') as f:
             file_data = f.read()
         db_file = discord.File(fp=io.BytesIO(file_data), filename="frd_room.db")
+        print(f"[INFO] [{PRINT_PREFIX}] Room database file exported to {interaction.user}")
         await interaction.followup.send(file=db_file, ephemeral=True)
     
 
@@ -242,6 +260,8 @@ class Admin(app_commands.Group):
         Get data for a specific room as a json file.
         """
         await interaction.response.defer(ephemeral=True)
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Room data requested for '{room_name}' by {interaction.user}")
         
         level = await utils.permission_check(interaction.user)
         if level < 5:
@@ -255,6 +275,7 @@ class Admin(app_commands.Group):
         
         # Send room data as a json file
         json_file = discord.File(fp=io.BytesIO(json.dumps(room_data, indent=4).encode()), filename=f"{room_name}_data.json")
+        print(f"[INFO] [{PRINT_PREFIX}] Room data for '{room_name}' exported to {interaction.user}")
         await interaction.followup.send(file=json_file, ephemeral=True)
 
 shared.FRD_bot.tree.add_command(Admin())

@@ -81,6 +81,28 @@ The bot will:
 
 Documentation for each module is available in their respective folder. (WIP)
 
+### Logging
+
+**Logs are split in levels**
+- `TRACE`
+- `DEBUG`
+- `INFO`
+- `INFORMATION`
+- `WARN`
+- `WARNING`
+- `ERROR`
+- `FAIL`
+- `FAILURE`
+
+> To enable [DEBUG] logging go to `src\logs_manager.py`*
+
+**Logging format**
+```python
+print(f"[INFO] {PRINT_PREFIX} This action happened.")
+print(f"[ERROR] {PRINT_PREFIX} This action could not happen.")
+print(f"[WARNING] {PRINT_PREFIX} This was not found, skipping.")
+```
+
 ### Commands Documentation
 ```bash
 src\commands\_CMDS_DOCS.md

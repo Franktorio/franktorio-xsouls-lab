@@ -67,7 +67,7 @@ def _close_sessions_task():
         conn.commit()
         conn.close()
 
-        print(f"[{PRINT_PREFIX}] Closed old sessions inactive for more than {SESSION_LIFE} seconds.")
+        print(f"[INFO] [{PRINT_PREFIX}] Closed old sessions inactive for more than {SESSION_LIFE} seconds.")
 
     while True:
         close_old_sessions()
@@ -164,7 +164,7 @@ def start_session(scanner_version: str) -> tuple[str, str]:
     conn.commit()
     conn.close()
     
-    print(f"[{PRINT_PREFIX}] Started new session {session_id} with scanner version {scanner_version}.")
+    print(f"[INFO] [{PRINT_PREFIX}] Started new session {session_id} with scanner version {scanner_version}.")
     return session_id, password
 
 def end_session(session_id: str, session_password: str) -> bool:
@@ -185,7 +185,7 @@ def end_session(session_id: str, session_password: str) -> bool:
     stored_password = cursor.fetchone()
     if stored_password is None or not _compare_password(stored_password[0], session_password):
         conn.close()
-        print(f"[{PRINT_PREFIX}] Failed to end session {session_id}: invalid session ID or password, or session is already closed.")
+        print(f"[ERROR] [{PRINT_PREFIX}] Failed to end session {session_id}: invalid session ID or password, or session is already closed.")
         return False
     
     cursor.execute("""
@@ -194,7 +194,7 @@ def end_session(session_id: str, session_password: str) -> bool:
         WHERE session_id = ?
     """, (session_id,))
     
-    print(f"[{PRINT_PREFIX}] Ended session {session_id}.")
+    print(f"[INFO] [{PRINT_PREFIX}] Ended session {session_id}.")
     conn.commit()
     conn.close()
     return True
@@ -222,7 +222,7 @@ def log_encountered_room(session_id: str, room_name: str, session_password: str)
     stored_password = cursor.fetchone()
     if stored_password is None or not _compare_password(stored_password[0], session_password):
         conn.close()
-        print(f"[{PRINT_PREFIX}] Failed to log room '{room_name}': invalid session ID or password, or session is closed.")
+        print(f"[ERROR] [{PRINT_PREFIX}] Failed to log room '{room_name}': invalid session ID or password, or session is closed.")
         return False
     
     cursor.execute("""
@@ -235,7 +235,7 @@ def log_encountered_room(session_id: str, room_name: str, session_password: str)
     conn.commit()
     conn.close()
     
-    print(f"[{PRINT_PREFIX}] Logged encountered room '{room_name}' in session {session_id}.")
+    print(f"[INFO] [{PRINT_PREFIX}] Logged encountered room '{room_name}' in session {session_id}.")
     return success
 
 def get_sessions(include_closed: bool = True) -> list[tuple]:
@@ -265,7 +265,7 @@ def get_sessions(include_closed: bool = True) -> list[tuple]:
     sessions = cursor.fetchall()
     conn.close()
 
-    print(f"[{PRINT_PREFIX}] Retrieved {'all' if include_closed else 'open'} sessions.")
+    print(f"[INFO] [{PRINT_PREFIX}] Retrieved {'all' if include_closed else 'open'} sessions.")
     return sessions
 
 def get_session_rooms(session_id: str) -> list[tuple]:
@@ -288,7 +288,7 @@ def get_session_rooms(session_id: str) -> list[tuple]:
     encounters = cursor.fetchall()
     conn.close()
     
-    print(f"[{PRINT_PREFIX}] Retrieved encountered rooms for session {session_id}.")
+    print(f"[INFO] [{PRINT_PREFIX}] Retrieved encountered rooms for session {session_id}.")
     return encounters
 
 def get_all_encountered_rooms() -> list[tuple]:
@@ -310,7 +310,7 @@ def get_all_encountered_rooms() -> list[tuple]:
     encounters = cursor.fetchall()
     conn.close()
     
-    print(f"[{PRINT_PREFIX}] Retrieved all encountered rooms across all sessions.")
+    print(f"[INFO] [{PRINT_PREFIX}] Retrieved all encountered rooms across all sessions.")
     return encounters
 
 def jsonify_database() -> dict[str, any]:
@@ -389,5 +389,5 @@ def jsonify_database() -> dict[str, any]:
 
     conn.close()
 
-    print(f"[{PRINT_PREFIX}] Converted database to JSON-serializable dictionary.")
+    print(f"[INFO] [{PRINT_PREFIX}] Converted database to JSON-serializable dictionary.")
     return data
