@@ -17,9 +17,9 @@ import src.shared as shared
 import src.log_manager as log_manager # This module overrides the print function
 
 if log_manager.DEBUG_ENABLED:
-    print("[INFO] [MAIN] Debug logging is ENABLED")
+    print("[WARNING] [MAIN] Debug logging is ENABLED")
 else:
-    print("[INFO] [MAIN] Debug logging is DISABLED")
+    print("[WARNING] [MAIN] Debug logging is DISABLED")
 
 # Bot intents
 intents = discord.Intents.default()
