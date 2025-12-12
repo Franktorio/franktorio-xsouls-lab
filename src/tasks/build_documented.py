@@ -40,8 +40,8 @@ async def build_documented_channels():
     _force_fetch_iterations += 1
     if _force_fetch_iterations >= _MAX_FORCE_FETCH:
         _force_fetch_iterations = 0
-        async for _ in shared.FRD_bot.fetch_guilds():
-            pass
+        async for guild in shared.FRD_bot.fetch_guilds():
+            print(f"[DEBUG] [{PRINT_PREFIX}] Force-fetched guild: {guild.name} to refresh cache")
     
     print(f"[INFO] [{PRINT_PREFIX}] Processing {len(shared.FRD_bot.guilds)} guild(s) for sync")
     for guild in shared.FRD_bot.guilds:
@@ -100,10 +100,6 @@ async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):
             # Check if room needs to be added or updated
             if room_name not in current_doc_ids:
                 rooms_to_process.append(room_name)
-            else:
-                # Check if room was updated (compare timestamps if available)
-                # For now, we'll skip already documented rooms unless explicitly requested
-                pass
         
         # Find rooms that were deleted from database but still in server
         rooms_to_delete = []
@@ -245,7 +241,7 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
         # Clear the channel reference but keep the profile
         datamanager.server_db_handler.update_server_profile(
             server_id=server_id,
-            documented_channel_id=None,
+            documented_channel_id=0, # Set to 0 to indicate no channel, when getting profile will return None
             doc_msg_ids={}
         )
         return True  # Still mark as processed to avoid infinite retry
