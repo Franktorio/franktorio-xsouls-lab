@@ -50,6 +50,36 @@ class Admin(app_commands.Group):
         await shared.FRD_bot.close()
         os._exit(0)
 
+    @app_commands.command(name="room_reset", description="Delete the room documentation across all servers. The build_documented task will re-send it later.")
+    async def room_reset(self, interaction: discord.Interaction, room_name: str):
+        """Global reset a room across all servers."""
+        await interaction.response.defer()
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Room reset invoked by {interaction.user} for room '{room_name}'")
+        
+        level = await utils.permission_check(interaction.user)
+        if level < 5:
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
+        
+        room_profile = datamanager.room_db_handler.get_roominfo(room_name)
+        if not room_profile:
+            embed = embeds.create_error_embed(
+                title="Room Not Found",
+                description=f"The room '{room_name}' does not exist in the database."
+            )
+            await interaction.followup.send(embed=embed)
+            return
+        
+        await utils.global_reset(room_name)
+
+        embed = embeds.create_success_embed(
+            title="Room Reset Complete",
+            description=f"The room '{room_name}' has been reset across all servers."
+        )
+        await interaction.followup.send(embed=embed)
+        print(f"[INFO] [{PRINT_PREFIX}] Room '{room_name}' reset complete across all servers")
+
     @app_commands.command(name="global_reset_documented", description="Bulk deletes every message in the documented channel across all servers.")
     async def global_reset_documented(self, interaction: discord.Interaction):
         """Bulk deletes every message in the documented channel across all servers."""
