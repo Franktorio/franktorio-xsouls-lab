@@ -187,7 +187,11 @@ async def sync_databases():
         if len(valid_urls) < len(picture_urls):
             print(f"[WARNING] [{PRINT_PREFIX}]    External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
         
-        datamanager.room_db_handler.document_room(
+        # Get existing local data to preserve edit history
+        local_room = datamanager.room_db_handler.get_roominfo(room_name)
+        existing_edits = local_room.get('edits', []) if local_room else None
+        
+        datamanager.room_db_handler.replace_doc(
             room_name=room_name,
             roomtype=ext_data.get("roomtype", "Unclassified"),
             picture_urls=valid_urls,
@@ -195,7 +199,8 @@ async def sync_databases():
             doc_by_user_id=ext_data.get("documented_by", 0),
             tags=ext_data.get("tags", []),
             timestamp=ext_data.get("last_edited", 0),
-            edited_by_user_id=ext_data.get("last_edited_by")
+            edited_by_user_id=ext_data.get("last_edited_by"),
+            edits=existing_edits  # Preserve existing edit history
         )
 
         await utils.global_reset(room_name)

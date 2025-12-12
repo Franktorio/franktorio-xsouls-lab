@@ -106,9 +106,9 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
         # Update existing record
         cursor.execute("""
             UPDATE room_db
-            SET picture_urls = ?, description = ?, last_updated = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?, last_updated = ?
+            SET picture_urls = ?, description = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?, last_updated = ?
             WHERE room_name = ?
-        """, (json.dumps(picture_urls), description, datetime.datetime.now().timestamp(), json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id if edited_by_user_id else doc_by_user_id, timestamp, room_name))
+        """, (json.dumps(picture_urls), description, json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id if edited_by_user_id else doc_by_user_id, int(timestamp), room_name))
         print(f"[INFO] [{PRINT_PREFIX}] Updated room: '{room_name}'")
     else:
         # Insert new record
