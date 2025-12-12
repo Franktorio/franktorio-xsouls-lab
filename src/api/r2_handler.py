@@ -32,6 +32,7 @@ from config.vars import (
 # Cache directory
 CACHE_DIR = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), "databases", "images")
 image_memory_cache = {}  # In-memory cache for image files
+cache_lock = asyncio.Lock()
 
 # Ensure cache directory exists
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -345,34 +346,34 @@ async def get_stored_images(room_data, roomname):
             # Get cached image path
             cache_path = await get_cached_image_path(img_url)
             if not cache_path or not os.path.exists(cache_path) or os.path.getsize(cache_path) == 0:
-                print(f"[WARN] [{PRINT_PREFIX}] Invalid cache path for {img_url}, skipping")
+                print(f"[WARN] [{PRINT_PREFIX}] Invalid memory cache path for {img_url}, skipping")
                 continue
+            async with cache_lock:
+                # Use memory cache if valid
+                cached_entry = get_image_from_memory_cache(img_url)
+                if cached_entry and now - cached_entry["timestamp"] < 3600 and cached_entry["bytes"]:
+                    img_bytes = cached_entry["bytes"]
+                    files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
+                    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image {roomname}_{i+1} from memory cache")
+                    continue
+                elif cached_entry is not None:
+                    remove_image_from_memory_cache(img_url)
 
-            # Use memory cache if valid
-            cached_entry = get_image_from_memory_cache(img_url)
-            if cached_entry and now - cached_entry["timestamp"] < 3600 and cached_entry["bytes"]:
-                img_bytes = cached_entry["bytes"]
+                # Read from disk
+                def read_file(path):
+                    with open(path, 'rb') as f:
+                        return f.read()
+
+                img_bytes = await asyncio.to_thread(read_file, cache_path)
+                if not img_bytes:
+                    print(f"[WARN] [{PRINT_PREFIX}] Disk image {roomname}_{i+1} is empty, skipping")
+                    continue
+
+                # Store in memory cache using helper
+                add_image_to_memory_cache(img_url, img_bytes)
+
                 files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
-                print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image {roomname}_{i+1} from memory cache")
-                continue
-            elif cached_entry is not None:
-                remove_image_from_memory_cache(img_url)
-
-            # Read from disk
-            def read_file(path):
-                with open(path, 'rb') as f:
-                    return f.read()
-
-            img_bytes = await asyncio.to_thread(read_file, cache_path)
-            if not img_bytes:
-                print(f"[WARN] [{PRINT_PREFIX}] Disk image {roomname}_{i+1} is empty, skipping")
-                continue
-
-            # Store in memory cache using helper
-            add_image_to_memory_cache(img_url, img_bytes)
-
-            files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
-            print(f"[INFO] [{PRINT_PREFIX}] Cached image {roomname}_{i+1} in memory")
+                print(f"[INFO] [{PRINT_PREFIX}] Cached image {roomname}_{i+1} in memory")
 
         except Exception as e:
             print(f"[ERROR] [{PRINT_PREFIX}] Error loading image {roomname}_{i+1}: {e}")
