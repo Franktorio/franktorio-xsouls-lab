@@ -4,6 +4,7 @@
 # Log Manager - Overrides print function to log outputs to a file
 
 import builtins
+from math import log
 import os
 import datetime
 import threading
@@ -19,7 +20,6 @@ os.makedirs("logs", exist_ok=True)
 os.makedirs("logs/rotated_logs", exist_ok=True)
 
 # Create and/or open the bot logs file in append mode
-logs_open = True 
 bot_logs = open("logs/bot_logs.log", "a")
 
 log_queue = [] # Hold messages when logs are closed for rotation
@@ -42,17 +42,13 @@ def logging_print(*args, **kwargs):
     
     bot_log = f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {text_output}\n"
     with log_lock:
-        if logs_open:
-            bot_logs.write(bot_log)
-            bot_logs.flush() # Force write to file
-        else:
-            log_queue.append(bot_log)
-
+        bot_logs.write(bot_log)
+        bot_logs.flush() # Force write to file
+    
 def _rotate_log():
     """Rotate the log file by closing the current one and opening a new one."""
-    global bot_logs, logs_open
+    global bot_logs
     bot_logs = open("logs/bot_logs.log", "a")
-    logs_open = True
 
 def auto_rotate_log():
     """
@@ -67,7 +63,7 @@ def auto_rotate_log():
     6. Repeat daily at midnight
 
     """
-    global bot_logs, logs_open
+    global bot_logs
 
     while True:
         now = datetime.datetime.now()
@@ -77,45 +73,42 @@ def auto_rotate_log():
 
         # Wait until midnight
         sleep_duration = (next_midnight - now).total_seconds()
-        print(F"[INFO] [{PRINT_PREFIX}] Next log rotation scheduled in {sleep_duration} seconds.")
+        log_queue.append(f"[INFO] [{PRINT_PREFIX}] Next log rotation scheduled in {sleep_duration} seconds.")
         threading.Event().wait(sleep_duration)
-        print(F"[INFO] [{PRINT_PREFIX}] Rotating log file.")
+        log_queue.append(f"[INFO] [{PRINT_PREFIX}] Rotating log file.")
 
         # Rotate the log file
         now = datetime.datetime.now()
         with log_lock:
-            logs_open = False
             bot_logs.close()
 
             date_suffix = now.strftime("%Y%m%d")
 
             try:
                 os.rename("logs/bot_logs.log", f"logs/rotated_logs/bot_logs_{date_suffix}.log")
-                print(f"[INFO] [{PRINT_PREFIX}] Log file rotated to bot_logs_{date_suffix}.log")
+                log_queue.append(f"[INFO] [{PRINT_PREFIX}] Log file rotated to bot_logs_{date_suffix}.log")
             except FileNotFoundError:
-                print(f"[WARNING] [{PRINT_PREFIX}] No log file to rotate.")
+                log_queue.append(f"[WARNING] [{PRINT_PREFIX}] No log file to rotate.")
                 pass
 
             # Delete logs older than 7 days
             old_date_suffix = (now - datetime.timedelta(days=7)).strftime("%Y%m%d")
             old_log_path = f"logs/rotated_logs/bot_logs_{old_date_suffix}.log"
             if os.path.exists(old_log_path):
-                print(f"[INFO] [{PRINT_PREFIX}] Deleting old log file: bot_logs_{old_date_suffix}.log")
+                log_queue.append(f"[INFO] [{PRINT_PREFIX}] Deleting old log file: bot_logs_{old_date_suffix}.log")
                 os.remove(old_log_path)
             else:
-                print(f"[DEBUG] [{PRINT_PREFIX}] No old log file to delete for date: {old_date_suffix}")
+                log_queue.append(f"[DEBUG] [{PRINT_PREFIX}] No old log file to delete for date: {old_date_suffix}")
         
             # Reopen new active log
             _rotate_log()
-
-            # Flush queued log messages
-            for log_msg in log_queue:
-                bot_logs.write(log_msg)
-            bot_logs.flush()
-            log_queue.clear()
-            print(f"[INFO] [{PRINT_PREFIX}] Log rotation complete.")
-            for _ in range(5):
-                print(f"[INFO] [{PRINT_PREFIX}] " + "-"*50)
+        for log_msg in log_queue:
+            print(log_msg)
+        log_queue.clear()
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Log rotation complete.")
+        for _ in range(5):
+            print(f"[INFO] [{PRINT_PREFIX}] " + "-"*50)
 
 
 # Override the built-in print function
