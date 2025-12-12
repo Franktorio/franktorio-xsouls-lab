@@ -379,12 +379,16 @@ async def get_stored_images(room_data, roomname):
 
     return files
 
-def get_image_from_memory_cache(url: str) -> bytes:
-    """Retrieve an image's bytes from the in-memory cache."""
+def get_image_from_memory_cache(url: str) -> dict:
+    """Retrieve an image's cache entry from the in-memory cache.
+    
+    Returns:
+        Dictionary with 'bytes' and 'timestamp' keys, or None if not cached.
+    """
     cached_entry = image_memory_cache.get(url)
     if cached_entry:
         print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image from memory cache for URL: {url}")
-        return cached_entry["bytes"]
+        return cached_entry
     else:
         print(f"[DEBUG] [{PRINT_PREFIX}] Image not found in memory cache for URL: {url}")
         return None
