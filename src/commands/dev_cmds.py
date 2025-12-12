@@ -19,7 +19,7 @@ from discord import app_commands
 # Local imports
 import config.vars as vars
 from src import datamanager, shared
-from src.api import _r2_handler
+from src.api import r2_handler
 from src.utils import embeds, utils
 
 class Admin(app_commands.Group):
@@ -179,7 +179,7 @@ class Admin(app_commands.Group):
             cache_failed = False
             for url in image_urls:
 
-                path = await _r2_handler.get_cached_image_path(url)
+                path = await r2_handler.get_cached_image_path(url)
                 
         
                 if path is None:

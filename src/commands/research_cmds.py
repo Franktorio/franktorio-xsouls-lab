@@ -20,7 +20,7 @@ from PIL import Image
 # Local imports
 from config.vars import RoomType, Tags
 from src import shared
-from src.api import _r2_handler, external_api
+from src.api import r2_handler, external_api
 from src.datamanager.db_handlers import room_db_handler
 from src.utils import embeds, utils
 
@@ -52,7 +52,7 @@ async def _get_image_links(images: list[Optional[discord.Attachment]], brighten:
                             processed_data = data
                         
                         # Upload to R2
-                        r2_url = await _r2_handler.upload_to_r2(processed_data, room_name, i)
+                        r2_url = await r2_handler.upload_to_r2(processed_data, room_name, i)
                         if r2_url:
                             image_links.append(r2_url)
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
@@ -116,10 +116,10 @@ class ResearchCommands(app_commands.Group):
             return
         
         # Check if room was already documented
-        print(f"[{PRINT_PREFIX}] Checking if room '{roomname}' already exists")
+        print(f"[INFO] [{PRINT_PREFIX}] Checking if room '{roomname}' already exists")
         existing_room = room_db_handler.get_roominfo(roomname)
         if existing_room:
-            print(f"[{PRINT_PREFIX}] Room '{roomname}' already documented, rejecting duplicate")
+            print(f"[INFO] [{PRINT_PREFIX}] Room '{roomname}' already documented, rejecting duplicate")
             await interaction.followup.send(f"The room '{roomname}' has already been documented.")
             return
         
@@ -162,9 +162,9 @@ class ResearchCommands(app_commands.Group):
         
         if not api_response.get("success"):
             if api_response.get("skipped"):
-                print(f"[{PRINT_PREFIX}] Skipped external API export for '{roomname}': {api_response.get('error')}")
+                print(f"[WARNING] [{PRINT_PREFIX}] Skipped external API export for '{roomname}': {api_response.get('error')}")
             else:
-                print(f"[{PRINT_PREFIX}] Failed to export room '{roomname}' to external API: {api_response.get('error')}")
+                print(f"[ERROR] [{PRINT_PREFIX}] Failed to export room '{roomname}' to external API: {api_response.get('error')}")
 
         embed = embeds.create_success_embed(
             "Room Documented",
@@ -239,7 +239,7 @@ class ResearchCommands(app_commands.Group):
             return
         
         # Clear cached images for this room before uploading new ones
-        await _r2_handler.delete_room_images(roomname)
+        await r2_handler.delete_room_images(roomname)
         
         images = [image1, image2, image3, image4, image5, image6, image7, image8, image9, image10] 
         images = [img for img in images if img is not None]
@@ -644,7 +644,7 @@ class ResearchCommands(app_commands.Group):
             return
         
         # Delete the room images from R2 and cache before deleting from database
-        await _r2_handler.delete_room_images(roomname)
+        await r2_handler.delete_room_images(roomname)
         
         success = room_db_handler.delete_room(roomname)
         

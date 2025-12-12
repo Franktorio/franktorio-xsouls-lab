@@ -15,38 +15,11 @@ from datetime import datetime, timezone
 import discord
 
 # Local imports
+from src.api import r2_handler
 from src import shared
-from src.api import _r2_handler
 from .utils import get_doc_message_link
 
 IMAGE_MEMORY_CACHE = {}
-
-async def _get_stored_images(room_data, roomname):
-    """Get images from R2 URLs (cached locally)"""
-    files = []
-    images_urls = room_data.get("picture_urls", [])
-    
-    if images_urls:
-        for i, img_url in enumerate(images_urls):
-            try:
-                # Get cached image path
-                cache_path = await _r2_handler.get_cached_image_path(img_url)
-                if cache_path:
-                    # Read image into memory
-                    if not str(cache_path) in IMAGE_MEMORY_CACHE:
-                        with open(cache_path, 'rb') as f:
-                            file_data = f.read()
-                            IMAGE_MEMORY_CACHE[str(cache_path)] = io.BytesIO(file_data)
-                    file = discord.File(fp=IMAGE_MEMORY_CACHE[str(cache_path)], filename=f"{roomname}_image_{i+1}.jpg")
-                    files.append(file)
-                    print(f"[DEBUG] [{PRINT_PREFIX}] Loaded image {i+1} for room '{roomname}'")
-                else:
-                    print(f"[WARN] [{PRINT_PREFIX}] Cache path not found for image {i+1} of room '{roomname}'")
-            except Exception as e:
-                print(f"[ERROR] [{PRINT_PREFIX}] Error loading image {i+1} for {roomname}: {e}")
-                continue
-    
-    return files
 
 
 async def send_room_documentation_embed(channel: discord.TextChannel, room_data: dict, return_embed: bool = False):
@@ -96,7 +69,8 @@ async def send_room_documentation_embed(channel: discord.TextChannel, room_data:
 
     embed.add_field(name="Documentation Link", value=f"https://pressure.xsoul.org/rooms/{roomname_link}", inline=False)
 
-    image_files = await _get_stored_images(room_data, roomname)
+    image_files = await r2_handler.get_stored_images(room_data, roomname)
+
     # Make sure its only 10 images max
     image_files = image_files[:10]
 

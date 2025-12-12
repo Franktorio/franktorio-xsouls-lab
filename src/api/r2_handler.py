@@ -7,11 +7,14 @@ PRINT_PREFIX = "R2 HANDLER"
 
 # Standard library imports
 import asyncio
+import io
 import os
+import datetime
 
 # Third-party imports
 import boto3
 import requests
+import discord
 from botocore.config import Config
 
 # Local imports
@@ -28,6 +31,7 @@ from config.vars import (
 
 # Cache directory
 CACHE_DIR = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), "databases", "images")
+image_memory_cache = {}  # In-memory cache for image files
 
 # Ensure cache directory exists
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -326,7 +330,85 @@ async def delete_r2_images(image_urls):
         print(f"[ERROR] [{PRINT_PREFIX}] R2 cleanup failed: {e}")
         return False
     
+async def get_stored_images(room_data, roomname):
+    """
+    Retrieve stored images for a room from cache or disk.
+    Returns a list of discord.File objects for sending in messages.
+    """
 
+    files = []
+    images_urls = room_data.get("picture_urls", [])
+    now = datetime.datetime.now().timestamp()
 
+    for i, img_url in enumerate(images_urls):
+        try:
+            # Get cached image path
+            cache_path = await get_cached_image_path(img_url)
+            if not cache_path or not os.path.exists(cache_path) or os.path.getsize(cache_path) == 0:
+                print(f"[WARN] [{PRINT_PREFIX}] Invalid cache path for {img_url}, skipping")
+                continue
 
+            # Use memory cache if valid
+            cached_entry = get_image_from_memory_cache(img_url)
+            if cached_entry and now - cached_entry["timestamp"] < 3600 and cached_entry["bytes"]:
+                img_bytes = cached_entry["bytes"]
+                files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
+                print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image {roomname}_{i+1} from memory cache")
+                continue
+            elif cached_entry is not None:
+                remove_image_from_memory_cache(img_url)
 
+            # Read from disk
+            def read_file(path):
+                with open(path, 'rb') as f:
+                    return f.read()
+
+            img_bytes = await asyncio.to_thread(read_file, cache_path)
+            if not img_bytes:
+                print(f"[WARN] [{PRINT_PREFIX}] Disk image {roomname}_{i+1} is empty, skipping")
+                continue
+
+            # Store in memory cache using helper
+            add_image_to_memory_cache(img_url, img_bytes)
+
+            files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
+            print(f"[INFO] [{PRINT_PREFIX}] Cached image {roomname}_{i+1} in memory")
+
+        except Exception as e:
+            print(f"[ERROR] [{PRINT_PREFIX}] Error loading image {roomname}_{i+1}: {e}")
+
+    return files
+
+def get_image_from_memory_cache(url: str) -> bytes:
+    """Retrieve an image's bytes from the in-memory cache."""
+    cached_entry = image_memory_cache.get(url)
+    if cached_entry:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image from memory cache for URL: {url}")
+        return cached_entry["bytes"]
+    else:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Image not found in memory cache for URL: {url}")
+        return None
+
+def add_image_to_memory_cache(url: str, image_bytes: bytes):
+    """Add an image's bytes to the in-memory cache."""
+    now = datetime.datetime.now().timestamp()
+    image_memory_cache[url] = {"bytes": image_bytes, "timestamp": now}
+    print(f"[INFO] [{PRINT_PREFIX}] Added image to memory cache for URL: {url}")
+
+def update_image_in_memory_cache(url: str, image_bytes: bytes):
+    """Update an existing image's bytes in the in-memory cache."""
+    if url in image_memory_cache:
+        now = datetime.datetime.now().timestamp()
+        image_memory_cache[url] = {"bytes": image_bytes, "timestamp": now}
+        print(f"[INFO] [{PRINT_PREFIX}] Updated image in memory cache for URL: {url}")
+    else:
+        print(f"[WARNING] [{PRINT_PREFIX}] Attempted to update non-existent image in memory cache for URL: {url}")
+        add_image_to_memory_cache(url, image_bytes)
+
+def remove_image_from_memory_cache(url: str):
+    """Remove an image from the in-memory cache."""
+    if url in image_memory_cache:
+        del image_memory_cache[url]
+        print(f"[INFO] [{PRINT_PREFIX}] Removed image from memory cache for URL: {url}")
+    else:
+        print(f"[WARNING] [{PRINT_PREFIX}] Attempted to remove non-existent image from memory cache for URL: {url}")
