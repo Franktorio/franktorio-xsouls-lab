@@ -115,7 +115,7 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
         cursor.execute("""
             INSERT INTO room_db (room_name, picture_urls, description, doc_by_user_id, edits, tags, roomtype, last_updated, edited_by_user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, timestamp, None))
+        """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, int(timestamp), None))
         print(f"[INFO] [{PRINT_PREFIX}] Documented new room: '{room_name}'")
 
     conn.commit()
@@ -145,7 +145,6 @@ def replace_doc(room_name: str, picture_urls: list, description: str, doc_by_use
     conn = _connect_db()
     cursor = conn.cursor()
     
-    # Check if room exists and get existing edit history
     cursor.execute("SELECT edits FROM room_db WHERE room_name = ?", (room_name,))
     result = cursor.fetchone()
     exists = result is not None
@@ -158,19 +157,19 @@ def replace_doc(room_name: str, picture_urls: list, description: str, doc_by_use
         edits = []
     
     if exists:
-        # Replace existing record but keep edit history
+        print(f"[DEBUG] [{PRINT_PREFIX}] Replacing {room_name} with timestamp={timestamp} (type={type(timestamp).__name__})")
         cursor.execute("""
             UPDATE room_db
             SET picture_urls = ?, description = ?, last_updated = ?, doc_by_user_id = ?, edits = ?, tags = ?, roomtype = ?, edited_by_user_id = ?
             WHERE room_name = ?
-        """, (json.dumps(picture_urls), description, timestamp, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id, room_name))
-        print(f"[INFO] [{PRINT_PREFIX}] Replaced documentation for room: '{room_name}'")
+        """, (json.dumps(picture_urls), description, int(timestamp), doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, edited_by_user_id, room_name))
+        print(f"[INFO] [{PRINT_PREFIX}] Replaced documentation for room: '{room_name}' (rows affected: {cursor.rowcount})")
     else:
         # Insert new record
         cursor.execute("""
             INSERT INTO room_db (room_name, picture_urls, description, doc_by_user_id, edits, tags, roomtype, last_updated, edited_by_user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, timestamp, edited_by_user_id))
+        """, (room_name, json.dumps(picture_urls), description, doc_by_user_id, json.dumps(edits), json.dumps(tags), roomtype, int(timestamp), edited_by_user_id))
         print(f"[INFO] [{PRINT_PREFIX}] Created new room via replace_doc: '{room_name}'")
 
     conn.commit()
@@ -355,24 +354,33 @@ def set_roomdescription(room_name: str, description: str, edited_by_user_id: int
                   edited_by_user_id=edited_by_user_id)
     return True
 
-def get_roominfo(room_name: str) -> Optional[Dict[str, Any]]:
+def get_roominfo(room_name: str, case_insensitive: bool = False) -> Optional[Dict[str, Any]]:
     """
     Retrieve room information from the database.
-    Case-insensitive search for room names.
     
     Args:
-        room_name: The name of the room to retrieve (case-insensitive)
+        room_name: The name of the room to retrieve
+        case_insensitive: If True, perform case-insensitive search (default: False)
 
     Returns:
         A dictionary containing the room information, or None if not found.
     """
     conn = _connect_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT room_name, picture_urls, description, last_updated, doc_by_user_id, edits, tags, roomtype, edited_by_user_id
-        FROM room_db
-        WHERE LOWER(room_name) = LOWER(?)
-    """, (room_name,))
+    
+    if case_insensitive:
+        cursor.execute("""
+            SELECT room_name, picture_urls, description, last_updated, doc_by_user_id, edits, tags, roomtype, edited_by_user_id
+            FROM room_db
+            WHERE LOWER(room_name) = LOWER(?)
+        """, (room_name,))
+    else:
+        cursor.execute("""
+            SELECT room_name, picture_urls, description, last_updated, doc_by_user_id, edits, tags, roomtype, edited_by_user_id
+            FROM room_db
+            WHERE room_name = ?
+        """, (room_name,))
+    
     row = cursor.fetchone()
     conn.close()
 
@@ -381,7 +389,7 @@ def get_roominfo(room_name: str) -> Optional[Dict[str, Any]]:
             'room_name': row[0],
             'picture_urls': json.loads(row[1]),
             'description': row[2],
-            'last_updated': row[3],
+            'last_updated': int(row[3]),
             'doc_by_user_id': row[4],
             'edits': json.loads(row[5]),
             'tags': json.loads(row[6]),
@@ -441,7 +449,7 @@ def search_rooms_by_tag(tag: str) -> list:
         'room_name': row[0],
         'picture_urls': json.loads(row[1]),
         'description': row[2],
-        'last_updated': row[3],
+        'last_updated': int(row[3]),
         'doc_by_user_id': row[4],
         'edits': json.loads(row[5]),
         'tags': json.loads(row[6]),
@@ -472,7 +480,7 @@ def search_rooms_by_name(search_term: str) -> list:
         'room_name': row[0],
         'picture_urls': json.loads(row[1]),
         'description': row[2],
-        'last_updated': row[3],
+        'last_updated': int(row[3]),
         'doc_by_user_id': row[4],
         'edits': json.loads(row[5]),
         'tags': json.loads(row[6]),
@@ -503,7 +511,7 @@ def search_rooms_by_description(search_term: str) -> list:
         'room_name': row[0],
         'picture_urls': json.loads(row[1]),
         'description': row[2],
-        'last_updated': row[3],
+        'last_updated': int(row[3]),
         'doc_by_user_id': row[4],
         'edits': json.loads(row[5]),
         'tags': json.loads(row[6]),
@@ -532,7 +540,7 @@ def search_rooms_by_roomtype(roomtype: str) -> list:
         'room_name': row[0],
         'picture_urls': json.loads(row[1]),
         'description': row[2],
-        'last_updated': row[3],
+        'last_updated': int(row[3]),
         'doc_by_user_id': row[4],
         'edits': json.loads(row[5]),
         'tags': json.loads(row[6]),
@@ -593,7 +601,7 @@ def get_documented_by_user(user_id: int) -> list:
         'room_name': row[0],
         'picture_urls': json.loads(row[1]),
         'description': row[2],
-        'last_updated': row[3],
+        'last_updated': int(row[3]),
         'doc_by_user_id': row[4],
         'edits': json.loads(row[5]),
         'tags': json.loads(row[6]),
@@ -637,7 +645,7 @@ def jsonify_room_db() -> Dict[str, Any]:
         room_db_dict["room_db"][row[0]] = {
             'picture_urls': json.loads(row[1]),
             'description': row[2],
-            'last_updated': row[3],
+            'last_updated': int(row[3]),
             'doc_by_user_id': row[4],
             'edits': json.loads(row[5]),
             'tags': json.loads(row[6]),

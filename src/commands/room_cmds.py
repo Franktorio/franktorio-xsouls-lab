@@ -30,7 +30,7 @@ class RoomCommands(app_commands.Group):
         print(f"[INFO] [{PRINT_PREFIX}] Room info requested for '{room_name}' by {interaction.user}")
         await interaction.response.defer()
         
-        room = room_db_handler.get_roominfo(room_name)
+        room = room_db_handler.get_roominfo(room_name, case_insensitive=True)
         if not room:
             embed = embeds.create_error_embed("Room Not Found", f"No information found for room: **{room_name}**")
             await interaction.followup.send(embed=embed)

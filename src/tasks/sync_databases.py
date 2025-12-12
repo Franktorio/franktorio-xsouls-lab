@@ -47,12 +47,13 @@ async def sync_databases():
             missing_locally.append((room_name, ext_room_data))
             continue
 
-        ext_last_updated = ext_room_data.get("last_edited", 0)
-        local_last_updated = local_room_data.get("last_updated", 0)
+        ext_last_updated = int(ext_room_data.get("last_edited", 0))
+        local_last_updated = int(local_room_data.get("last_updated", 0))
 
         if local_last_updated > ext_last_updated:
             newer_locally.append((room_name, local_room_data))
         elif ext_last_updated > local_last_updated:
+            print(f"[DEBUG] [{PRINT_PREFIX}] {room_name}: external={ext_last_updated} (type={type(ext_last_updated).__name__}), local={local_last_updated} (type={type(local_last_updated).__name__})")
             newer_externally.append((room_name, ext_room_data))
 
     for room_name in db_json.keys():
@@ -187,11 +188,7 @@ async def sync_databases():
         if len(valid_urls) < len(picture_urls):
             print(f"[WARNING] [{PRINT_PREFIX}]    External API sent {len(picture_urls) - len(valid_urls)} invalid URLs (file paths) - filtered out")
         
-        # Get existing local data to preserve edit history
-        local_room = datamanager.room_db_handler.get_roominfo(room_name)
-        existing_edits = local_room.get('edits', []) if local_room else None
-        
-        datamanager.room_db_handler.replace_doc(
+        datamanager.room_db_handler.document_room(
             room_name=room_name,
             roomtype=ext_data.get("roomtype", "Unclassified"),
             picture_urls=valid_urls,
@@ -199,8 +196,7 @@ async def sync_databases():
             doc_by_user_id=ext_data.get("documented_by", 0),
             tags=ext_data.get("tags", []),
             timestamp=ext_data.get("last_edited", 0),
-            edited_by_user_id=ext_data.get("last_edited_by"),
-            edits=existing_edits  # Preserve existing edit history
+            edited_by_user_id=ext_data.get("last_edited_by")
         )
 
         await utils.global_reset(room_name)

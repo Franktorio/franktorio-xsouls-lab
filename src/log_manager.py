@@ -11,7 +11,7 @@ import threading
 
 PRINT_PREFIX = "LOG MANAGER"
 
-DEBUG_ENABLED = False # Toggles skipping over prints with [DEBUG] tag
+DEBUG_ENABLED = True # Toggles skipping over prints with [DEBUG] tag
 
 # Reference to the original print function
 original_print = builtins.print
