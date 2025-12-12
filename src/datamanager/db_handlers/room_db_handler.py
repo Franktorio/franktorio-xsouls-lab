@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 
 # Local imports
 from ..database_manager import connect_db
+from ...api import r2_handler
 
 DB_FILE_NAME = "frd_room.db"
 
@@ -82,6 +83,13 @@ def document_room(room_name: str, picture_urls: list, description: str, doc_by_u
         existing_description = row[2]
         edits = json.loads(row[3])
         existing_doc_by = row[6]  # Get existing documenter
+        
+        # Invalidate old image URLs from memory cache if they changed
+        if existing_picture_urls != picture_urls:
+            for old_url in existing_picture_urls:
+                if old_url not in picture_urls:
+                    r2_handler.remove_image_from_memory_cache(old_url)
+                    print(f"[DEBUG] [{PRINT_PREFIX}] Invalidated memory cache for removed image: {old_url}")
         
         edit_entry = {
             "timestamp": datetime.datetime.now().timestamp() if timestamp == 0 else timestamp,
@@ -181,6 +189,18 @@ def replace_imgs(room_name: str, picture_urls: list) -> bool:
 
     conn = _connect_db()
     cursor = conn.cursor()
+    
+    # Get existing picture URLs to invalidate from cache
+    cursor.execute("SELECT picture_urls FROM room_db WHERE room_name = ?", (room_name,))
+    row = cursor.fetchone()
+    if row:
+        existing_picture_urls = json.loads(row[0])
+        # Invalidate old image URLs from memory cache if they changed
+        for old_url in existing_picture_urls:
+            if old_url not in picture_urls:
+                r2_handler.remove_image_from_memory_cache(old_url)
+                print(f"[DEBUG] [{PRINT_PREFIX}] Invalidated memory cache for removed image: {old_url}")
+    
     cursor.execute("""
         UPDATE room_db
         SET picture_urls = ?
@@ -227,6 +247,11 @@ def rename_room(old_name: str, new_name: str, edited_by_user_id: int) -> bool:
     tags = json.loads(row[3])
     roomtype = row[4]
     doc_by_user_id = row[5]
+    
+    # Invalidate all image URLs from memory cache since room name changed
+    for img_url in picture_urls:
+        r2_handler.remove_image_from_memory_cache(img_url)
+        print(f"[DEBUG] [{PRINT_PREFIX}] Invalidated memory cache for renamed room image: {img_url}")
     
     # Create edit history entry for rename
     edit_entry = {
@@ -374,6 +399,17 @@ def delete_room(room_name: str) -> bool:
     """
     conn = _connect_db()
     cursor = conn.cursor()
+    
+    # Get picture URLs to invalidate from cache before deleting
+    cursor.execute("SELECT picture_urls FROM room_db WHERE room_name = ?", (room_name,))
+    row = cursor.fetchone()
+    if row:
+        picture_urls = json.loads(row[0])
+        # Invalidate all image URLs from memory cache
+        for img_url in picture_urls:
+            r2_handler.remove_image_from_memory_cache(img_url)
+            print(f"[DEBUG] [{PRINT_PREFIX}] Invalidated memory cache for deleted room image: {img_url}")
+    
     cursor.execute("DELETE FROM room_db WHERE room_name = ?", (room_name,))
     conn.commit()
     success = cursor.rowcount > 0
