@@ -24,7 +24,7 @@ Developer-only commands that are only executable by members with permission leve
 ### `/dev room_reset`
 - **Arguments**
   - `room_name` (string): Name of the room to globally reset across servers.
-- **Description**: Delete the room documentation across all servers.
+- **Description**: Delete the room documentation across all servers. The build_documented task will re-send it later.
 
 
 ### `/dev global_reset_documented`
