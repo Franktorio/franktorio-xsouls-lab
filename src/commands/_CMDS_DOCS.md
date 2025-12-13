@@ -26,7 +26,6 @@ Developer-only commands that are only executable by members with permission leve
   - `room_name` (string): Name of the room to globally reset across servers.
 - **Description**: Delete the room documentation across all servers. The build_documented task will re-send it later.
 
-
 ### `/dev global_reset_documented`
 - **Arguments**: None
 - **Description**: Bulk deletes every message in the documented channel across all servers, then clears the message IDs from each server's profile. The automated task will rebuild all documented channels.
