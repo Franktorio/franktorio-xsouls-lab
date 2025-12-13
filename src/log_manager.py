@@ -15,6 +15,7 @@ DEBUG_ENABLED = True # Toggles skipping over prints with [DEBUG] tag
 
 TO_SKIP = [
     "self._context.run(self._callback, *self._args)" # Spammy debug logs that are not useful
+    "TypeError: 'NoneType' object is not callable" # Recurring error that clutters logs
     ]  # List of substrings to skip in logs
 
 # Reference to the original print function
