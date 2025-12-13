@@ -13,6 +13,10 @@ PRINT_PREFIX = "LOG MANAGER"
 
 DEBUG_ENABLED = True # Toggles skipping over prints with [DEBUG] tag
 
+TO_SKIP = [
+    "self._context.run(self._callback, *self._args)" # Spammy debug logs that are not useful
+    ]  # List of substrings to skip in logs
+
 # Reference to the original print function
 original_print = builtins.print
 
@@ -30,10 +34,13 @@ def logging_print(*args, **kwargs):
     """Custom print function for logging purposes."""
     global DEBUG_ENABLED
     # Skip debug prints if DEBUG_ENABLED is False
-    if not DEBUG_ENABLED:
-        for arg in args:
-            if isinstance(arg, str) and "[DEBUG]" in arg:
+    for arg in args:
+        if not DEBUG_ENABLED and "[DEBUG]" in str(arg):
+            return
+        for skip_str in TO_SKIP:
+            if skip_str in str(arg):
                 return
+    
     original_print(*args, **kwargs)  # Print to console
 
     text_output = ""
