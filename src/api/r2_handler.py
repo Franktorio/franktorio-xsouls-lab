@@ -354,7 +354,6 @@ async def get_stored_images(room_data, roomname):
                 if cached_entry and now - cached_entry["timestamp"] < 3600 and cached_entry["bytes"]:
                     img_bytes = cached_entry["bytes"]
                     files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
-                    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image {roomname}_{i+1} from memory cache")
                     continue
                 elif cached_entry is not None:
                     remove_image_from_memory_cache(img_url)
