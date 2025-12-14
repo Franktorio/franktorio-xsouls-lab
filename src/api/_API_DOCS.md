@@ -4,12 +4,10 @@
 
 This document describes the Research API implemented in `src/api/research_api.py`.
 
-Note: Authentication is performed via an `api_key` field included in the request body models for authenticated endpoints (see individual endpoint sections). Scanner endpoints do not require `api_key` and use session-based authentication.
-
-
 ## Endpoints Summary
 
 Research endpoints **All Authenticated**
+> These endpoints are authenticated with the LOCAL_KEY on `config/vars.py`
 - GET `/` - health/status endpoint (`ReadRootRequest`)
 - GET `/get_researcher_role` - returns research level for a user (`GetResearcherRoleRequest` Pydantic Basemodel)
 - GET `/get_user_profile` - returns user's profile info (`GetUserProfileRequest` Pydantic Basemodel)
@@ -21,17 +19,12 @@ Research endpoints **All Authenticated**
 - DELETE `/deletedoc` - delete a room's documentation (`DeleteDocRequest` Pydantic Basemodel)
 
 Scanner endpoints (prefixed `/scanner`):
+> The authenticated endpoints require a session ID and password provided in `/scanner/request_session`
 - POST `/scanner/request_session` - request a scanner session (`SessionRequest`)
 - POST `/scanner/end_session` - end a scanner session (`SessionEndRequest` Pydantic Basemodel) **Authenticated**
 - POST `/scanner/get_roominfo` - get room info during a scanner session (`RoomInfoRequest` Pydantic Basemodel) **Authenticated**
 - POST `/scanner/room_encountered` - log encountered room in a scanner session (`RoomEncounteredRequest` Pydantic Basemodel) **Authenticated**
 
----
-
-## Authentication
-
-- For the main research endpoints, send an `api_key` field in the JSON request body that matches the `LOCAL_KEY` value in `config/vars.py`.
-- Scanner endpoints use the session `session_id` and `password` returned from `/scanner/request_session` for authentication.
 
 Unauthorized requests return:
 

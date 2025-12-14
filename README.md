@@ -112,6 +112,15 @@ Includes:
 - Command parameters and expected types
 - The permission levels of each
 
+### Research API Documentation
+```bash
+src\api\_API_DOCS.md
+```
+Includes:
+- All endpoints
+- Authentication needed
+- Example code
+
 ## Development
 
 ### Validate Configurations Variables
