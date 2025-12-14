@@ -12,7 +12,7 @@ import random
 import string
 import hashlib
 import os
-
+import time
 
 # Local imports
 from ..database_manager import connect_db
@@ -166,6 +166,36 @@ def start_session(scanner_version: str) -> tuple[str, str]:
     
     print(f"[INFO] [{PRINT_PREFIX}] Started new session {session_id} with scanner version {scanner_version}.")
     return session_id, password
+
+def validate_session(session_id: str, session_password: str) -> bool:
+    """Validate a scanning session. 
+    Will obfuscate and always take the same time to prevent timing attacks.
+    Returns:
+        True if the session is valid and open, False otherwise.
+    """
+    start = time.time()
+    end = start + 1.0  # Ensure at least 1 second of processing time
+    conn = _connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT session_password
+        FROM sessions
+        WHERE session_id = ? AND closed = 0
+    """, (session_id,))
+    stored_password = cursor.fetchone()
+    conn.close()
+
+    if stored_password is None:
+        time.sleep(max(0, end - time.time()))
+        print(f"[ERROR] [{PRINT_PREFIX}] Session {session_id} is invalid or closed.")
+        return False
+    
+    is_valid = _compare_password(stored_password[0], session_password)
+    if not is_valid:
+        time.sleep(max(0, end - time.time()))
+        print(f"[ERROR] [{PRINT_PREFIX}] Invalid password for session {session_id}.")
+    return is_valid
 
 def end_session(session_id: str, session_password: str) -> bool:
     """End a scanning session.
