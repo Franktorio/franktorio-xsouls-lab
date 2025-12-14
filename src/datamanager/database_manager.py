@@ -12,7 +12,7 @@ from typing import Dict
 
 # Determine project root (two levels up from this file) and put DB in FRD_bot/databases
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DB_DIR = os.path.join(PROJECT_ROOT, "databases")
+DB_DIR = os.path.join(PROJECT_ROOT, "data")
 
 databases = {}
 
