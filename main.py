@@ -16,7 +16,7 @@ import src.shared as shared
 # Override print function to log outputs to file
 import src.log_manager as log_manager # This module overrides the print function
 
-if log_manager.DEBUG_ENABLED:
+if config.vars.DEBUG_ENABLED:
     print("[WARNING] [MAIN] Debug logging is ENABLED")
 else:
     print("[WARNING] [MAIN] Debug logging is DISABLED")
@@ -50,6 +50,16 @@ print("[INFO] [MAIN] Initializing databases...")
 database_manager.init_databases()
 print("[INFO] [MAIN] Initializing backup manager...")
 backup_manager.init_backup_manager()
+
+# Run automated tests if in debug mode
+if config.vars.DEBUG_ENABLED:
+    print("[INFO] [MAIN] Running automated tests...")
+    import automations.tests.validate_config # Will auto-run tests on import
+    """
+    More tests can be added here in the future
+    e.g., database integrity tests, API endpoint tests, etc.
+    """
+    print("[INFO] [MAIN] Automated tests completed.")
 
 @FRD_bot.event
 async def on_ready():

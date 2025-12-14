@@ -10,6 +10,8 @@
 # Make sure have vars.py file in config/ directory before running this script.
 # Use vars.py.example as a template.
 
+PRINT_PREFIX = "CONFIG VALIDATION"
+
 
 try:
     from config import vars as config_vars
@@ -20,15 +22,15 @@ except ImportError as e:
 
 not_set = []
 for name, value in config_vars.__dict__.items():
-    print(f"Checking configuration variable: {name}")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Checking configuration variable: {name}")
     if name.isupper():
         if value is None or (isinstance(value, str) and value.startswith("YOUR_")):
-            print(f"Configuration variable '{name}' is not set.")
+            print(f"[WARNING] [{PRINT_PREFIX}] Configuration variable '{name}' is not set.")
             not_set.append(name)
 
 if not not_set:
-    print("All configuration variables are set correctly.")
+    print(f"[INFO] [{PRINT_PREFIX}] All configuration variables are set correctly.")
     exit(0)
 else:
-    print(f"The following configuration variables are not set: {', '.join(not_set)}")
+    print(f"[WARNING] [{PRINT_PREFIX}] The following configuration variables are not set: {', '.join(not_set)}: Please update 'config/vars.py' accordingly.")
     exit(1)
