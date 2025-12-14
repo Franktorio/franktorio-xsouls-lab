@@ -23,6 +23,18 @@ app = FastAPI()
 
 
 # Pydantic models for request bodies
+class ReadRootRequest(BaseModel):
+    api_key: str
+
+
+class GetResearcherRoleRequest(BaseModel):
+    user_id: int
+    api_key: str
+
+class GetUserProfileRequest(BaseModel):
+    user_id: int
+    api_key: str
+
 class DocumentRoomRequest(BaseModel):
     room_name: str
     roomtype: str
@@ -31,6 +43,7 @@ class DocumentRoomRequest(BaseModel):
     doc_by_user_id: int
     tags: Optional[list[str]] = None
     timestamp: Optional[float] = None
+    api_key: str
 
 
 class RedocumentRoomRequest(BaseModel):
@@ -42,24 +55,38 @@ class RedocumentRoomRequest(BaseModel):
     edited_by_user_id: int
     tags: Optional[list[str]] = None
     timestamp: Optional[float] = None
+    api_key: str
 
 
 class SetRoomTypeRequest(BaseModel):
     room_name: str
     roomtype: str
     edited_by_user_id: int
+    api_key: str
 
 
 class SetTagsRequest(BaseModel):
     room_name: str
     tags: list[str]
     edited_by_user_id: int
+    api_key: str
 
+
+class RenameRoomRequest(BaseModel):
+    old_name: str
+    new_name: str
+    edited_by_user_id: int
+    api_key: str
+
+
+class DeleteDocRequest(BaseModel):
+    room_name: str
+    api_key: str
 
 @app.get("/")
-async def read_root(key: str):
+async def read_root(request: ReadRootRequest):
     """Root endpoint to verify API is running."""
-    if key != LOCAL_KEY:
+    if request.key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
     room_amnt = len(room_db_handler.get_all_room_names())
@@ -70,23 +97,23 @@ async def read_root(key: str):
 
 
 @app.get("/get_researcher_role")
-async def get_researcher_role(key: str, user_id: int):
+async def get_researcher_role(request: GetResearcherRoleRequest):
     """Endpoint to get a user's research level"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    research_level = await utils.get_researcher_role(user_id)
-    return {"user_id": user_id, "research_level": research_level}
+    research_level = await utils.get_researcher_role(request.user_id)
+    return {"user_id": request.user_id, "research_level": research_level}
 
 @app.get("/get_user_profile")
-async def get_user_profile(key: str, user_id: int):
+async def get_user_profile(request: GetUserProfileRequest):
     """Endpoint to get a user's profile picture URL, username, and display name"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    user_data = utils.get_user_profile(user_id)
+    user_data = utils.get_user_profile(request.user_id)
     return {
-        "user_id": user_id,
+        "user_id": request.user_id,
         "profile_picture_url": user_data["profile_picture_url"],
         "username": user_data["username"],
         "display_name": user_data["display_name"]
@@ -94,9 +121,9 @@ async def get_user_profile(key: str, user_id: int):
 
 
 @app.post("/document_room")
-async def document_room(request: DocumentRoomRequest, key: str = Query(...)):
+async def document_room(request: DocumentRoomRequest):
     """Endpoint to document a room"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
     print(f"[INFO] [{PRINT_PREFIX}] Received document_room request for '{request.room_name}'")
@@ -123,9 +150,9 @@ async def document_room(request: DocumentRoomRequest, key: str = Query(...)):
 
 
 @app.post("/redocument_room")
-async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...)):
+async def redocument_room(request: RedocumentRoomRequest):
     """Endpoint to redocument an existing room"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
     print(f"[INFO] [{PRINT_PREFIX}] Received redocument_room request for '{request.room_name}'")
@@ -155,9 +182,9 @@ async def redocument_room(request: RedocumentRoomRequest, key: str = Query(...))
 
 
 @app.post("/set_roomtype")
-async def set_roomtype(request: SetRoomTypeRequest, key: str = Query(...)):
+async def set_roomtype(request: SetRoomTypeRequest):
     """Endpoint to set the type of a room"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
     print(f"[INFO] [{PRINT_PREFIX}] Received set_roomtype request for '{request.room_name}'")
@@ -173,9 +200,9 @@ async def set_roomtype(request: SetRoomTypeRequest, key: str = Query(...)):
 
 
 @app.post("/set_tags")
-async def set_tags(request: SetTagsRequest, key: str = Query(...)):
+async def set_tags(request: SetTagsRequest):
     """Endpoint to set tags for a room"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
     print(f"[INFO] [{PRINT_PREFIX}] Received set_tags request for '{request.room_name}'")
@@ -201,38 +228,38 @@ async def set_tags(request: SetTagsRequest, key: str = Query(...)):
 
 
 @app.post("/rename_room")
-async def rename_room(key: str = Query(...), old_name: str = Query(...), new_name: str = Query(...), edited_by_user_id: int = Query(...)):
+async def rename_room(request: RenameRoomRequest):
     """Endpoint to rename a room"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    print(f"[INFO] [{PRINT_PREFIX}] Received rename_room request: '{old_name}' -> '{new_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Received rename_room request: '{request.old_name}' -> '{request.new_name}'")
     
-    success = room_db_handler.rename_room(old_name, new_name, edited_by_user_id=edited_by_user_id)
+    success = room_db_handler.rename_room(request.old_name, request.new_name, edited_by_user_id=request.edited_by_user_id)
     
     if success:
-        await utils.global_reset(new_name)
-        print(f"[INFO] [{PRINT_PREFIX}] Successfully renamed room: '{old_name}' -> '{new_name}'")
-        return {"success": True, "message": f"Room '{old_name}' has been renamed to '{new_name}'."}
+        await utils.global_reset(request.new_name)
+        print(f"[INFO] [{PRINT_PREFIX}] Successfully renamed room: '{request.old_name}' -> '{request.new_name}'")
+        return {"success": True, "message": f"Room '{request.old_name}' has been renamed to '{request.new_name}'."}
     else:
-        return {"error": f"Room '{old_name}' does not exist in the database."}
+        return {"error": f"Room '{request.old_name}' does not exist in the database."}
 
 
 @app.delete("/deletedoc")
-async def deletedoc(key: str = Query(...), room_name: str = Query(...)):
+async def deletedoc(request: DeleteDocRequest):
     """Endpoint to delete room documentation"""
-    if key != LOCAL_KEY:
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    print(f"[INFO] [{PRINT_PREFIX}] Received deletedoc request for '{room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Received deletedoc request for '{request.room_name}'")
     
-    success = room_db_handler.delete_room(room_name)
+    success = room_db_handler.delete_room(request.room_name)
     
     if success:
-        print(f"[INFO] [{PRINT_PREFIX}] Successfully deleted documentation for room '{room_name}'")
-        return {"success": True, "message": f"Documentation for room '{room_name}' has been deleted."}
+        print(f"[INFO] [{PRINT_PREFIX}] Successfully deleted documentation for room '{request.room_name}'")
+        return {"success": True, "message": f"Documentation for room '{request.room_name}' has been deleted."}
     else:
-        return {"error": f"Room '{room_name}' does not exist in the database."}
+        return {"error": f"Room '{request.room_name}' does not exist in the database."}
 
 
 
@@ -276,23 +303,11 @@ async def _log_request(session_id: str):
     
     return len(scanner_request_logs[session_id])
 
+def _validate_session(session_id: str, password: str) -> bool:
+    """Helper function to validate a scanner session"""
+    return scanner_db_handler.validate_session(session_id, password)
+
 BASE_URL = "/scanner"
-
-@app.post(f"{BASE_URL}/get_roominfo")
-async def get_room_info(request: RoomInfoRequest):
-    """Endpoint to get room information for the scanner"""
-
-    request_count = await _log_request(request.session_id)
-    if request_count > RATE_LIMIT:
-        print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
-        return {"error": "Rate limit exceeded. Please try again later."}
-    print(f"[INFO] [{PRINT_PREFIX}] Scanner requesting room info for '{request.room_name}'")
-    
-    room_profile = room_db_handler.get_roominfo(request.room_name)
-    if not room_profile:
-        return {"error": f"Room '{request.room_name}' does not exist in the database."}
-    
-    return {"success": True, "room_info": room_profile}
 
 @app.post(f"{BASE_URL}/request_session")
 async def request_scanner_session(request: SessionRequest):
@@ -314,12 +329,36 @@ async def end_scanner_session(request: SessionEndRequest):
     
     print(f"[INFO] [{PRINT_PREFIX}] Scanner session end requested: {request.session_id}")
     
+    valid_session = _validate_session(request.session_id, request.password)
+    if not valid_session:
+        return {"error": "Invalid session ID or password."}
+    
     success = scanner_db_handler.end_session(session_id=request.session_id, session_password=request.password)
     if success:
         print(f"[INFO] [{PRINT_PREFIX}] Scanner session ended: {request.session_id}")
         return {"success": True, "message": f"Session '{request.session_id}' has been ended."}
     else:
         return {"error": "Invalid session ID or password, or session already ended."}
+
+@app.post(f"{BASE_URL}/get_roominfo")
+async def get_room_info(request: RoomInfoRequest):
+    """Endpoint to get room information for the scanner"""
+
+    request_count = await _log_request(request.session_id)
+    if request_count > RATE_LIMIT:
+        print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
+        return {"error": "Rate limit exceeded. Please try again later."}
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner requesting room info for '{request.room_name}'")
+
+    valid_session = _validate_session(request.session_id, request.password)
+    if not valid_session:
+        return {"error": "Invalid session ID or password."}
+    
+    room_profile = room_db_handler.get_roominfo(request.room_name)
+    if not room_profile:
+        return {"error": f"Room '{request.room_name}' does not exist in the database."}
+    
+    return {"success": True, "room_info": room_profile}
     
 @app.post(f"{BASE_URL}/room_encountered")
 async def room_encountered(request: RoomEncounteredRequest):
@@ -331,6 +370,10 @@ async def room_encountered(request: RoomEncounteredRequest):
         return {"error": "Rate limit exceeded. Please try again later."}
     
     print(f"[INFO] [{PRINT_PREFIX}] Room encountered in session {request.session_id}: '{request.room_name}'")
+    
+    valid_session = _validate_session(request.session_id, request.password)
+    if not valid_session:
+        return {"error": "Invalid session ID or password."}
     
     success = scanner_db_handler.log_encountered_room(session_id=request.session_id, session_password=request.password, room_name=request.room_name)
     if success:

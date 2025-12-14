@@ -135,7 +135,7 @@ python automations/scripts/init_dbs.py
 - [ ] Implement automated tests for data management  
 - [ ] Implement automated tests for Discord features  
 - [ ] Document external API in a `.md` file  
-- [ ] Document research & scanner API in a `.md` file  
+- [x] Document research & scanner API in a `.md` file  
 - [x] Document commands in a `.md` file  
 - [ ] Add commands to analyze and view scanner data  
 
