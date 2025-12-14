@@ -4,14 +4,12 @@
 # Log Manager - Overrides print function to log outputs to a file
 
 import builtins
-from math import log
 import os
 import datetime
 import threading
+from config.vars import DEBUG_ENABLED
 
 PRINT_PREFIX = "LOG MANAGER"
-
-DEBUG_ENABLED = True # Toggles skipping over prints with [DEBUG] tag
 
 TO_SKIP = [
     "self._context.run(self._callback, *self._args)", # Spammy debug logs that are not useful
@@ -117,7 +115,7 @@ def auto_rotate_log():
         
         print(f"[INFO] [{PRINT_PREFIX}] Log rotation complete.")
         for _ in range(5):
-            print(f"[INFO] [{PRINT_PREFIX}] " + "-"*50)
+            print("#"*70)
 
 
 # Override the built-in print function

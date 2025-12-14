@@ -33,6 +33,7 @@ config/vars.py
 *.db
 *.sqlite
 *.sqlite3
+data/
 databases/*.db
 databases/*.sqlite
 

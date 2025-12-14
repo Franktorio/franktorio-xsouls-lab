@@ -8,6 +8,7 @@ PRINT_PREFIX = "RESEARCH API"
 # Standard library imports
 from datetime import datetime
 from typing import Optional
+import asyncio
 
 # Third-party imports
 from fastapi import FastAPI, Query
@@ -239,107 +240,101 @@ async def deletedoc(key: str = Query(...), room_name: str = Query(...)):
 #            SCANNER ENDPOINTS            #
 ###########################################
 
-IP_RATE_LIMIT = 60 # Max requests per minute per IP for unauthenticated scanner endpoints
+class RoomInfoRequest(BaseModel):
+    room_name: str
+    session_id: str
+    password: str
 
-scanner_request_logs = {}  # Dictionary to track request timestamps per IP
+class RoomEncounteredRequest(BaseModel):
+    session_id: str
+    password: str
+    room_name: str
 
-def _validate_ip(ip: str) -> bool:
-    """Helper function to validate IP address format"""
-    parts = ip.split(".")
-    if len(parts) != 4:
-        return False
-    for part in parts:
-        if not part.isdigit() or not 0 <= int(part) <= 255:
-            return False
-    return True
+class SessionRequest(BaseModel):
+    scanner_version: str
 
-def _log_request(ip: str):
-    """Helper function to log requests per IP for rate limiting"""
+class SessionEndRequest(BaseModel):
+    session_id: str
+    password: str
+
+log_request_lock = asyncio.Lock()
+scanner_request_logs = {}  # Dictionary to track request timestamps per session
+
+RATE_LIMIT = 60 # Max requests per minute per IP for unauthenticated scanner endpoints
+
+async def _log_request(session_id: str):
+    """Helper function to log requests per session for rate limiting"""
     current_time = datetime.now().timestamp()
-    if ip not in scanner_request_logs:
-        scanner_request_logs[ip] = []
+    if session_id not in scanner_request_logs:
+        scanner_request_logs[session_id] = []
     
     # Remove timestamps older than 60 seconds
-    scanner_request_logs[ip] = [t for t in scanner_request_logs[ip] if current_time - t < 60]
+    async with log_request_lock:
+        scanner_request_logs[session_id] = [t for t in scanner_request_logs[session_id] if current_time - t < 60]
+        
+        scanner_request_logs[session_id].append(current_time)
     
-    scanner_request_logs[ip].append(current_time)
-    
-    return len(scanner_request_logs[ip])
+    return len(scanner_request_logs[session_id])
 
 BASE_URL = "/scanner"
 
-# UNAUTHENTICATED ENDPOINTS FOR THE SCANNER TOOL
-@app.get(f"{BASE_URL}/get_roominfo")
-async def get_room_info(room_name: str = Query(...), ip: str = Query(...)):
+@app.post(f"{BASE_URL}/get_roominfo")
+async def get_room_info(request: RoomInfoRequest):
     """Endpoint to get room information for the scanner"""
 
-    if not _validate_ip(ip):
-        return {"error": "Invalid IP address format."}
-
-    request_count = _log_request(ip)
-    if request_count > IP_RATE_LIMIT:
+    request_count = await _log_request(request.session_id)
+    if request_count > RATE_LIMIT:
+        print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
         return {"error": "Rate limit exceeded. Please try again later."}
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner requesting room info for '{request.room_name}'")
     
-    print(f"[INFO] [{PRINT_PREFIX}] Scanner requesting room info for '{room_name}' from IP: {ip}")
-    
-    room_profile = room_db_handler.get_roominfo(room_name)
+    room_profile = room_db_handler.get_roominfo(request.room_name)
     if not room_profile:
-        return {"error": f"Room '{room_name}' does not exist in the database."}
+        return {"error": f"Room '{request.room_name}' does not exist in the database."}
     
     return {"success": True, "room_info": room_profile}
 
-@app.get(f"{BASE_URL}/request_session")
-async def request_scanner_session(scanner_version: str = Query(...), ip: str = Query(...)):
+@app.post(f"{BASE_URL}/request_session")
+async def request_scanner_session(request: SessionRequest):
     """Endpoint to request a new scanner session"""
-
-    if not _validate_ip(ip):
-        return {"error": "Invalid IP address format."}
     
-    request_count = _log_request(ip)
-    if request_count > IP_RATE_LIMIT:
-        return {"error": "Rate limit exceeded. Please try again later."}
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner session requested (version: {request.scanner_version})")
     
-    print(f"[INFO] [{PRINT_PREFIX}] Scanner session requested from IP: {ip} (version: {scanner_version})")
-    
-    session_id, password = scanner_db_handler.start_session(scanner_version=scanner_version)
+    session_id, password = scanner_db_handler.start_session(scanner_version=request.scanner_version)
     return {"success": True, "session_id": session_id, "password": password}
 
 @app.post(f"{BASE_URL}/end_session")
-async def end_scanner_session(session_id: str = Query(...), password: str = Query(...), ip: str = Query(...)):
+async def end_scanner_session(request: SessionEndRequest):
     """Endpoint to end a scanner session"""
-
-    if not _validate_ip(ip):
-        return {"error": "Invalid IP address format."}
     
-    request_count = _log_request(ip)
-    if request_count > IP_RATE_LIMIT:
+    request_count = await _log_request(request.session_id)
+    if request_count > RATE_LIMIT:
+        print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
         return {"error": "Rate limit exceeded. Please try again later."}
     
-    print(f"[INFO] [{PRINT_PREFIX}] Scanner session end requested: {session_id} from IP: {ip}")
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner session end requested: {request.session_id}")
     
-    success = scanner_db_handler.end_session(session_id=session_id, session_password=password)
+    success = scanner_db_handler.end_session(session_id=request.session_id, session_password=request.password)
     if success:
-        print(f"[INFO] [{PRINT_PREFIX}] Scanner session ended: {session_id}")
-        return {"success": True, "message": f"Session '{session_id}' has been ended."}
+        print(f"[INFO] [{PRINT_PREFIX}] Scanner session ended: {request.session_id}")
+        return {"success": True, "message": f"Session '{request.session_id}' has been ended."}
     else:
         return {"error": "Invalid session ID or password, or session already ended."}
     
 @app.post(f"{BASE_URL}/room_encountered")
-async def room_encountered(session_id: str = Query(...), password: str = Query(...), room_name: str = Query(...), ip: str = Query(...)):
+async def room_encountered(request: RoomEncounteredRequest):
     """Endpoint to log that a room has been encountered during a scanning session"""
     
-    if not _validate_ip(ip):
-        return {"error": "Invalid IP address format."}
-    
-    request_count = _log_request(ip)
-    if request_count > IP_RATE_LIMIT:
+    request_count = await _log_request(request.session_id)
+    if request_count > RATE_LIMIT:
+        print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
         return {"error": "Rate limit exceeded. Please try again later."}
     
-    print(f"[INFO] [{PRINT_PREFIX}] Room encountered in session {session_id}: '{room_name}'")
+    print(f"[INFO] [{PRINT_PREFIX}] Room encountered in session {request.session_id}: '{request.room_name}'")
     
-    success = scanner_db_handler.log_encountered_room(session_id=session_id, session_password=password, room_name=room_name)
+    success = scanner_db_handler.log_encountered_room(session_id=request.session_id, session_password=request.password, room_name=request.room_name)
     if success:
-        print(f"[INFO] [{PRINT_PREFIX}] Logged room '{room_name}' for session {session_id}")
-        return {"success": True, "message": f"Room '{room_name}' has been logged for session '{session_id}'."}
+        print(f"[INFO] [{PRINT_PREFIX}] Logged room '{request.room_name}' for session {request.session_id}")
+        return {"success": True, "message": f"Room '{request.room_name}' has been logged for session '{request.session_id}'."}
     else:
         return {"error": "Invalid session ID or password, or session has ended."}

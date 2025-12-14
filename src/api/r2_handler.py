@@ -18,6 +18,7 @@ import discord
 from botocore.config import Config
 
 # Local imports
+from src.datamanager.database_manager import DB_DIR
 from config.vars import (
     R2_ACCOUNT_ID,
     R2_ACCESS_KEY_ID,
@@ -30,7 +31,7 @@ from config.vars import (
 
 
 # Cache directory
-CACHE_DIR = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), "databases", "images")
+CACHE_DIR = os.path.join(DB_DIR, "images")
 image_memory_cache = {}  # In-memory cache for image files
 cache_lock = asyncio.Lock()
 

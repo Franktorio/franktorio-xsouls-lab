@@ -9,9 +9,10 @@ PRINT_PREFIX = "ACTION JSON"
 import json
 import os
 
+# Local imports
+from ..database_manager import DB_DIR
+
 # Determine project root and actions.json path
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-DB_DIR = os.path.join(PROJECT_ROOT, "databases")
 ACTIONS_JSON_PATH = os.path.join(DB_DIR, "actions.json")
 
 # Ensure directory exists
