@@ -56,8 +56,6 @@ DATABASE_REPLICATION_INTERVAL = 300 # 5 minutes default
 
 DEBUG_ENABLED = False # Off by default
 
-RoomType = Literal["Hadal Blacksite", "Blacksite Administration", "Flooded Rooms", "Heavy Containment", "Maintenance Tunnels", "Mantle Extraction", 
-                   "Oxygen Gardens", "River Rooms", "Server Farms", "The Dredge", "The Outskirts", "Trench Tunnels", "Endless Ridge", 
-                   "Hotel Rooms", "Meat Rooms", "The Rooms", "Sewers", "The Back Area", "Winter Gardens", "The Ridge"]
+RoomType = Literal["YOUR", "ROOM", "TYPES", "HERE"]
 
-Tags = Literal["SS", "PSS", "Shop", "Rare", "Easter Egg", "Bunnies", "Has Document", "Endless", " Dead Zone"]
+Tags = Literal["YOUR", "TAGS", "HERE"]
