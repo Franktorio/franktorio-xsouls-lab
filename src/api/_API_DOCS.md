@@ -10,7 +10,7 @@ Research endpoints **All Authenticated**
 > These endpoints are authenticated with the LOCAL_KEY on `config/vars.py`
 - GET `/` - health/status endpoint (`ReadRootRequest`)
 - GET `/get_researcher_role` - returns research level for a user (`GetResearcherRoleRequest` Pydantic Basemodel)
- - GET `/get_all_researchers` - returns all researchers and their levels (`GetAllResearchersRequest` Pydantic Basemodel)
+- GET `/get_all_researchers` - returns all researchers and their levels (`GetAllResearchersRequest` Pydantic Basemodel)
 - GET `/get_user_profile` - returns user's profile info (`GetUserProfileRequest` Pydantic Basemodel)
 - POST `/document_room` - create new room documentation (`DocumentRoomRequest` Pydantic Basemodel)
 - POST `/redocument_room` - update existing room documentation (`RedocumentRoomRequest` Pydantic Basemodel)
