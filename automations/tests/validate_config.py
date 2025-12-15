@@ -30,7 +30,6 @@ for name, value in config_vars.__dict__.items():
 
 if not not_set:
     print(f"[INFO] [{PRINT_PREFIX}] All configuration variables are set correctly.")
-    exit(0)
 else:
     print(f"[WARNING] [{PRINT_PREFIX}] The following configuration variables are not set: {', '.join(not_set)}: Please update 'config/vars.py' accordingly.")
     exit(1)
