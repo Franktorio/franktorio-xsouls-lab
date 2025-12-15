@@ -83,7 +83,8 @@ class DeleteDocRequest(BaseModel):
 @app.get("/")
 async def read_root(request: ReadRootRequest):
     """Root endpoint to verify API is running."""
-    if request.key != LOCAL_KEY:
+    print(f"[INFO] [{PRINT_PREFIX}] Received root API request.")
+    if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
     room_amnt = len(room_db_handler.get_all_room_names())
@@ -96,6 +97,7 @@ async def read_root(request: ReadRootRequest):
 @app.get("/get_researcher_role")
 async def get_researcher_role(request: GetResearcherRoleRequest):
     """Endpoint to get a user's research level"""
+    print(f"[INFO] [{PRINT_PREFIX}] Received get_researcher_role request for user ID: {request.user_id}")
     if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
@@ -105,6 +107,7 @@ async def get_researcher_role(request: GetResearcherRoleRequest):
 @app.get("/get_all_researchers")
 async def get_all_researchers(request: GetAllResearchersRequest):
     """Endpoint to get all researchers and their levels"""
+    print(f"[INFO] [{PRINT_PREFIX}] Received get_all_researchers request from API key: {request.api_key}")
     if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
@@ -114,10 +117,11 @@ async def get_all_researchers(request: GetAllResearchersRequest):
 @app.get("/get_user_profile")
 async def get_user_profile(request: GetUserProfileRequest):
     """Endpoint to get a user's profile picture URL, username, and display name"""
+    print(f"[INFO] [{PRINT_PREFIX}] Received get_user_profile request for user ID: {request.user_id}")
     if request.api_key != LOCAL_KEY:
         return {"error": "Unauthorized"}
     
-    user_data = utils.get_user_profile(request.user_id)
+    user_data = await utils.get_user_profile(request.user_id)
     return {
         "user_id": request.user_id,
         "profile_picture_url": user_data["profile_picture_url"],
