@@ -15,6 +15,7 @@ import src.shared as shared
 
 # Override print function to log outputs to file
 import src.log_manager as log_manager # This module overrides the print function
+import automations.tests.validate_config # Will auto-run test on import
 
 if config.vars.DEBUG_ENABLED:
     print("[WARNING] [MAIN] Debug logging is ENABLED")
@@ -51,15 +52,12 @@ database_manager.init_databases()
 print("[INFO] [MAIN] Initializing backup manager...")
 backup_manager.init_backup_manager()
 
-# Run automated tests if in debug mode
-if config.vars.DEBUG_ENABLED:
-    print("[INFO] [MAIN] Running automated tests...")
-    import automations.tests.validate_config # Will auto-run tests on import
-    """
-    More tests can be added here in the future
-    e.g., database integrity tests, API endpoint tests, etc.
-    """
-    print("[INFO] [MAIN] Automated tests completed.")
+# Start API server in a separate thread
+print("[INFO] [MAIN] Starting API server...")
+api_thread = threading.Thread(target=run_api_server, daemon=True)
+api_thread.start()
+print(f"[INFO] [MAIN] API server started on http://0.0.0.0:{config.vars.API_PORT}")
+
 
 @FRD_bot.event
 async def on_ready():
@@ -73,12 +71,6 @@ async def on_ready():
     print(f"[INFO] [MAIN] Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
     print(f"[INFO] [MAIN] Connected to {len(FRD_bot.guilds)} guild(s)")
     print("="*50)
-    
-    # Start API server in a separate thread
-    print("[INFO] [MAIN] Starting API server...")
-    api_thread = threading.Thread(target=run_api_server, daemon=True)
-    api_thread.start()
-    print(f"[INFO] [MAIN] API server started on http://0.0.0.0:{config.vars.API_PORT}")
     
     # Start background tasks
     init_tasks.start_all_tasks()
