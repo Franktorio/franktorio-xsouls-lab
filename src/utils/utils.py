@@ -157,6 +157,7 @@ async def get_user_profile(user_id: int) -> dict:
     async def _fetch_user_profile(user_id: int) -> dict:
         """Helper to fetch user profile in Discord's event loop."""
         user = await shared.FRD_bot.fetch_user(user_id)
+        print(f"[INFO] [{PRINT_PREFIX}] Fetching user profile for user ID: {user_id}")
         if user is None:
             return {
                 "profile_picture_url": None,
@@ -170,6 +171,7 @@ async def get_user_profile(user_id: int) -> dict:
             "username": str(user),
             "display_name": user.name
         }
+    
     try:
         loop = asyncio.get_running_loop()
         # If we're in FastAPI's loop, schedule task in Discord's loop
@@ -190,16 +192,20 @@ async def get_all_researchers() -> list[dict]:
     Returns:
         A list of dictionaries with user_id and research_level.
     """
-    researchers = []
 
     async def _fetch_all_researchers() -> list[dict]:
         """Helper to fetch all researchers in Discord's event loop."""
-        home_guild = await shared.FRD_bot.fetch_guild(vars.HOME_GUILD_ID)
-        if home_guild is None:
-            print(f"[WARN] [{PRINT_PREFIX}] Home guild not found in cache")
-            return researchers
+        home_guild = shared.FRD_bot.get_guild(vars.HOME_GUILD_ID)
+        researchers = []
 
-        for member in home_guild.members:
+        members = [m async for m in home_guild.fetch_members(limit=None)] # Fetch all members
+        
+        if home_guild is None:
+            print(f"[WARN] [{PRINT_PREFIX}] Home guild not found!")
+            return researchers
+        print(f"[DEBUG] [{PRINT_PREFIX}] Fetching members of home guild. Member count: {home_guild.member_count}")
+
+        for member in members:
             role_ids = {r.id for r in member.roles}
             research_level = None
             if vars.HEAD_RESEARCHER in role_ids:
@@ -212,13 +218,14 @@ async def get_all_researchers() -> list[dict]:
                 research_level = "Trial Researcher"
 
             if research_level:
+                print(f"[DEBUG] [{PRINT_PREFIX}] Found researcher: {member.id} - {research_level}")
                 researchers.append({
                     "user_id": member.id,
                     "username": str(member),
                     "profile_picture_url": str(member.display_avatar.url) if member.display_avatar else None,
                     "research_level": research_level
                 })
-        print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved {len(researchers)} researchers from home guild")
+        print(f"[INFO] [{PRINT_PREFIX}] Retrieved {len(researchers)} researchers from home guild")
         return researchers
     
     try:
