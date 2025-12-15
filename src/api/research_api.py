@@ -26,13 +26,15 @@ app = FastAPI()
 class ReadRootRequest(BaseModel):
     api_key: str
 
-
 class GetResearcherRoleRequest(BaseModel):
     user_id: int
     api_key: str
 
 class GetUserProfileRequest(BaseModel):
     user_id: int
+    api_key: str
+
+class GetAllResearchersRequest(BaseModel):
     api_key: str
 
 class DocumentRoomRequest(BaseModel):
@@ -45,7 +47,6 @@ class DocumentRoomRequest(BaseModel):
     timestamp: Optional[float] = None
     api_key: str
 
-
 class RedocumentRoomRequest(BaseModel):
     room_name: str
     roomtype: str
@@ -57,13 +58,11 @@ class RedocumentRoomRequest(BaseModel):
     timestamp: Optional[float] = None
     api_key: str
 
-
 class SetRoomTypeRequest(BaseModel):
     room_name: str
     roomtype: str
     edited_by_user_id: int
     api_key: str
-
 
 class SetTagsRequest(BaseModel):
     room_name: str
@@ -71,13 +70,11 @@ class SetTagsRequest(BaseModel):
     edited_by_user_id: int
     api_key: str
 
-
 class RenameRoomRequest(BaseModel):
     old_name: str
     new_name: str
     edited_by_user_id: int
     api_key: str
-
 
 class DeleteDocRequest(BaseModel):
     room_name: str
@@ -105,6 +102,15 @@ async def get_researcher_role(request: GetResearcherRoleRequest):
     research_level = await utils.get_researcher_role(request.user_id)
     return {"user_id": request.user_id, "research_level": research_level}
 
+@app.get("/get_all_researchers")
+async def get_all_researchers(request: GetAllResearchersRequest):
+    """Endpoint to get all researchers and their levels"""
+    if request.api_key != LOCAL_KEY:
+        return {"error": "Unauthorized"}
+    
+    researchers = await utils.get_all_researchers()
+    return {"researchers": researchers}
+
 @app.get("/get_user_profile")
 async def get_user_profile(request: GetUserProfileRequest):
     """Endpoint to get a user's profile picture URL, username, and display name"""
@@ -118,7 +124,6 @@ async def get_user_profile(request: GetUserProfileRequest):
         "username": user_data["username"],
         "display_name": user_data["display_name"]
     }
-
 
 @app.post("/document_room")
 async def document_room(request: DocumentRoomRequest):
