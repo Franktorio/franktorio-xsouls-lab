@@ -10,6 +10,7 @@ Research endpoints **All Authenticated**
 > These endpoints are authenticated with the LOCAL_KEY on `config/vars.py`
 - GET `/` - health/status endpoint (`ReadRootRequest`)
 - GET `/get_researcher_role` - returns research level for a user (`GetResearcherRoleRequest` Pydantic Basemodel)
+ - GET `/get_all_researchers` - returns all researchers and their levels (`GetAllResearchersRequest` Pydantic Basemodel)
 - GET `/get_user_profile` - returns user's profile info (`GetUserProfileRequest` Pydantic Basemodel)
 - POST `/document_room` - create new room documentation (`DocumentRoomRequest` Pydantic Basemodel)
 - POST `/redocument_room` - update existing room documentation (`RedocumentRoomRequest` Pydantic Basemodel)
@@ -46,6 +47,9 @@ Below are the request models as defined in `research_api.py`.
 
 ### GetUserProfileRequest
 - `user_id` (int): Discord user id to query
+- `api_key` (string): authentication key
+
+### GetAllResearchersRequest
 - `api_key` (string): authentication key
 
 ### DocumentRoomRequest
@@ -164,6 +168,14 @@ print(resp.json())
 ```python
 payload = {"user_id": 123456789, "api_key": LOCAL_KEY}
 resp = requests.request("GET", f"{BASE_URL}/get_user_profile", json=payload)
+print(resp.json())
+```
+
+## Get all researchers
+
+```python
+payload = {"api_key": LOCAL_KEY}
+resp = requests.request("GET", f"{BASE_URL}/get_all_researchers", json=payload)
 print(resp.json())
 ```
 
