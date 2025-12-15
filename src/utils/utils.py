@@ -147,33 +147,95 @@ async def global_reset(room_name: str):
         if message_id:
             await _delete_message(guild, message_id, room_name)
 
-def get_user_profile(user_id: int) -> dict:
+async def get_user_profile(user_id: int) -> dict:
     """Get the profile picture URL, username, and display name of a user from cache.
     Args:
         user_id: The Discord user ID.
     Returns:
         A dictionary containing profile_picture_url, username, and display_name.
-    Note:
-        This only checks the bot's user cache. Users not in cache will return empty strings.
-        This is intentional to avoid event loop conflicts between FastAPI and Discord.py.
     """
-    user = shared.FRD_bot.get_user(user_id)
-    if user is None:
-        # Return empty data if user is not in cache
-        # We can't use fetch_user from FastAPI context due to event loop conflicts
-        print(f"[DEBUG] [{PRINT_PREFIX}] User {user_id} not found in cache")
+    async def _fetch_user_profile(user_id: int) -> dict:
+        """Helper to fetch user profile in Discord's event loop."""
+        user = await shared.FRD_bot.fetch_user(user_id)
+        if user is None:
+            return {
+                "profile_picture_url": None,
+                "username": "Unknown User",
+                "display_name": "Unknown User"
+            }
+        
+        profile_picture_url = str(user.display_avatar.url) if user.display_avatar else None
         return {
-            "profile_picture_url": "",
-            "username": "",
-            "display_name": ""
+            "profile_picture_url": profile_picture_url,
+            "username": str(user),
+            "display_name": user.name
         }
+    try:
+        loop = asyncio.get_running_loop()
+        # If we're in FastAPI's loop, schedule task in Discord's loop
+        if loop != shared.FRD_bot.loop:
+            future = asyncio.run_coroutine_threadsafe(
+                _fetch_user_profile(user_id),
+                shared.FRD_bot.loop
+            )
+            return future.result()
+    except RuntimeError:
+        pass  # No running loop
+
+    # We're in Discord's loop, run normally
+    return await _fetch_user_profile(user_id)
+
+async def get_all_researchers() -> list[dict]:
+    """Get a list of all researchers in the home guild.
+    Returns:
+        A list of dictionaries with user_id and research_level.
+    """
+    researchers = []
+
+    async def _fetch_all_researchers() -> list[dict]:
+        """Helper to fetch all researchers in Discord's event loop."""
+        home_guild = await shared.FRD_bot.fetch_guild(vars.HOME_GUILD_ID)
+        if home_guild is None:
+            print(f"[WARN] [{PRINT_PREFIX}] Home guild not found in cache")
+            return researchers
+
+        for member in home_guild.members:
+            role_ids = {r.id for r in member.roles}
+            research_level = None
+            if vars.HEAD_RESEARCHER in role_ids:
+                research_level = "Head Researcher"
+            elif vars.EXPERIENCED_RESEARCHER in role_ids:
+                research_level = "Experienced Researcher"
+            elif vars.NOVICE_RESEARCHER in role_ids:
+                research_level = "Novice Researcher"
+            elif vars.TRIAL_RESEARCHER in role_ids:
+                research_level = "Trial Researcher"
+
+            if research_level:
+                researchers.append({
+                    "user_id": member.id,
+                    "username": str(member),
+                    "profile_picture_url": str(member.display_avatar.url) if member.display_avatar else None,
+                    "research_level": research_level
+                })
+        print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved {len(researchers)} researchers from home guild")
+        return researchers
     
-    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved profile for user {user_id} from cache")
-    return {
-        "profile_picture_url": str(user.display_avatar.url),
-        "username": str(user.name),
-        "display_name": str(user.display_name)
-    }
+    try:
+        loop = asyncio.get_running_loop()
+        # If we're in FastAPI's loop, schedule task in Discord's loop
+        if loop != shared.FRD_bot.loop:
+            future = asyncio.run_coroutine_threadsafe(
+                _fetch_all_researchers(),
+                shared.FRD_bot.loop
+            )
+            return future.result()
+    except RuntimeError:
+        pass  # No running loop
+
+    # We're in Discord's loop, run normally
+    return await _fetch_all_researchers()
+
 
 def get_doc_message_link(server_id: int, room_name: str) -> str:
     """Get the link to the documented message for a room in a server.
