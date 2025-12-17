@@ -10,6 +10,7 @@ import uvicorn
 from discord.ext import commands
 
 # Local imports
+from src.datamanager.db_handlers import room_db_handler
 import config
 import src.shared as shared
 
@@ -83,6 +84,11 @@ async def on_ready():
     except Exception as e:
         print(f"[ERROR] [MAIN] Failed to sync commands: {e}")
         print("[WARNING] [MAIN] Bot will continue running but slash commands may not be available")
+    
+    # Set status to how many documented rooms there are
+    documented_rooms = len(room_db_handler.get_all_room_names())
+    await FRD_bot.change_presence(activity=discord.Game(name=f"Documented Rooms: {documented_rooms}"))
+    print(f"[INFO] [MAIN] Set bot status to 'Documented Rooms: {documented_rooms}'")
 
 print("="*50)
 print("[INFO] [MAIN] Starting bot connection to Discord...")
