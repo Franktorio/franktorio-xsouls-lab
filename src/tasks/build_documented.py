@@ -15,6 +15,7 @@ from discord.ext import tasks
 # Local imports
 from src import datamanager, shared
 from src.utils import embeds
+import config
 
 # Configuration
 BATCH_SIZE = 50  # Number of rooms to process concurrently per server
@@ -27,6 +28,14 @@ _MAX_FORCE_FETCH = 5
 async def build_documented_channels():
     """Background task to sync documented channels with room database."""
     global _force_fetch_iterations
+    
+    # Check if cleanup mode is enabled
+    if config.vars.CLEANUP_ENABLED:
+        print(f"[INFO] [{PRINT_PREFIX}] Starting cleanup mode - will delete all messages in documented channels")
+        print(f"[INFO] [{PRINT_PREFIX}] Processing {len(shared.FRD_bot.guilds)} guild(s) for cleanup")
+        for guild in shared.FRD_bot.guilds:
+            asyncio.create_task(_cleanup_documented_channel(guild))
+        return
     
     print(f"[INFO] [{PRINT_PREFIX}] Starting documented channel sync cycle")
     # Get all rooms from database
@@ -46,6 +55,88 @@ async def build_documented_channels():
     print(f"[INFO] [{PRINT_PREFIX}] Processing {len(shared.FRD_bot.guilds)} guild(s) for sync")
     for guild in shared.FRD_bot.guilds:
         asyncio.create_task(_sync_server_documentation(guild, all_rooms))
+
+
+async def _cleanup_documented_channel(guild: discord.Guild):
+    """Delete all messages in a server's documented channel."""
+    server_id = guild.id
+    
+    # Check if already running
+    if server_id in currently_running_builds:
+        return  # Skip if a cleanup is already running for this server
+    
+    try:
+        currently_running_builds.append(server_id)
+        
+        # Get server profile
+        profile = datamanager.server_db_handler.get_server_profile(server_id)
+        if not profile or not profile.get('documented_channel_id'):
+            return
+        
+        # Try to get channel
+        documented_channel = guild.get_channel(profile['documented_channel_id'])
+        if not documented_channel:
+            try:
+                documented_channel = await guild.fetch_channel(profile['documented_channel_id'])
+            except discord.NotFound:
+                print(f"[WARNING] [{PRINT_PREFIX}] Documented channel not found for {guild.name}, skipping cleanup")
+                return
+            except Exception as e:
+                print(f"[ERROR] [{PRINT_PREFIX}] Error fetching channel in server {guild.name}: {e}")
+                return
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Starting cleanup for {guild.name} ({server_id})")
+        
+        # Try to purge first
+        try:
+            deleted = await documented_channel.purge(limit=None, check=lambda m: True)
+            print(f"[INFO] [{PRINT_PREFIX}] Successfully purged {len(deleted)} messages in {guild.name}")
+
+        except discord.Forbidden:
+            # No permission to purge, manually delete each message
+            print(f"[WARNING] [{PRINT_PREFIX}] No purge permission in {guild.name}, manually deleting messages.")
+
+            deleted_count = 0
+            failed_count = 0
+            
+            async for message in documented_channel.history(limit=None):
+                try:
+                    await message.delete()
+                    deleted_count += 1
+                    # Add small delay to avoid rate limits
+                    if deleted_count % 5 == 0:
+                        print(f"[DEBUG] [{PRINT_PREFIX}] Deleted 5 messages in {guild.name}")
+                        await asyncio.sleep(1)
+                except discord.Forbidden:
+                    failed_count += 1
+                    print(f"[ERROR] [{PRINT_PREFIX}] No permission to delete message {message.id} in {guild.name}")
+                except discord.NotFound:
+                    # Message already deleted, skip
+                    pass
+                except Exception as e:
+                    failed_count += 1
+                    print(f"[ERROR] [{PRINT_PREFIX}] Error deleting message in {guild.name}: {e}")
+            
+            print(f"[INFO] [{PRINT_PREFIX}] Manually deleted {deleted_count} messages in {guild.name} ({failed_count} failed)")
+
+        except Exception as e:
+            print(f"[ERROR] [{PRINT_PREFIX}] Error during cleanup in {guild.name}: {e}")
+        
+        # Clear all doc message IDs from server profile
+        datamanager.server_db_handler.update_server_profile(
+            server_id=server_id,
+            doc_msg_ids={}
+        )
+        print(f"[INFO] [{PRINT_PREFIX}] Cleared doc message IDs for {guild.name}")
+        
+    except Exception as e:
+        print(f"[ERROR] [{PRINT_PREFIX}] Error cleaning up server {guild.name}: {e}")
+
+    finally: # Regardless of success or failure
+        # Always remove from running builds list
+
+        if server_id in currently_running_builds:
+            currently_running_builds.remove(server_id)
     
 
 async def _sync_server_documentation(guild: discord.Guild, all_rooms: list):

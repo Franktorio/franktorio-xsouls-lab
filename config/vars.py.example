@@ -55,6 +55,7 @@ DATABASE_ROLLOVER_MAX_AGE = 604800  # 7 days in seconds
 DATABASE_REPLICATION_INTERVAL = 300 # 5 minutes default
 
 DEBUG_ENABLED = False # Off by default
+CLEANUP_ENABLED = False # When enabled, deletes all messages in documented channels instead of building them. Used to repair broken documented channels
 
 RoomType = Literal["YOUR", "ROOM", "TYPES", "HERE"]
 
