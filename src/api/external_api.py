@@ -69,7 +69,7 @@ async def export_room_to_api(
         payload["last_edited_by"] = last_edited_by
     
     if timestamp is not None:
-        payload["timestamp"] = timestamp
+        payload["last_edited"] = timestamp
     
     try:
         print(f"[INFO] [{PRINT_PREFIX}] Sending POST request to external API for room: {room_name}")
