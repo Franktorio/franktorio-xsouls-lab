@@ -45,10 +45,11 @@ async def build_documented_channels():
         print(f"[INFO] [{PRINT_PREFIX}] No rooms found in database, skipping sync")
         return
     
-    # Forcefully load guilds to ensure cache is populated
+    # Forcefully load guilds to ensure cache is populated, also updates presence
     _force_fetch_iterations += 1
     if _force_fetch_iterations >= _MAX_FORCE_FETCH:
         _force_fetch_iterations = 0
+        shared.FRD_bot.change_presence(activity=discord.Game(name=f"Documented Rooms: {len(all_rooms)}"))
         async for guild in shared.FRD_bot.fetch_guilds():
             print(f"[DEBUG] [{PRINT_PREFIX}] Force-fetched guild: {guild.name} to refresh cache")
     
