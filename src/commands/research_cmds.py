@@ -110,7 +110,7 @@ class ResearchCommands(app_commands.Group):
         
         print(f"[DEBUG] [{PRINT_PREFIX}] Checking permissions for user {interaction.user}")
         level = await utils.permission_check(interaction.user)
-        if level < 2:
+        if level < 1:
             print(f"[WARNING] [{PRINT_PREFIX}] Permission denied for user {interaction.user} (level: {level})")
             await interaction.followup.send("You do not have permission to document rooms. You need to be trial researcher or higher.", ephemeral=True)
             return
@@ -148,6 +148,7 @@ class ResearchCommands(app_commands.Group):
             tags=tags,
             timestamp=doc_timestamp
         )
+
 
         # Export to external API after local save
         api_response = await external_api.export_room_to_api(
@@ -240,6 +241,7 @@ class ResearchCommands(app_commands.Group):
         
         # Clear cached images for this room before uploading new ones
         await r2_handler.delete_room_images(roomname)
+        [r2_handler.remove_image_from_memory_cache(url) for url in existing_room.get('picture_urls', [])]
         
         images = [image1, image2, image3, image4, image5, image6, image7, image8, image9, image10] 
         images = [img for img in images if img is not None]

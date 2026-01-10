@@ -15,7 +15,7 @@ from fastapi import FastAPI, Query
 from pydantic import BaseModel
 
 # Local imports
-from config.vars import LOCAL_KEY
+from config.vars import LOCAL_KEY, LATEST_SCANNER_VERSION
 from src.datamanager.db_handlers import room_db_handler, server_db_handler, scanner_db_handler
 from src.utils import utils
 
@@ -296,7 +296,7 @@ class SessionEndRequest(BaseModel):
 log_request_lock = asyncio.Lock()
 scanner_request_logs = {}  # Dictionary to track request timestamps per session
 
-RATE_LIMIT = 60 # Max requests per minute per IP for unauthenticated scanner endpoints
+RATE_LIMIT = 500 # Max requests per minute per IP for scanner endpoints
 
 async def _log_request(session_id: str):
     """Helper function to log requests per session for rate limiting"""
@@ -318,6 +318,12 @@ def _validate_session(session_id: str, password: str) -> bool:
 
 BASE_URL = "/scanner"
 
+@app.post(f"{BASE_URL}/check_version")
+async def check_scanner_version(request: SessionRequest):
+    """Endpoint to check the scanner version"""
+    print(f"[INFO] [{PRINT_PREFIX}] Scanner version check: {request.scanner_version}")
+    return {"success": True, "latest_version": LATEST_SCANNER_VERSION}
+
 @app.post(f"{BASE_URL}/request_session")
 async def request_scanner_session(request: SessionRequest):
     """Endpoint to request a new scanner session"""
@@ -336,7 +342,7 @@ async def end_scanner_session(request: SessionEndRequest):
         print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
         return {"error": "Rate limit exceeded. Please try again later."}
     
-    print(f"[INFO] [{PRINT_PREFIX}] Scanner session end requested: {request.session_id}")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Scanner session end requested: {request.session_id}")
     
     valid_session = _validate_session(request.session_id, request.password)
     if not valid_session:
@@ -357,7 +363,7 @@ async def get_room_info(request: RoomInfoRequest):
     if request_count > RATE_LIMIT:
         print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
         return {"error": "Rate limit exceeded. Please try again later."}
-    print(f"[INFO] [{PRINT_PREFIX}] Scanner requesting room info for '{request.room_name}'")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Scanner requesting room info for '{request.room_name}'")
 
     valid_session = _validate_session(request.session_id, request.password)
     if not valid_session:
@@ -378,7 +384,7 @@ async def room_encountered(request: RoomEncounteredRequest):
         print(f"[WARNING] [{PRINT_PREFIX}] Rate limit exceeded for session {request.session_id}")
         return {"error": "Rate limit exceeded. Please try again later."}
     
-    print(f"[INFO] [{PRINT_PREFIX}] Room encountered in session {request.session_id}: '{request.room_name}'")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Room encountered in session {request.session_id}: '{request.room_name}'")
     
     valid_session = _validate_session(request.session_id, request.password)
     if not valid_session:
@@ -386,7 +392,7 @@ async def room_encountered(request: RoomEncounteredRequest):
     
     success = scanner_db_handler.log_encountered_room(session_id=request.session_id, session_password=request.password, room_name=request.room_name)
     if success:
-        print(f"[INFO] [{PRINT_PREFIX}] Logged room '{request.room_name}' for session {request.session_id}")
+        print(f"[INFO] [{PRINT_PREFIX}] Session '{request.session_id}' logged encountered room '{request.room_name}'")
         return {"success": True, "message": f"Room '{request.room_name}' has been logged for session '{request.session_id}'."}
     else:
         return {"error": "Invalid session ID or password, or session has ended."}

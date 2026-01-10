@@ -116,14 +116,19 @@ def auto_rotate_log():
                 log_queue.append(f"[WARNING] [{PRINT_PREFIX}] No log file to rotate.")
                 pass
 
-            # Delete logs older than 7 days
-            old_date_suffix = (now - datetime.timedelta(days=7)).strftime("%Y%m%d")
-            old_log_path = f"logs/rotated_logs/bot_logs_{old_date_suffix}.log"
-            if os.path.exists(old_log_path):
-                log_queue.append(f"[INFO] [{PRINT_PREFIX}] Deleting old log file: bot_logs_{old_date_suffix}.log")
-                os.remove(old_log_path)
-            else:
-                log_queue.append(f"[DEBUG] [{PRINT_PREFIX}] No old log file to delete for date: {old_date_suffix}")
+            # Delete logs older than 7 days up to 30 days back
+            for i in range(8, 30): # Check up to 30 days back
+                old_date_suffix = (now - datetime.timedelta(days=i)).strftime("%Y%m%d")
+                file_number = 1
+                # Delete all files with this date suffix and incrementing file numbers
+                while os.path.exists(f"logs/rotated_logs/bot_logs_{old_date_suffix}_{file_number}.log"):
+                    old_log_path = f"logs/rotated_logs/bot_logs_{old_date_suffix}_{file_number}.log"
+                    try:
+                        os.remove(old_log_path)
+                        log_queue.append(f"[INFO] [{PRINT_PREFIX}] Deleted old log file: {old_log_path}")
+                    except Exception as e:
+                        log_queue.append(f"[ERROR] [{PRINT_PREFIX}] Failed to delete old log file {old_log_path}: {e}")
+                    file_number += 1
         
             # Reopen new active log
             _rotate_log()

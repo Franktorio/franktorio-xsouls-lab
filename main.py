@@ -72,6 +72,10 @@ async def on_ready():
     print(f"[INFO] [MAIN] Logged in as: {FRD_bot.user} (ID: {FRD_bot.user.id})")
     print(f"[INFO] [MAIN] Connected to {len(FRD_bot.guilds)} guild(s)")
     print("="*50)
+
+    # Set status to how many documented rooms there are
+    documented_rooms = len(room_db_handler.get_all_room_names())
+    await FRD_bot.change_presence(activity=discord.Game(name=f"Initializing bot with {documented_rooms} rooms."))
     
     # Start background tasks
     init_tasks.start_all_tasks()
@@ -85,10 +89,7 @@ async def on_ready():
         print(f"[ERROR] [MAIN] Failed to sync commands: {e}")
         print("[WARNING] [MAIN] Bot will continue running but slash commands may not be available")
     
-    # Set status to how many documented rooms there are
-    documented_rooms = len(room_db_handler.get_all_room_names())
-    await FRD_bot.change_presence(activity=discord.Game(name=f"Documented Rooms: {documented_rooms}"))
-    print(f"[INFO] [MAIN] Set bot status to 'Documented Rooms: {documented_rooms}'")
+
 
 print("="*50)
 print("[INFO] [MAIN] Starting bot connection to Discord...")

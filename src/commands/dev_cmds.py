@@ -308,4 +308,27 @@ class Admin(app_commands.Group):
         print(f"[INFO] [{PRINT_PREFIX}] Room data for '{room_name}' exported to {interaction.user}")
         await interaction.followup.send(file=json_file, ephemeral=True)
 
+    @app_commands.command(name="purge_scanner_db", description="Purge all data from the scanner database.")
+    @app_commands.describe(confirm="Type CONFIRM to confirm purging the scanner database.")
+    async def purge_scanner_db(self, interaction: discord.Interaction, confirm: Optional[str] = None):
+        """
+        Purge all data from the scanner database.
+        """
+        await interaction.response.defer(ephemeral=True)
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Purge scanner database requested by {interaction.user}")
+        
+        level = await utils.permission_check(interaction.user)
+        if level < 5:
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
+        
+        if confirm != "CONFIRM":
+            await interaction.followup.send("To confirm purging the scanner database, please add `confirm=CONFIRM` to the command.", ephemeral=True)
+            return
+        
+        datamanager.scanner_db_handler.purge_database()
+        await interaction.followup.send("Scanner database purged successfully.", ephemeral=True)
+        print(f"[INFO] [{PRINT_PREFIX}] Scanner database purged by {interaction.user}")
+
 shared.FRD_bot.tree.add_command(Admin())

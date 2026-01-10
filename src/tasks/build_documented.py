@@ -7,6 +7,7 @@ PRINT_PREFIX = "DOCUMENTED BUILDER"
 
 # Standard library imports
 import asyncio
+import os
 
 # Third-party imports
 import discord
@@ -16,12 +17,13 @@ from discord.ext import tasks
 from src import datamanager, shared
 from src.utils import embeds
 import config
+import src.api.r2_handler as r2_handler
 
 # Configuration
 BATCH_SIZE = 50  # Number of rooms to process concurrently per server
 currently_running_builds = []
 
-_force_fetch_iterations = 0
+_force_fetch_iterations = 5 # Start at max to force initial fetch
 _MAX_FORCE_FETCH = 5
 
 @tasks.loop(minutes=1)
@@ -49,7 +51,10 @@ async def build_documented_channels():
     _force_fetch_iterations += 1
     if _force_fetch_iterations >= _MAX_FORCE_FETCH:
         _force_fetch_iterations = 0
-        shared.FRD_bot.change_presence(activity=discord.Game(name=f"Documented Rooms: {len(all_rooms)}"))
+        cached_images = r2_handler.get_paths_of_cached_images()
+        parented_images_count = _validate_image_cache(all_rooms, cached_images)
+        await shared.FRD_bot.change_presence(activity=discord.Game(name=f"Documented Rooms: {len(all_rooms)} | Images: {parented_images_count}"))
+        print(f"[INFO] [{PRINT_PREFIX}] Force-fetching guilds to refresh cache")
         async for guild in shared.FRD_bot.fetch_guilds():
             print(f"[DEBUG] [{PRINT_PREFIX}] Force-fetched guild: {guild.name} to refresh cache")
     
@@ -57,6 +62,51 @@ async def build_documented_channels():
     for guild in shared.FRD_bot.guilds:
         asyncio.create_task(_sync_server_documentation(guild, all_rooms))
 
+
+
+def _validate_image_cache(all_rooms: list, all_cached_images: set) -> int:
+    """
+    Validate that all images for rooms are cached locally and delete orphaned images.
+    
+    Returns the number of parented images.
+    """
+    
+    if not all_cached_images:
+        return
+    
+    parented_images = set()
+    orphaned_images = set()
+
+    # Build set of cache filenames that should exist
+    for room_name in all_rooms:
+        room_info = datamanager.room_db_handler.get_roominfo(room_name)
+        if not room_info:
+            continue
+
+        for url in room_info.get('picture_urls', []):
+            try:
+                # Use _get_cache_filename to get just the filename, not the full path
+                cache_filename = r2_handler._get_cache_filename(url)
+                parented_images.add(cache_filename)
+            except Exception as e:
+                print(f"[ERROR] [{PRINT_PREFIX}] Error computing cache filename for {url}: {e}")
+
+    # Find orphaned images (cached but not referenced by any room)
+    for cached_image in all_cached_images:
+        if cached_image not in parented_images:
+            orphaned_images.add(cached_image)
+
+    # Delete orphaned images from disk
+    for orphan in orphaned_images:
+        try:
+            full_path = os.path.join(r2_handler.CACHE_DIR, orphan)
+            if os.path.exists(full_path):
+                os.remove(full_path)
+                print(f"[INFO] [{PRINT_PREFIX}] Deleted orphaned cached image: {orphan}")
+        except Exception as e:
+            print(f"[ERROR] [{PRINT_PREFIX}] Failed to delete cached image {orphan}: {e}")
+
+    return len(parented_images)
 
 async def _cleanup_documented_channel(guild: discord.Guild):
     """Delete all messages in a server's documented channel."""

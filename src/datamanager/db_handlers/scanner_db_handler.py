@@ -164,8 +164,10 @@ def start_session(scanner_version: str) -> tuple[str, str]:
     conn.commit()
     conn.close()
     
-    print(f"[INFO] [{PRINT_PREFIX}] Started new session {session_id} with scanner version {scanner_version}.")
+    print(f"[INFO] [{PRINT_PREFIX}] Started new session '{session_id}' with scanner version '{scanner_version}'.")
     return session_id, password
+
+DUMMY_HASH = _hash_password(_generate_password())
 
 def validate_session(session_id: str, session_password: str) -> bool:
     """Validate a scanning session. 
@@ -173,8 +175,8 @@ def validate_session(session_id: str, session_password: str) -> bool:
     Returns:
         True if the session is valid and open, False otherwise.
     """
-    start = time.time()
-    end = start + 1.0  # Ensure at least 1 second of processing time
+    start = time.perf_counter()
+    end = start + 0.1  # Always take at least 0.1 seconds, not an educated guess
     conn = _connect_db()
     cursor = conn.cursor()
 
@@ -187,14 +189,15 @@ def validate_session(session_id: str, session_password: str) -> bool:
     conn.close()
 
     if stored_password is None:
-        time.sleep(max(0, end - time.time()))
-        print(f"[ERROR] [{PRINT_PREFIX}] Session {session_id} is invalid or closed.")
-        return False
+        stored_password = (DUMMY_HASH,)
     
     is_valid = _compare_password(stored_password[0], session_password)
+    to_wait = max(0, end - time.perf_counter())
+    time.sleep(to_wait) # Obfuscate timing
     if not is_valid:
-        time.sleep(max(0, end - time.time()))
-        print(f"[ERROR] [{PRINT_PREFIX}] Invalid password for session {session_id}.")
+        print(f"[ERROR] [{PRINT_PREFIX}] Invalid password, sesssion, or closed session for session_id: {session_id} after waiting {to_wait:.2f} seconds.")
+    else:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Validated session {session_id} after waiting {to_wait:.2f} seconds.")
     return is_valid
 
 def end_session(session_id: str, session_password: str) -> bool:
@@ -265,7 +268,7 @@ def log_encountered_room(session_id: str, room_name: str, session_password: str)
     conn.commit()
     conn.close()
     
-    print(f"[INFO] [{PRINT_PREFIX}] Logged encountered room '{room_name}' in session {session_id}.")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Logged encountered room '{room_name}' in session {session_id}.")
     return success
 
 def get_sessions(include_closed: bool = True) -> list[tuple]:
@@ -421,3 +424,18 @@ def jsonify_database() -> dict[str, any]:
 
     print(f"[INFO] [{PRINT_PREFIX}] Converted database to JSON-serializable dictionary.")
     return data
+
+def purge_database() -> None:
+    """
+    Purge all data from the scanner database.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM encountered_rooms")
+    cursor.execute("DELETE FROM sessions")
+    
+    conn.commit()
+    conn.close()
+
+    print(f"[INFO] [{PRINT_PREFIX}] Purged all data from the scanner database.")

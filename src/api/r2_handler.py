@@ -130,7 +130,17 @@ async def get_cached_image_path(url: str) -> str:
     else:
         print(f"[INFO] [{PRINT_PREFIX}] Downloading and caching image")
         return await _download_and_cache(url)
-
+    
+def get_paths_of_cached_images() -> set | None:
+    """Return the a set of cached images on disk."""
+    try:
+        files = os.listdir(CACHE_DIR)
+        valid_files = [f for f in files if os.path.getsize(os.path.join(CACHE_DIR, f)) > 0]
+        return set(valid_files)
+    except Exception as e:
+        print(f"[ERROR] [{PRINT_PREFIX}] Error counting cached images: {e}")
+        return None
+    
 
 async def upload_to_r2(image_data, room_name: str, image_index: int = 1):
     """
