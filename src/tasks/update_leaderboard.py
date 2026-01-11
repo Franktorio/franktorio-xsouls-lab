@@ -58,14 +58,30 @@ async def update_leaderboard():
             actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
             save_actions_json()
         
-        rooms = datamanager.room_db_handler.jsonify_room_db()["room_db"]
-        top_10 = {}
-        for room in rooms:
-            room = rooms[room]
-            documenter = room.get('doc_by_user_id')
-            top_10[documenter] = top_10.get(documenter, 0) + 1
-        # Sort the top 10 contributors
-        top_10 = dict(sorted(top_10.items(), key=lambda item: item[1], reverse=True)[:10])
+        # Get all rooms and count contributions (documentations + edits)
+        all_room_names = datamanager.room_db_handler.get_all_room_names()
+        contributions = {}  # {user_id: contribution_count}
+        
+        for room_name in all_room_names:
+            room_info = datamanager.room_db_handler.get_roominfo(room_name)
+            if not room_info:
+                continue
+            
+            # Count initial documentation
+            documenter = room_info.get('doc_by_user_id')
+            if documenter:
+                contributions[documenter] = contributions.get(documenter, 0) + 1
+            
+            # Count edits from edit history, but don't double-count if the original documenter edited their own room
+            edits = room_info.get('edits', [])
+            for edit in edits:
+                editor = edit.get('edited_by_user_id')
+                # Only count the edit if it's by someone other than the original documenter
+                if editor and editor != documenter:
+                    contributions[editor] = contributions.get(editor, 0) + 1
+        
+        # Sort and get top 10 contributors
+        top_10 = dict(sorted(contributions.items(), key=lambda item: item[1], reverse=True)[:10])
 
         # Update the leaderboard message
         await message.edit(embed=embeds.create_leaderboard_embed(top_10), content=None)

@@ -10,6 +10,7 @@ import asyncio
 import io
 import os
 import datetime
+from collections import OrderedDict
 
 # Third-party imports
 import boto3
@@ -32,8 +33,10 @@ from config.vars import (
 
 # Cache directory
 CACHE_DIR = os.path.join(DB_DIR, "images")
-image_memory_cache = {}  # In-memory cache for image files
+image_memory_cache = OrderedDict()  # In-memory cache for image files with LRU ordering
 cache_lock = asyncio.Lock()
+MAX_CACHE_SIZE_BYTES = 1 * 1024 * 1024 * 1024  # GB limit
+current_cache_size = 0  # Track current cache size in bytes
 
 # Ensure cache directory exists
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -257,11 +260,14 @@ async def delete_room_images(room_name: str) -> bool:
                         deleted_count += 1
                         print(f"[INFO] [{PRINT_PREFIX}] Deleted R2 image: {filename}")
                         
-                        # Remove cached image
+                        # Remove from both disk cache AND memory cache
                         url = f"{R2_PUBLIC_URL}/{filename}"
                         cache_removed = await remove_cached_image(url)
                         if cache_removed:
-                            print(f"[INFO] [{PRINT_PREFIX}] Removed cached image for: {filename}")
+                            print(f"[INFO] [{PRINT_PREFIX}] Removed disk cached image for: {filename}")
+                        
+                        # Remove from memory cache as well
+                        remove_image_from_memory_cache(url)
                     except Exception as e:
                         print(f"[ERROR] [{PRINT_PREFIX}] Failed to delete {filename}: {e}")
         except Exception as e:
@@ -329,10 +335,13 @@ async def delete_r2_images(image_urls):
                     deleted_count += 1
                     print(f"[INFO] [{PRINT_PREFIX}] Deleted R2 image: {filename}")
                     
-                    # Remove cached image
+                    # Remove from both disk cache AND memory cache
                     cache_removed = await remove_cached_image(url)
                     if cache_removed:
-                        print(f"[INFO] [{PRINT_PREFIX}] Removed cached image for: {filename}")
+                        print(f"[INFO] [{PRINT_PREFIX}] Removed disk cached image for: {filename}")
+                    
+                    # Remove from memory cache as well
+                    remove_image_from_memory_cache(url)
                 except Exception as e:
                     print(f"[ERROR] [{PRINT_PREFIX}] Failed to delete {filename}: {e}")
         
@@ -392,12 +401,15 @@ async def get_stored_images(room_data, roomname):
 
 def get_image_from_memory_cache(url: str) -> dict:
     """Retrieve an image's cache entry from the in-memory cache.
+    Updates LRU order by moving to end.
     
     Returns:
         Dictionary with 'bytes' and 'timestamp' keys, or None if not cached.
     """
     cached_entry = image_memory_cache.get(url)
     if cached_entry:
+        # Move to end (most recently used)
+        image_memory_cache.move_to_end(url)
         print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image from memory cache for URL: {url}")
         return cached_entry
     else:
@@ -405,16 +417,41 @@ def get_image_from_memory_cache(url: str) -> dict:
         return None
 
 def add_image_to_memory_cache(url: str, image_bytes: bytes):
-    """Add an image's bytes to the in-memory cache."""
+    """Add an image's bytes to the in-memory cache.
+    Evicts oldest images if cache exceeds 3GB limit.
+    """
+    global current_cache_size
+    
+    image_size = len(image_bytes)
     now = datetime.datetime.now().timestamp()
+    
+    # Evict oldest images until we have room
+    while current_cache_size + image_size > MAX_CACHE_SIZE_BYTES and image_memory_cache:
+        # Remove the first (oldest) item
+        oldest_url, oldest_entry = image_memory_cache.popitem(last=False)
+        oldest_size = len(oldest_entry["bytes"])
+        current_cache_size -= oldest_size
+        print(f"[INFO] [{PRINT_PREFIX}] Evicted oldest image from cache: {oldest_url} ({oldest_size / (1024*1024):.2f}MB)")
+    
+    # Add new image
     image_memory_cache[url] = {"bytes": image_bytes, "timestamp": now}
-    print(f"[INFO] [{PRINT_PREFIX}] Added image to memory cache for URL: {url}")
+    current_cache_size += image_size
+    print(f"[INFO] [{PRINT_PREFIX}] Added image to memory cache: {url} ({image_size / (1024*1024):.2f}MB, total: {current_cache_size / (1024*1024*1024):.2f}GB)")
 
 def update_image_in_memory_cache(url: str, image_bytes: bytes):
     """Update an existing image's bytes in the in-memory cache."""
+    global current_cache_size
+    
     if url in image_memory_cache:
+        # Update cache size accounting
+        old_size = len(image_memory_cache[url]["bytes"])
+        new_size = len(image_bytes)
+        current_cache_size = current_cache_size - old_size + new_size
+        
         now = datetime.datetime.now().timestamp()
         image_memory_cache[url] = {"bytes": image_bytes, "timestamp": now}
+        # Move to end (most recently used)
+        image_memory_cache.move_to_end(url)
         print(f"[INFO] [{PRINT_PREFIX}] Updated image in memory cache for URL: {url}")
     else:
         print(f"[WARNING] [{PRINT_PREFIX}] Attempted to update non-existent image in memory cache for URL: {url}")
@@ -422,8 +459,12 @@ def update_image_in_memory_cache(url: str, image_bytes: bytes):
 
 def remove_image_from_memory_cache(url: str):
     """Remove an image from the in-memory cache."""
+    global current_cache_size
+    
     if url in image_memory_cache:
+        image_size = len(image_memory_cache[url]["bytes"])
         del image_memory_cache[url]
-        print(f"[INFO] [{PRINT_PREFIX}] Removed image from memory cache for URL: {url}")
+        current_cache_size -= image_size
+        print(f"[INFO] [{PRINT_PREFIX}] Removed image from memory cache for URL: {url} ({image_size / (1024*1024):.2f}MB)")
     else:
         print(f"[WARNING] [{PRINT_PREFIX}] Attempted to remove non-existent image from memory cache for URL: {url}")

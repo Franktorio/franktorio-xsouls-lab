@@ -240,8 +240,8 @@ class ResearchCommands(app_commands.Group):
             return
         
         # Clear cached images for this room before uploading new ones
+        # This now handles both disk and memory cache clearing
         await r2_handler.delete_room_images(roomname)
-        [r2_handler.remove_image_from_memory_cache(url) for url in existing_room.get('picture_urls', [])]
         
         images = [image1, image2, image3, image4, image5, image6, image7, image8, image9, image10] 
         images = [img for img in images if img is not None]

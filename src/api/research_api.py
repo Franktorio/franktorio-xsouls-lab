@@ -23,8 +23,6 @@ app = FastAPI()
 
 
 # Pydantic models for request bodies
-class ReadRootRequest(BaseModel):
-    api_key: str
 
 class GetResearcherRoleRequest(BaseModel):
     user_id: int
@@ -81,11 +79,9 @@ class DeleteDocRequest(BaseModel):
     api_key: str
 
 @app.get("/")
-async def read_root(request: ReadRootRequest):
+async def read_root():
     """Root endpoint to verify API is running."""
     print(f"[INFO] [{PRINT_PREFIX}] Received root API request.")
-    if request.api_key != LOCAL_KEY:
-        return {"error": "Unauthorized"}
     
     room_amnt = len(room_db_handler.get_all_room_names())
     servers_amnt = len(server_db_handler.get_all_server_profiles())

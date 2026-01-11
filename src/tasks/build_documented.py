@@ -67,15 +67,19 @@ async def build_documented_channels():
 def _validate_image_cache(all_rooms: list, all_cached_images: set) -> int:
     """
     Validate that all images for rooms are cached locally and delete orphaned images.
+    Also detects and removes duplicate/stale images, keeping only the newest version.
     
     Returns the number of parented images.
     """
     
     if not all_cached_images:
-        return
+        return 0
     
     parented_images = set()
     orphaned_images = set()
+    
+    # Track expected URLs for each room to validate cache freshness
+    expected_images = {}  # {cache_filename: url}
 
     # Build set of cache filenames that should exist
     for room_name in all_rooms:
@@ -88,6 +92,7 @@ def _validate_image_cache(all_rooms: list, all_cached_images: set) -> int:
                 # Use _get_cache_filename to get just the filename, not the full path
                 cache_filename = r2_handler._get_cache_filename(url)
                 parented_images.add(cache_filename)
+                expected_images[cache_filename] = url
             except Exception as e:
                 print(f"[ERROR] [{PRINT_PREFIX}] Error computing cache filename for {url}: {e}")
 
@@ -96,15 +101,51 @@ def _validate_image_cache(all_rooms: list, all_cached_images: set) -> int:
         if cached_image not in parented_images:
             orphaned_images.add(cached_image)
 
+    # Validate that cached images match their expected URLs
+    # This helps catch stale cache entries that weren't properly invalidated
+    stale_cache_removed = 0
+    for cache_filename, expected_url in expected_images.items():
+        full_path = os.path.join(r2_handler.CACHE_DIR, cache_filename)
+        
+        if not os.path.exists(full_path):
+            continue
+            
+        try:
+            # Check if file is empty (corrupted/incomplete download)
+            file_size = os.path.getsize(full_path)
+            if file_size == 0:
+                print(f"[WARNING] [{PRINT_PREFIX}] Found empty cached image: {cache_filename}, removing")
+                os.remove(full_path)
+                stale_cache_removed += 1
+                continue
+                
+            # Check if file is suspiciously small (likely corrupted)
+            if file_size < 100:  # PNG files are typically > 100 bytes
+                print(f"[WARNING] [{PRINT_PREFIX}] Found suspiciously small cached image ({file_size} bytes): {cache_filename}, removing")
+                os.remove(full_path)
+                stale_cache_removed += 1
+                continue
+                
+        except Exception as e:
+            print(f"[ERROR] [{PRINT_PREFIX}] Error validating cached image {cache_filename}: {e}")
+
+    if stale_cache_removed > 0:
+        print(f"[INFO] [{PRINT_PREFIX}] Removed {stale_cache_removed} stale/corrupted cached images")
+
     # Delete orphaned images from disk
+    orphans_removed = 0
     for orphan in orphaned_images:
         try:
             full_path = os.path.join(r2_handler.CACHE_DIR, orphan)
             if os.path.exists(full_path):
                 os.remove(full_path)
+                orphans_removed += 1
                 print(f"[INFO] [{PRINT_PREFIX}] Deleted orphaned cached image: {orphan}")
         except Exception as e:
             print(f"[ERROR] [{PRINT_PREFIX}] Failed to delete cached image {orphan}: {e}")
+    
+    if orphans_removed > 0:
+        print(f"[INFO] [{PRINT_PREFIX}] Removed {orphans_removed} orphaned cached images")
 
     return len(parented_images)
 

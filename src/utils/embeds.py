@@ -91,7 +91,8 @@ def create_leaderboard_embed(leaderboard_data: dict):
         title="⚗️ Franktorio & xSoul's Research Division 🧬",
         description=(
             "**Research Leaderboard** 🏆\n"
-            "🔬 Top-10 users with the most documented rooms! 🔬"
+            "🔬 Top-10 users with the most contributions! 🔬\n"
+            "*Contributions include documentations and edits*"
         ),
         color=discord.Color.from_rgb(52, 152, 219),  # Science blue
         timestamp=datetime.now(timezone.utc)
@@ -110,12 +111,12 @@ def create_leaderboard_embed(leaderboard_data: dict):
         "#3 - 🥉"   
     ]
 
-    for i, (user_id, doc_count) in enumerate(leaderboard_data.items()):
+    for i, (user_id, contribution_count) in enumerate(leaderboard_data.items()):
         rank_icon = ranks[i] if i < 3 else f"#{i+1} - 🧪"
 
         embed.add_field(
             name=f"{rank_icon}",
-            value=f"ㆍ<@{user_id}> 📄 **Documented Rooms:** `{doc_count}`",
+            value=f"ㆍ<@{user_id}> 🏆 **Contributions:** `{contribution_count}`",
             inline=False
         )
 
