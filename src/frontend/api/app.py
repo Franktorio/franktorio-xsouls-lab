@@ -16,9 +16,9 @@ from src.datamanager.db_handlers import room_db_handler, server_db_handler
 from . import research, scanner
 
 # Get absolute path to project root
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-STATIC_DIR = os.path.join(BASE_DIR, "src", "frontend", "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "src", "frontend", "templates")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+STATIC_DIR = os.path.join(BASE_DIR, "frontend", "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend", "templates")
 
 print(f"[INFO] [{PRINT_PREFIX}] BASE_DIR: {BASE_DIR}")
 print(f"[INFO] [{PRINT_PREFIX}] STATIC_DIR: {STATIC_DIR}")
