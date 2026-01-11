@@ -9,9 +9,12 @@ PRINT_PREFIX = "RESEARCH API"
 from datetime import datetime
 from typing import Optional
 import asyncio
+import os
 
 # Third-party imports
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 # Local imports
@@ -19,8 +22,19 @@ from config.vars import LOCAL_KEY, LATEST_SCANNER_VERSION
 from src.datamanager.db_handlers import room_db_handler, server_db_handler, scanner_db_handler
 from src.utils import utils
 
-app = FastAPI()
+# Get absolute path to project root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+STATIC_DIR = os.path.join(BASE_DIR, "frontend", "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend", "templates")
 
+print(f"[INFO] [{PRINT_PREFIX}] BASE_DIR: {BASE_DIR}")
+print(f"[INFO] [{PRINT_PREFIX}] STATIC_DIR: {STATIC_DIR}")
+print(f"[INFO] [{PRINT_PREFIX}] Static directory exists: {os.path.exists(STATIC_DIR)}")
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # Pydantic models for request bodies
 
@@ -79,16 +93,20 @@ class DeleteDocRequest(BaseModel):
     api_key: str
 
 @app.get("/")
-async def read_root():
+async def read_root(request: Request):
     """Root endpoint to verify API is running."""
     print(f"[INFO] [{PRINT_PREFIX}] Received root API request.")
     
     room_amnt = len(room_db_handler.get_all_room_names())
     servers_amnt = len(server_db_handler.get_all_server_profiles())
-    current_time = datetime.now().timestamp()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    return {"message": f"Research API is running. {room_amnt} rooms documented. {servers_amnt} servers using the bot. Current timestamp: {current_time} UTC."}
-
+    return templates.TemplateResponse("root.html", {
+        "request": request,
+        "room_amnt": room_amnt,
+        "servers_amnt": servers_amnt,
+        "current_time": current_time
+    })
 
 @app.get("/get_researcher_role")
 async def get_researcher_role(request: GetResearcherRoleRequest):

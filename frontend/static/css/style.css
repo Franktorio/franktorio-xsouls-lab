@@ -1,0 +1,51 @@
+/* style.css */
+
+/* Base page styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #120f1a;
+    color: #e6e1f0;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Page title */
+h1 {
+    color: #6f4bb8;
+    font-size: 2.5rem;
+    margin:10px;
+    background-color: #1a1426;
+    padding: 10px;
+    border:1px solid #3a2f52;
+    border-radius: 10px;
+}
+
+.info {
+    background-color: #1a1426;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #3a2f52;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    max-width: 800px;
+}
+
+.info p {
+    font-size: 18px;
+    color: #b8aecf;
+    margin: 10px 0;
+}
+
+.info:hover {
+    background-color: #241c33;
+    transition: background-color 0.2s ease-out;
+}
+
+h1:hover {
+    background-color: #241c33;
+    transition: background-color 0.2s ease-out;
+}

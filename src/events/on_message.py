@@ -81,6 +81,7 @@ async def on_message(message: discord.Message):
                 return
 
             await embeds.send_room_documentation_embed(message.channel, room_info)
+            print(f"[INFO] [{PRINT_PREFIX}] Sent room info for room '{room_name}' in response to message from user '{message.author}' in server '{message.guild.name}'.")
 
             async with per_channel_cooldown_lock:
                 per_channel_cooldown[message.channel] = time_now
