@@ -32,6 +32,15 @@ Franktorio's Research Division (FRD) is designed to facilitate collaborative res
 - Sessions time out after two hours of being created
 
 
+## Scanner Showcase
+
+> https://github.com/Franktorio/franktorio-pressure-scanner
+
+![Scanner Screenshot 1](https://pub-14908be79b544ff094192d7ae647f32b.r2.dev/Screenshot%202026-01-05%20011142.png)
+
+![Scanner Screenshot 2](https://pub-14908be79b544ff094192d7ae647f32b.r2.dev/Screenshot%202026-01-10%20202239.png)
+
+
 ## Installation & Setup
 
 Must have:
