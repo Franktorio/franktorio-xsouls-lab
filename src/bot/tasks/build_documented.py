@@ -17,7 +17,7 @@ from discord.ext import tasks
 from src import datamanager, shared
 from src.utils import embeds
 import config
-import src.api.r2_handler as r2_handler
+import src.utils.r2_handler as r2_handler
 
 # Configuration
 BATCH_SIZE = 50  # Number of rooms to process concurrently per server

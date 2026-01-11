@@ -19,7 +19,7 @@ from discord import app_commands
 # Local imports
 import config.vars as vars
 from src import datamanager, shared
-from src.api import r2_handler
+from src.utils import r2_handler
 from src.utils import embeds, utils
 
 class Admin(app_commands.Group):

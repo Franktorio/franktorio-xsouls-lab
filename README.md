@@ -103,7 +103,7 @@ Documentation for each module is available in their respective folder. (WIP)
 - `FAIL`
 - `FAILURE`
 
-> To enable [DEBUG] logging go to `src\logs_manager.py`*
+> To enable [DEBUG] logging go to `src/log_manager.py`*
 
 **Logging format**
 ```python
@@ -114,7 +114,7 @@ print(f"[WARNING] {PRINT_PREFIX} This was not found, skipping.")
 
 ### Commands Documentation
 ```bash
-src\commands\_CMDS_DOCS.md
+src/bot/commands/_CMDS_DOCS.md
 ```
 Includes:
 - Description of each slash command
@@ -123,7 +123,7 @@ Includes:
 
 ### Research API Documentation
 ```bash
-src\api\_API_DOCS.md
+src/frontend/api/_API_DOCS.md
 ```
 Includes:
 - All endpoints

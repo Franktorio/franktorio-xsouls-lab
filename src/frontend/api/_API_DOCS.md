@@ -2,7 +2,13 @@
 
 ## Overview
 
-This document describes the Research API implemented in `src/api/research_api.py`.
+This document describes the Research API implemented in `src/frontend/api/`.
+
+The API is now modularized:
+- `app.py` - FastAPI application initialization and root endpoint
+- `models.py` - All Pydantic request/response models
+- `research.py` - Research-related endpoints (room documentation)
+- `scanner.py` - Scanner-related endpoints (session management, encounters)
 
 ## Endpoints Summary
 
@@ -36,10 +42,11 @@ Unauthorized requests return:
 
 ## Request Models
 
-Below are the request models as defined in `research_api.py`.
+Below are the request models as defined in `models.py`.
 
-### ReadRootRequest
-- `api_key` (string): authentication key included in the request body for the GET `/` endpoint.
+### Research API Models
+
+### Research API Models
 
 ### GetResearcherRoleRequest
 - `user_id` (int): Discord user id to query
@@ -89,7 +96,7 @@ Below are the request models as defined in `research_api.py`.
 - `api_key` (string)
 
 
-## Scanner Models
+### Scanner API Models
 
 ### SessionRequest
 - `scanner_version` (string)
@@ -113,7 +120,18 @@ Below are the request models as defined in `research_api.py`.
 
 - Successful actions typically return `{"success": true, ...}` with a `message` or payload.
 - If a requested room doesn't exist, endpoints respond with an `error` field describing the issue.
-- Scanner endpoints may respond with `{"error": "Rate limit exceeded. Please try again later."}` when hit with >60 requests in a rolling 60s window per session.
+- Scanner endpoints may respond with `{"error": "Rate limit exceeded. Please try again later."}` when hit with >500 requests in a rolling 60s window per session.
+
+## Project Structure
+
+```
+src/frontend/api/
+├── app.py         # FastAPI initialization, root endpoint
+├── models.py      # Pydantic models for all requests
+├── research.py    # Research endpoints (APIRouter)
+├── scanner.py     # Scanner endpoints (APIRouter)
+└── __init__.py    # Exports the FastAPI app
+```
 
 ## Example Code
 

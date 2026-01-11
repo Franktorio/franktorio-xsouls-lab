@@ -11,7 +11,7 @@ from discord.ext import tasks
 # Local imports
 from config.vars import EXTERNAL_DATA_SOURCE
 from src import datamanager, shared
-from src.api import external_api
+from src.utils import external_api
 from src.utils import embeds, utils
 
 

@@ -20,7 +20,7 @@ from PIL import Image
 # Local imports
 from config.vars import RoomType, Tags
 from src import shared
-from src.api import r2_handler, external_api
+from src.utils import r2_handler, external_api
 from src.datamanager.db_handlers import room_db_handler
 from src.utils import embeds, utils
 

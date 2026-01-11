@@ -15,8 +15,8 @@ from discord import app_commands
 # Local imports
 import config.vars as vars
 from src import shared
-from src.api import external_api
-from src.tasks.sync_databases import sync_databases
+from src.utils import external_api
+from ..tasks.sync_databases import sync_databases
 from src.utils import utils
 from src.utils.embeds import create_error_embed, create_success_embed
 from src.utils import embeds

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 import discord
 
 # Local imports
-from src.api import r2_handler
+from src.utils import r2_handler
 from src import shared
 from .utils import get_doc_message_link
 

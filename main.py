@@ -35,13 +35,13 @@ FRD_bot = commands.Bot(command_prefix='!', intents=intents, description="Frankto
 shared.set_bot(FRD_bot)
 
 # Import modules that register commands and tasks
-import src.commands  # Commands will auto-register via decorators
-import src.events  # Event handlers will auto-register via decorators
+import src.bot.commands  # Commands will auto-register via decorators
+import src.bot.events  # Event handlers will auto-register via decorators
 
 import src.datamanager.database_manager as database_manager
 import src.datamanager.backup_manager as backup_manager
-import src.tasks.init_tasks as init_tasks
-from src.api.research_api import app as api_app
+import src.bot.tasks.init_tasks as init_tasks
+from src.frontend.api.app import app as api_app
 
 def run_api_server():
     """Run the FastAPI server in a separate thread."""

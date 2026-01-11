@@ -14,7 +14,7 @@ from typing import Optional, Dict, Any
 
 # Local imports
 from ..database_manager import connect_db
-from ...api import r2_handler
+from ...utils import r2_handler
 
 DB_FILE_NAME = "frd_room.db"
 
