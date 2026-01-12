@@ -14,6 +14,7 @@
 
 PRINT_PREFIX = "CONFIG VALIDATION"
 
+TO_SKIP_VARS = ["LOCAL_API_ROOT_PATH"]  # List of variables to skip during validation
 
 try:
     from config import vars as config_vars
@@ -31,7 +32,7 @@ for key in to_check:
     if key.isupper():  # Only check uppercase variables
         if not hasattr(config_vars, key): # Variable not set
             not_set.append(key)
-        elif getattr(config_vars, key) == to_check[key] and type(getattr(config_vars, key)) == str: # Variable set to default/example value as string
+        elif getattr(config_vars, key) == to_check[key] and type(getattr(config_vars, key)) == str and key not in TO_SKIP_VARS: # Variable set to default/example value as string
             not_set.append(key)
 
 if not not_set:

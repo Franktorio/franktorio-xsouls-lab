@@ -58,7 +58,7 @@ DATABASE_REPLICATION_INTERVAL = 300 # 5 minutes default
 DEBUG_ENABLED = False # Off by default
 CLEANUP_ENABLED = False # When enabled, deletes all messages in documented channels instead of building them. Used to repair broken documented channels
 
-LATEST_SCANNER_VERSION = "1.3.2"
+LATEST_SCANNER_VERSION = "YOUR_SCANNER_VERSION_HERE"
 
 RoomType = Literal["Hadal Blacksite", "Blacksite Administration", "Flooded Rooms", "Heavy Containment", "Maintenance Tunnels", "Mantle Extraction", 
                    "Oxygen Gardens", "River Rooms", "Server Farms", "The Dredge", "The Outskirts", "Trench Tunnels", "Endless Ridge", 
