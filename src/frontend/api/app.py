@@ -5,6 +5,7 @@
 
 PRINT_PREFIX = "API APP"
 
+from logging import root
 import os
 from datetime import datetime
 from fastapi import FastAPI, Request
@@ -15,6 +16,7 @@ from fastapi.responses import FileResponse
 # Local imports
 from src.datamanager.db_handlers import room_db_handler, server_db_handler
 from . import research, scanner
+from config.vars import LOCAL_API_ROOT_PATH
 
 # Get absolute path to project root
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,7 +28,7 @@ print(f"[INFO] [{PRINT_PREFIX}] STATIC_DIR: {STATIC_DIR}")
 print(f"[INFO] [{PRINT_PREFIX}] Static directory exists: {os.path.exists(STATIC_DIR)}")
 
 # Initialize FastAPI app
-app = FastAPI()
+app = FastAPI(root_path=LOCAL_API_ROOT_PATH)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -39,7 +41,7 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 app.include_router(research.router)
 app.include_router(scanner.router)
 
-@app.get("/")
+@app.get("/", name="root")
 async def read_root(request: Request):
     """Root endpoint to verify API is running."""
     print(f"[INFO] [{PRINT_PREFIX}] Received root API request.")
@@ -58,6 +60,5 @@ async def read_root(request: Request):
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     """Serve the favicon."""
-
     favicon_path = os.path.join(STATIC_DIR, "images", "favicon.ico")
     return FileResponse(favicon_path)
