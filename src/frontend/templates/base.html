@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Franktorio & xSoul's Lab{% endblock %}</title>
+
+    <!-- shared CSS / icons / colors -->
+    <link rel="stylesheet" href="static/css/style.css?v=47.0">
+    <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <!--Navigation bar-->
+    <div class="titlebar">
+        <div>
+            <img src="static/images/favicon.ico" alt="Logo">
+            <span>Franktorio & xSoul's Lab</span>
+        </div>
+        <nav>
+            <a href="/">Home</a>
+        </nav>
+    </div>
+    {% block content %}{% endblock %}
+</body>
+</html>

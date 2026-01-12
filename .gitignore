@@ -55,11 +55,8 @@ bot_logs.txt
 .env.*.local
 
 # Images
-databases/images/
-*.png
-*.jpg
-*.jpeg
-*.gif
+data/images/
+
 
 # Temporary files
 *.tmp

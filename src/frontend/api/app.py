@@ -10,6 +10,7 @@ from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import FileResponse
 
 # Local imports
 from src.datamanager.db_handlers import room_db_handler, server_db_handler
@@ -33,6 +34,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 # Initialize templates
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
+
 # Include routers
 app.include_router(research.router)
 app.include_router(scanner.router)
@@ -52,3 +54,10 @@ async def read_root(request: Request):
         "servers_amnt": servers_amnt,
         "current_time": current_time
     })
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve the favicon."""
+
+    favicon_path = os.path.join(STATIC_DIR, "images", "favicon.ico")
+    return FileResponse(favicon_path)
