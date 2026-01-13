@@ -68,6 +68,7 @@ async def send_room_documentation_embed(channel: discord.TextChannel, room_data:
     roomname_link = urllib.parse.quote(roomname)
 
     embed.add_field(name="Documentation Link", value=f"https://pressure.xsoul.org/rooms/{roomname_link}", inline=False)
+    embed.add_field(name="Bot Website", value=f"https://franktorio.dev/frd-api/", inline=False)
 
     image_files = await r2_handler.get_stored_images(room_data, roomname)
 
@@ -121,6 +122,7 @@ def create_leaderboard_embed(leaderboard_data: dict):
         )
 
     embed.add_field(name="Want to contribute?", value="Join https://discord.gg/nightfalldiv and become a researcher!", inline=False)
+    embed.add_field(name="Bot Website", value=f"https://franktorio.dev/frd-api/", inline=False)
 
     # Commented out to keep logs cleaner
     # print(f"[DEBUG] [{PRINT_PREFIX}] Created leaderboard embed with {len(leaderboard_data)} entries")

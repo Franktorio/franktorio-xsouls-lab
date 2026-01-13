@@ -33,9 +33,9 @@ from config.vars import (
 
 # Cache directory
 CACHE_DIR = os.path.join(DB_DIR, "images")
-image_memory_cache = OrderedDict()  # In-memory cache for image files with LRU ordering
+CACHE = {"order": [], "rooms": {}}  # order tracks LRU, rooms stores image data by room
 cache_lock = asyncio.Lock()
-MAX_CACHE_SIZE_BYTES = 1 * 1024 * 1024 * 1024  # GB limit
+MAX_CACHED_ROOMS = 10  # Maximum number of rooms to cache
 current_cache_size = 0  # Track current cache size in bytes
 
 # Ensure cache directory exists
@@ -371,7 +371,7 @@ async def get_stored_images(room_data, roomname):
             async with cache_lock:
                 # Use memory cache if valid
                 cached_entry = get_image_from_memory_cache(img_url)
-                if cached_entry and now - cached_entry["timestamp"] < 3600 and cached_entry["bytes"]:
+                if cached_entry and now - cached_entry["timestamp"] < 1800 and cached_entry["bytes"]:
                     img_bytes = cached_entry["bytes"]
                     files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
                     continue
@@ -389,7 +389,7 @@ async def get_stored_images(room_data, roomname):
                     continue
 
                 # Store in memory cache using helper
-                add_image_to_memory_cache(img_url, img_bytes)
+                add_image_to_memory_cache(img_url, img_bytes, roomname)
 
                 files.append(discord.File(io.BytesIO(img_bytes), filename=f"{roomname}_{i+1}.png"))
                 print(f"[INFO] [{PRINT_PREFIX}] Cached image {roomname}_{i+1} in memory")
@@ -406,65 +406,128 @@ def get_image_from_memory_cache(url: str) -> dict:
     Returns:
         Dictionary with 'bytes' and 'timestamp' keys, or None if not cached.
     """
-    cached_entry = image_memory_cache.get(url)
-    if cached_entry:
-        # Move to end (most recently used)
-        image_memory_cache.move_to_end(url)
-        print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image from memory cache for URL: {url}")
-        return cached_entry
-    else:
-        print(f"[DEBUG] [{PRINT_PREFIX}] Image not found in memory cache for URL: {url}")
-        return None
+    # Find which room contains this URL
+    for room_name, images in CACHE["rooms"].items():
+        if url in images:
+            # Update LRU order - move room to end (most recently used)
+            if room_name in CACHE["order"]:
+                CACHE["order"].remove(room_name)
+                CACHE["order"].append(room_name)
+            
+            print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved image from memory cache for URL: {url}")
+            return images[url]
+    
+    print(f"[DEBUG] [{PRINT_PREFIX}] Image not found in memory cache for URL: {url}")
+    return None
 
-def add_image_to_memory_cache(url: str, image_bytes: bytes):
+def add_image_to_memory_cache(url: str, image_bytes: bytes, room_name: str = None):
     """Add an image's bytes to the in-memory cache.
-    Evicts oldest images if cache exceeds 3GB limit.
+    Evicts oldest rooms if cache exceeds 10 rooms limit.
+    
+    Args:
+        url: Image URL
+        image_bytes: Image bytes data
+        room_name: Name of the room (extracted from URL if not provided)
     """
     global current_cache_size
     
     image_size = len(image_bytes)
     now = datetime.datetime.now().timestamp()
     
-    # Evict oldest images until we have room
-    while current_cache_size + image_size > MAX_CACHE_SIZE_BYTES and image_memory_cache:
-        # Remove the first (oldest) item
-        oldest_url, oldest_entry = image_memory_cache.popitem(last=False)
-        oldest_size = len(oldest_entry["bytes"])
-        current_cache_size -= oldest_size
-        print(f"[INFO] [{PRINT_PREFIX}] Evicted oldest image from cache: {oldest_url} ({oldest_size / (1024*1024):.2f}MB)")
+    # Extract room name from URL if not provided
+    if not room_name:
+        # URL format: cdn.xsoul.org/RoomName/RoomName_1.png
+        if "cdn.xsoul.org/" in url:
+            room_name = url.split("cdn.xsoul.org/")[1].split("/")[0]
+        elif "r2.cloudflarestorage.com/" in url or "r2.dev/" in url:
+            # Extract room name from path
+            path_parts = url.split("/")
+            if len(path_parts) >= 2:
+                room_name = path_parts[-2]
     
-    # Add new image
-    image_memory_cache[url] = {"bytes": image_bytes, "timestamp": now}
+    # If room_name still not found, use a default
+    if not room_name:
+        room_name = "unknown"
+    
+    # Check if room exists in cache
+    if room_name not in CACHE["rooms"]:
+        # Check if we need to evict oldest room
+        if len(CACHE["rooms"]) >= MAX_CACHED_ROOMS:
+            # Remove the oldest room (first in order list)
+            oldest_room = CACHE["order"][0]
+            images_to_remove = CACHE["rooms"][oldest_room]
+            for old_url, old_data in images_to_remove.items():
+                old_size = len(old_data["bytes"])
+                current_cache_size -= old_size
+            del CACHE["rooms"][oldest_room]
+            CACHE["order"].remove(oldest_room)
+            print(f"[INFO] [{PRINT_PREFIX}] Evicted room from cache: {oldest_room} ({len(images_to_remove)} images)")
+        
+        # Add new room
+        CACHE["rooms"][room_name] = {}
+        CACHE["order"].append(room_name)
+    else:
+        # Move room to end (most recently used)
+        if room_name in CACHE["order"]:
+            CACHE["order"].remove(room_name)
+            CACHE["order"].append(room_name)
+    
+    # Add image to room
+    CACHE["rooms"][room_name][url] = {"bytes": image_bytes, "timestamp": now}
     current_cache_size += image_size
-    print(f"[INFO] [{PRINT_PREFIX}] Added image to memory cache: {url} ({image_size / (1024*1024):.2f}MB, total: {current_cache_size / (1024*1024*1024):.2f}GB)")
+    print(f"[INFO] [{PRINT_PREFIX}] Added image to memory cache: {url} ({image_size / (1024*1024):.2f}MB, room: {room_name}, total rooms: {len(CACHE['rooms'])})")
 
 def update_image_in_memory_cache(url: str, image_bytes: bytes):
     """Update an existing image's bytes in the in-memory cache."""
     global current_cache_size
     
-    if url in image_memory_cache:
-        # Update cache size accounting
-        old_size = len(image_memory_cache[url]["bytes"])
-        new_size = len(image_bytes)
-        current_cache_size = current_cache_size - old_size + new_size
-        
-        now = datetime.datetime.now().timestamp()
-        image_memory_cache[url] = {"bytes": image_bytes, "timestamp": now}
-        # Move to end (most recently used)
-        image_memory_cache.move_to_end(url)
-        print(f"[INFO] [{PRINT_PREFIX}] Updated image in memory cache for URL: {url}")
-    else:
+    # Find the room containing this URL
+    found = False
+    for room_name, images in CACHE["rooms"].items():
+        if url in images:
+            # Update cache size accounting
+            old_size = len(images[url]["bytes"])
+            new_size = len(image_bytes)
+            current_cache_size = current_cache_size - old_size + new_size
+            
+            now = datetime.datetime.now().timestamp()
+            images[url] = {"bytes": image_bytes, "timestamp": now}
+            
+            # Move room to end (most recently used)
+            if room_name in CACHE["order"]:
+                CACHE["order"].remove(room_name)
+                CACHE["order"].append(room_name)
+            
+            print(f"[INFO] [{PRINT_PREFIX}] Updated image in memory cache for URL: {url}")
+            found = True
+            break
+    
+    if not found:
         print(f"[WARNING] [{PRINT_PREFIX}] Attempted to update non-existent image in memory cache for URL: {url}")
-        add_image_to_memory_cache(url, image_bytes)
+        # Extract room name for adding to cache
+        room_name = None
+        if "cdn.xsoul.org/" in url:
+            room_name = url.split("cdn.xsoul.org/")[1].split("/")[0]
+        add_image_to_memory_cache(url, image_bytes, room_name)
 
 def remove_image_from_memory_cache(url: str):
     """Remove an image from the in-memory cache."""
     global current_cache_size
     
-    if url in image_memory_cache:
-        image_size = len(image_memory_cache[url]["bytes"])
-        del image_memory_cache[url]
-        current_cache_size -= image_size
-        print(f"[INFO] [{PRINT_PREFIX}] Removed image from memory cache for URL: {url} ({image_size / (1024*1024):.2f}MB)")
-    else:
-        print(f"[WARNING] [{PRINT_PREFIX}] Attempted to remove non-existent image from memory cache for URL: {url}")
+    # Find and remove the image from its room
+    for room_name, images in list(CACHE["rooms"].items()):
+        if url in images:
+            image_size = len(images[url]["bytes"])
+            del images[url]
+            current_cache_size -= image_size
+            
+            # If room has no more images, remove the room
+            if not images:
+                del CACHE["rooms"][room_name]
+                if room_name in CACHE["order"]:
+                    CACHE["order"].remove(room_name)
+            
+            print(f"[INFO] [{PRINT_PREFIX}] Removed image from memory cache for URL: {url} ({image_size / (1024*1024):.2f}MB)")
+            return
+    
+    print(f"[WARNING] [{PRINT_PREFIX}] Attempted to remove non-existent image from memory cache for URL: {url}")

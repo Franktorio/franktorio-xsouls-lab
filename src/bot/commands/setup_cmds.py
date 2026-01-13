@@ -52,6 +52,7 @@ class Setup(app_commands.Group):
                 color=discord.Color.orange(),
                 timestamp=discord.utils.utcnow()
             )
+            embed.add_field(name="Bot Website", value=f"https://franktorio.dev/frd-api/", inline=False)
             msg = await interaction.followup.send(embed=embed)
             await msg.add_reaction("✅")
             await msg.add_reaction("❌")
@@ -236,6 +237,7 @@ class Setup(app_commands.Group):
                     f"{new_channel.mention}\n\n"
                 )
             )
+            embed.add_field(name="Bot Website", value=f"https://franktorio.dev/frd-api/", inline=False)
             print(f"[INFO] [{PRINT_PREFIX}] Leaderboard reset complete for {interaction.guild.name}")
             await interaction.followup.send(embed=embed)
         
@@ -323,6 +325,7 @@ class Setup(app_commands.Group):
                     "Building documentation channel now. This may take a few hours depending on the number of rooms."
                 )
             )
+            embed.add_field(name="Bot Website", value=f"https://franktorio.dev/frd-api/", inline=False)
             print(f"[INFO] [{PRINT_PREFIX}] Documented channel reset complete for {interaction.guild.name}")
             await interaction.followup.send(embed=embed)
         

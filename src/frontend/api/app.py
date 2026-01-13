@@ -18,6 +18,7 @@ from src.datamanager.db_handlers import room_db_handler, server_db_handler
 from src.utils.r2_handler import get_paths_of_cached_images
 from . import research, scanner
 from config.vars import LOCAL_API_ROOT_PATH
+from src.shared import FRD_bot
 
 # Get absolute path to project root
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,7 +49,7 @@ async def read_root(request: Request):
     print(f"[INFO] [{PRINT_PREFIX}] Received index request.")
     
     rooms = room_db_handler.get_all_room_names()
-    servers_amnt = len(server_db_handler.get_all_server_profiles())
+    servers_amnt = len(FRD_bot.guilds) if FRD_bot else "Bot not initialized"
     room_amnt = len(rooms)
 
     try:

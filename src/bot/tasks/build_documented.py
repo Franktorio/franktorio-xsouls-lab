@@ -35,6 +35,7 @@ async def build_documented_channels():
     if config.vars.CLEANUP_ENABLED:
         print(f"[INFO] [{PRINT_PREFIX}] Starting cleanup mode - will delete all messages in documented channels")
         print(f"[INFO] [{PRINT_PREFIX}] Processing {len(shared.FRD_bot.guilds)} guild(s) for cleanup")
+        await shared.FRD_bot.change_presence(activity=discord.Game(name="Cleanup Mode Active! Documented Channels will be cleared."))
         for guild in shared.FRD_bot.guilds:
             asyncio.create_task(_cleanup_documented_channel(guild))
         return
