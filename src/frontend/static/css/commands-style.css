@@ -1,0 +1,281 @@
+/* Commands Page Styles */
+.commands-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.commands-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.commands-header h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.5em;
+    color: var(--accent);
+}
+
+.commands-header p {
+    margin: 0;
+    color: var(--text-inactive);
+    font-size: 1.1em;
+}
+
+.section {
+    margin-bottom: 50px;
+}
+
+.section-title {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+}
+
+.section-desc {
+    color: var(--text-inactive);
+    margin-bottom: 20px;
+    font-size: 1.05em;
+}
+
+/* Permission Grid */
+.permission-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.permission-card {
+    background-color: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.permission-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(111, 75, 184, 0.2);
+}
+
+.permission-level {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--text-inactive);
+    margin-bottom: 5px;
+}
+
+.permission-role {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.permission-card.level-0 {
+    border-left: 4px solid #718096;
+}
+
+.permission-card.level-1 {
+    border-left: 4px solid #48bb78;
+}
+
+.permission-card.level-2 {
+    border-left: 4px solid #4299e1;
+}
+
+.permission-card.level-3 {
+    border-left: 4px solid #9f7aea;
+}
+
+.permission-card.level-4 {
+    border-left: 4px solid #ed8936;
+}
+
+.permission-card.level-5 {
+    border-left: 4px solid #f56565;
+}
+
+.permission-card.admin {
+    border-left: 4px solid #ffffff;
+}
+
+.permission-card.level-0 .permission-role {
+    color: #718096;
+}
+
+.permission-card.level-1 .permission-role {
+    color: #48bb78;
+}
+
+.permission-card.level-2 .permission-role {
+    color: #4299e1;
+}
+
+.permission-card.level-3 .permission-role {
+    color: #9f7aea;
+}
+
+.permission-card.level-4 .permission-role {
+    color: #ed8936;
+}
+
+.permission-card.level-5 .permission-role {
+    color: #f56565;
+}
+
+.permission-card.admin .permission-role {
+    color: #ffffff;
+}
+
+.permission-note {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: var(--surface-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    font-style: italic;
+    color: var(--text-inactive);
+}
+
+/* Command Cards */
+.command-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.command-card:hover {
+    border-color: var(--accent);
+    background-color: var(--surface-light);
+}
+
+.command-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.command-name {
+    font-family: 'Courier New', monospace;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.command-desc {
+    color: var(--text);
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.command-args {
+    background-color: var(--button-bg);
+    padding: 15px;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+}
+
+.arg-label {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.arg-item {
+    margin: 8px 0;
+    padding-left: 15px;
+    color: var(--text);
+}
+
+.arg-name {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.arg-type {
+    font-family: 'Courier New', monospace;
+    color: var(--text-inactive);
+    font-size: 0.9em;
+}
+
+/* Permission Badges */
+.permission-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.permission-badge.level-0 {
+    background-color: rgba(113, 128, 150, 0.2);
+    color: #a0aec0;
+}
+
+.permission-badge.level-1 {
+    background-color: rgba(72, 187, 120, 0.2);
+    color: #48bb78;
+}
+
+.permission-badge.level-2 {
+    background-color: rgba(66, 153, 225, 0.2);
+    color: #4299e1;
+}
+
+.permission-badge.level-3 {
+    background-color: rgba(159, 122, 234, 0.2);
+    color: #9f7aea;
+}
+
+.permission-badge.level-4 {
+    background-color: rgba(237, 137, 54, 0.2);
+    color: #ed8936;
+}
+
+.permission-badge.level-5 {
+    background-color: rgba(245, 101, 101, 0.2);
+    color: #f56565;
+}
+
+.permission-badge.admin {
+    background-color: rgba(255, 255, 255, 0.322);
+    color: #000000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .commands-header h1 {
+        font-size: 2em;
+    }
+
+    .section-title {
+        font-size: 1.5em;
+    }
+
+    .command-name {
+        font-size: 1.1em;
+    }
+
+    .permission-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .command-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

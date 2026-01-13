@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/index-style.css') }}">
+{% endblock %}
+
+{% block content %}
+<img src="{{ url_for('static', path='images/frank_research_banner.png') }}" alt="Franktorio & xSoul's Lab Banner" class="hero-image">
+<div class="content-container">
+    <div class="info-card">
+        <h1>The Discord Bot that documents<br>Roblox Pressure Rooms.<br>From the community, for the community.</h1>
+        <div class="bordered-section">
+            <h2>Documented rooms: {{ room_amnt }}</h2>
+            <h2>Total images: {{ image_amnt }}</h2>
+            <h2>Servers: {{ servers_amnt }}</h2>
+        </div>
+        <p>
+            Franktorio & xSoul's Lab is Discord bot that documents Roblox Pressure Rooms.<br>
+            It allows users to easily submit and access room data, allowing Pressure players to contribute and explore rooms.<br><br>
+            Our database is growing with quality submissions from the community!<br>
+            It features tags, images, and detailed room information to help players learn more about each room.<br>
+        </p>
+        <p>
+            Our bot is open-source and community-driven, ensuring transparency and collaboration.<br>
+            If you want to contribute, check out our GitHub repository!
+        </p>
+        <a 
+            href="https://discord.com/oauth2/authorize?client_id=1436549244013121536" 
+            target="_blank" rel="noopener noreferrer" 
+            class="add_to_discord-button">
+            <img src="{{ url_for('static', path='images/discord_icon.png') }}" alt="Discord Logo" class="discord-logo">
+            Add to Discord
+        </a>
+    </div>
+    <div class="room_data_card">
+        <h1>Random Room From Database</h1>
+        <h2>Name:  <span class="purple_text">{{ room_data.room_name }}</span></h2>
+        <h2>Roomtype:  <span class="purple_text">{{ room_data.roomtype }}</span></h2>
+        <h2>Tags: 
+            <div class="room_data_tags_grid">
+            {% for tag in room_data.tags %}
+                <span class="room_data_tag">{{ tag }}</span>{% if not loop.last %}, {% endif %}
+            {% endfor %}
+            </div>
+        </h2>
+        <!--2x2 image grid -->
+        <div class="room_data_image_grid">
+            {% for image_url in room_data.picture_urls %}
+            <img src="{{ image_url }}" alt="Room Image">
+            {% endfor %}
+        </div>
+        <h2>Description: <span class="purple_text">{{ room_data.description }}</span></h2>
+    </div>
+</div>
+{% endblock %}

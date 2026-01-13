@@ -6,21 +6,34 @@
     <title>{% block title %}Franktorio & xSoul's Lab{% endblock %}</title>
 
     <!-- shared CSS / icons / colors -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v=47.0">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/titlebar-style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/footer-style.css') }}">
+
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/favicon.ico') }}">
     {% block head_extra %}{% endblock %}
 </head>
 <body>
     <!--Navigation bar-->
     <div class="titlebar">
-        <div>
-            <img src="{{ url_for('static', path='images/favicon.ico') }}" alt="Logo">
-            <span>Franktorio & xSoul's Lab</span>
+        <div class="nav-left">
+            <a href="{{ url_for('index') }}" class="logo">
+                <img src="{{ url_for('static', path='images/favicon.ico') }}" alt="Logo">
+                <h1 class="logo">Franktorio & xSoul's Lab</h1>
+            </a>
+            <a href="https://discord.com/invite/nightfalldiv" target="_blank" rel="noopener noreferrer" class="logo">Join Our Discord</a>
+            <a href="{{ url_for('bot_commands') }}" class="logo">Bot Commands</a>
         </div>
-        <nav>
-            <a href="{{ url_for('root') }}">Home</a>
-        </nav>
+        <div class="nav-right">
+            <a href="{{ url_for('franktorio-scanner') }}">Scanner</a>
+            <a href="https://github.com/Franktorio/franktorio-xsouls-lab" target="_blank" rel="noopener noreferrer">Github</a>
+            <a href="{{ url_for('index') }}">Login</a>
+        </div>
     </div>
-    {% block content %}{% endblock %}
+    <div class="content">{% block content %}{% endblock %}</div>
+    <div class="footer">
+        <p>Artwork by: <a href="https://mudkib.straw.page" target="_blank" rel="noopener noreferrer">mudkib</a></p>
+        <p>&copy; 2026 Franktorio & xSoul's Lab. All rights reserved.</p>
+    </div>
 </body>
 </html>

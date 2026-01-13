@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}Bot Commands - Franktorio & xSoul's Lab{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/commands-style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="commands-container">
+    <div class="commands-header">
+        <h1>Bot Commands Documentation</h1>
+        <p>Command Documentation for Franktorio & xSoul's Lab Bot</p>
+    </div>
+
+    <!-- Permission Levels Section -->
+    <section class="section">
+        <h2>Permission Levels</h2>
+        <div class="permission-grid">
+            <div class="permission-card level-0">
+                <div class="permission-level">Level 0</div>
+                <div class="permission-role">Viewer</div>
+                <p>No special permissions. Can submit bug reports and view room information.</p>
+            </div>
+            <div class="permission-card level-1">
+                <div class="permission-level">Level 1</div>
+                <div class="permission-role">Trial Researcher</div>
+                <p>Can add/remove tags and document rooms.</p>
+            </div>
+            <div class="permission-card level-2">
+                <div class="permission-level">Level 2</div>
+                <div class="permission-role">Novice Researcher</div>
+                <p>Can set descriptions and room types.</p>
+            </div>
+            <div class="permission-card level-3">
+                <div class="permission-level">Level 3</div>
+                <div class="permission-role">Experienced Researcher</div>
+                <p>Can rename and delete rooms.</p>
+            </div>
+            <div class="permission-card level-4">
+                <div class="permission-level">Level 4</div>
+                <div class="permission-role">Head Researcher</div>
+                <p>Can manage roles, sync databases, and handle bug reports.</p>
+            </div>
+            <div class="permission-card level-5">
+                <div class="permission-level">Level 5</div>
+                <div class="permission-role">Owner/Developer</div>
+                <p>Full access to all developer commands.</p>
+            </div>
+            <div class="permission-card admin">
+                <div class="permission-level">Server Permission</div>
+                <div class="permission-role">Administrator</div>
+                <p>Requires Administrator permission in the specific Discord server. Can run setup commands to configure the bot in the server.</p>
+            </div>
+        </div>
+        <p class="permission-note">Note: These role permissions are only valid when users have the roles on the home-server of the bot.</p>
+    </section>
+
+    <!-- Developer Commands -->
+    <section class="section">
+        <h2 class="section-title">/dev - Developer Commands</h2>
+        <p class="section-desc">Developer-only commands executable by members with permission level 5 (Owner).</p>
+        
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev restart</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Shuts down the bot. If running on a service with auto-restart, it will automatically restart.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev room_reset</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Delete the room documentation across all servers. The build_documented task will re-send it later.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">room_name</span> <span class="arg-type">(string)</span> - Name of the room to globally reset across servers</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev global_reset_documented</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Bulk deletes every message in the documented channel across all servers, then clears the message IDs from each server's profile. The automated task will rebuild all documented channels.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev cache_all_rooms</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Downloads and caches all room images from the database to R2 storage. Provides progress updates and a final summary of cached/failed images.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev get_room_json</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Exports the entire room database as a JSON file. Sent as a file attachment (ephemeral).</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev get_room_db</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Exports the raw SQLite database file. Sent as a file attachment (ephemeral).</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev room_data</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Exports data for a specific room as a JSON file. Sent as a file attachment (ephemeral).</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">room_name</span> <span class="arg-type">(string)</span> - Name of the room to export</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/dev purge_scanner_db</span>
+                <span class="permission-badge level-5">Level 5</span>
+            </div>
+            <p class="command-desc">Purge all data from the scanner database. Requires confirmation to prevent accidental deletion.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">confirm</span> <span class="arg-type">(string, optional)</span> - Type "CONFIRM" to confirm purging</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Setup Commands -->
+    <section class="section">
+        <h2 class="section-title">/setup - Setup Commands</h2>
+        <p class="section-desc">Commands for server administrators to configure the bot. Requires Administrator permission or Owner status.</p>
+        
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/setup init</span>
+                <span class="permission-badge admin">Admin</span>
+            </div>
+            <p class="command-desc">Initializes the bot in the server. Creates a category "Franktorio & xSoul's Research Division" with two channels: documented-rooms and research-leaderboard. If already set up, asks for confirmation before rebuilding.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/setup leaderboard</span>
+                <span class="permission-badge admin">Admin</span>
+            </div>
+            <p class="command-desc">Deletes the old leaderboard channel and creates a new one. Resets and rebuilds the research leaderboard from scratch.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/setup documented</span>
+                <span class="permission-badge admin">Admin</span>
+            </div>
+            <p class="command-desc">Deletes the old documented channel and creates a new one. Clears all cached message IDs and triggers a rebuild of all room documentation (may take hours depending on room count).</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Room Commands -->
+    <section class="section">
+        <h2 class="section-title">/room - Room Commands</h2>
+        <p class="section-desc">Commands for viewing room information and managing bug reports. Available to all users.</p>
+        
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room info</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Displays detailed information about a specific room, including description, type, tags, images, and documentation history.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">room_name</span> <span class="arg-type">(string)</span> - Name of the room</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room search</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Searches for rooms by name, tag, and/or room type. At least one parameter must be provided. Returns all rooms matching ALL provided criteria.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">name</span> <span class="arg-type">(string, optional)</span> - Search query for room names</div>
+                <div class="arg-item"><span class="arg-name">tag</span> <span class="arg-type">(Tags enum, optional)</span> - Tag to filter rooms by</div>
+                <div class="arg-item"><span class="arg-name">roomtype</span> <span class="arg-type">(RoomType enum, optional)</span> - Type of room to filter by</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room history</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Displays the complete edit history of a room, showing who documented it, who edited it, and what changes were made.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">room_name</span> <span class="arg-type">(string)</span> - Name of the room</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room bug_report</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Submits a bug report for a specific room. Returns a unique report ID for tracking.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">room_name</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">issue_description</span> <span class="arg-type">(string)</span> - Description of the issue (30-1000 characters)</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room view_room_reports</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Displays all bug reports for a specific room.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">room_name</span> <span class="arg-type">(string)</span> - Name of the room</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room view_all_reports</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Displays all bug reports across all rooms.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">include_resolved</span> <span class="arg-type">(boolean, optional, default: True)</span> - Include resolved reports</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/room view_report</span>
+                <span class="permission-badge level-0">Level 0</span>
+            </div>
+            <p class="command-desc">Displays detailed information about a specific bug report by its ID.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">report_id</span> <span class="arg-type">(integer)</span> - ID of the bug report</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Commands -->
+    <section class="section">
+        <h2 class="section-title">/research - Research Commands</h2>
+        <p class="section-desc">Commands for documenting and managing room data. Requires appropriate researcher permissions.</p>
+        
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research document</span>
+                <span class="permission-badge level-1">Level 1</span>
+            </div>
+            <p class="command-desc">Adds a new room to the database with images and metadata. Images are uploaded to R2 storage. If external data source is enabled, also syncs to external API.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">roomtype</span> <span class="arg-type">(RoomType enum)</span> - Type of the room</div>
+                <div class="arg-item"><span class="arg-name">description</span> <span class="arg-type">(string)</span> - Description of the room</div>
+                <div class="arg-item"><span class="arg-name">image1-4</span> <span class="arg-type">(attachments)</span> - Required images (minimum 4)</div>
+                <div class="arg-item"><span class="arg-name">image5-10</span> <span class="arg-type">(attachments, optional)</span> - Additional images (up to 10 total)</div>
+                <div class="arg-item"><span class="arg-name">ss</span> <span class="arg-type">(boolean, optional)</span> - Is this a SS room?</div>
+                <div class="arg-item"><span class="arg-name">pss</span> <span class="arg-type">(boolean, optional)</span> - Is this a PSS room?</div>
+                <div class="arg-item"><span class="arg-name">brighten</span> <span class="arg-type">(boolean, optional)</span> - Apply gamma correction to brighten images</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research redocument</span>
+                <span class="permission-badge level-2">Level 2</span>
+            </div>
+            <p class="command-desc">Updates an existing room's documentation with new images and data. Completely replaces all previous images and metadata.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">Same as /research document (room must exist in database)</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research set_description</span>
+                <span class="permission-badge level-2">Level 2</span>
+            </div>
+            <p class="command-desc">Updates only the description of an existing room.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">description</span> <span class="arg-type">(string)</span> - New description</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research set_roomtype</span>
+                <span class="permission-badge level-2">Level 2</span>
+            </div>
+            <p class="command-desc">Updates only the room type of an existing room.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">roomtype</span> <span class="arg-type">(RoomType enum)</span> - New room type</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research set_tags</span>
+                <span class="permission-badge level-1">Level 1</span>
+            </div>
+            <p class="command-desc">Replaces all existing tags with the provided tags. Removes any tags not specified.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">tag1-10</span> <span class="arg-type">(Tags enum)</span> - Tags to set (at least one required)</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research add_tags</span>
+                <span class="permission-badge level-1">Level 1</span>
+            </div>
+            <p class="command-desc">Adds tags to a room without removing existing tags. Duplicates are ignored.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">tag1-3</span> <span class="arg-type">(Tags enum)</span> - Tags to add (at least one required)</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research remove_tags</span>
+                <span class="permission-badge level-1">Level 1</span>
+            </div>
+            <p class="command-desc">Removes specified tags from a room. Other tags remain unchanged.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room</div>
+                <div class="arg-item"><span class="arg-name">tag1-3</span> <span class="arg-type">(Tags enum)</span> - Tags to remove (at least one required)</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research rename</span>
+                <span class="permission-badge level-3">Level 3</span>
+            </div>
+            <p class="command-desc">Renames a room in the database. Updates all references and triggers global reset.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Current name of the room</div>
+                <div class="arg-item"><span class="arg-name">newname</span> <span class="arg-type">(string)</span> - New name for the room</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/research deletedoc</span>
+                <span class="permission-badge level-3">Level 3</span>
+            </div>
+            <p class="command-desc">Permanently deletes a room from the database, including all images from R2 storage. If external data source is enabled, also deletes from external API.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">roomname</span> <span class="arg-type">(string)</span> - Name of the room to delete</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Management Commands -->
+    <section class="section">
+        <h2 class="section-title">/management - Management Commands</h2>
+        <p class="section-desc">Commands for managing the bot and users. Requires Head Researcher (Level 4) or higher.</p>
+        
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/management sync</span>
+                <span class="permission-badge level-4">Level 4</span>
+            </div>
+            <p class="command-desc">Manually triggers database synchronization across servers. Only runs if EXTERNAL_DATA_SOURCE is enabled. Restarts the sync task immediately.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item">None</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/management role</span>
+                <span class="permission-badge level-4">Level 4</span>
+            </div>
+            <p class="command-desc">Sets a user's permission level by assigning/removing Discord roles in the home guild. If external data source is enabled, also syncs to external API.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">user</span> <span class="arg-type">(User)</span> - The user to set the permission level for</div>
+                <div class="arg-item"><span class="arg-name">role</span> <span class="arg-type">(Literal)</span> - Permission role to assign (Viewer, Trial Researcher, Novice Researcher, Experienced Researcher, Head Researcher)</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/management delete_report</span>
+                <span class="permission-badge level-4">Level 4</span>
+            </div>
+            <p class="command-desc">Soft deletes a bug report by marking it as deleted in the database.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">report_id</span> <span class="arg-type">(integer)</span> - ID of the bug report to delete</div>
+            </div>
+        </div>
+
+        <div class="command-card">
+            <div class="command-header">
+                <span class="command-name">/management resolve_report</span>
+                <span class="permission-badge level-4">Level 4</span>
+            </div>
+            <p class="command-desc">Marks a bug report as resolved in the database.</p>
+            <div class="command-args">
+                <div class="arg-label">Arguments:</div>
+                <div class="arg-item"><span class="arg-name">report_id</span> <span class="arg-type">(integer)</span> - ID of the bug report to resolve</div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -47,6 +47,11 @@ Developer-only commands that are only executable by members with permission leve
   - `room_name` (string): Name of the room to export
 - **Description**: Exports data for a specific room as a JSON file. Sent as a file attachment (ephemeral).
 
+### `/dev purge_scanner_db`
+- **Arguments**: 
+  - `confirm` (string, optional): Type "CONFIRM" to confirm purging the scanner database
+- **Description**: Purge all data from the scanner database. Requires confirmation to prevent accidental deletion.
+
 
 ## Setup Commands (`/setup`)
 

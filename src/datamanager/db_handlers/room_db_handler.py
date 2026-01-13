@@ -364,6 +364,17 @@ def get_roominfo(room_name: str, case_insensitive: bool = False) -> Optional[Dic
 
     Returns:
         A dictionary containing the room information, or None if not found.
+        {
+            'room_name': str,
+            'picture_urls': list,
+            'description': str,
+            'last_updated': int,
+            'doc_by_user_id': int,
+            'edits': list,
+            'tags': list,
+            'roomtype': str,
+            'edited_by_user_id': int
+        }
     """
     conn = _connect_db()
     cursor = conn.cursor()

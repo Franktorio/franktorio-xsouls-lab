@@ -1,15 +1,33 @@
+/* Base Color Palette and Global Styles */
 :root {
     --background: #120f1a;
     --surface: #1a1426;
     --surface-light: #241c33;
     --titlebar: #060408;
     --border: #3a2f52;
-    --accent: #6f4bb8;
+    --accent: #9b69ff;
     --text: #e6e1f0;
-    --text-inactive: #7A738B;
+    --text-inactive: #928ba1;
     --button-bg: #2a2040;
     --button-hover: #3a2b5c;
     --button-inactive: #1a1426;
+}
+
+html{
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+html::-webkit-scrollbar {
+    display: none;
+}
+body::-webkit-scrollbar {
+    display: none;
 }
 
 body {
@@ -18,68 +36,16 @@ body {
     padding: 0;
     background-color: var(--background);
     color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-top: 30px;
 }
 
-.titlebar {
-    background-color: var(--titlebar);
-    color: var(--text);
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
+.content {
+    flex: 1; /*Push footer to bottom*/
+    margin: 20px;
+    min-height: 0;
+    overflow: visible;
     align-items: center;
-    justify-content: space-between;
-    border-radius: 0;
-    margin: 0;
-    border: none;
-    border-bottom: 1px solid var(--border);
-}
-.titlebar > div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-.titlebar img {
-    height: 30px;
-    width: 30px;
-}
-.titlebar span {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--text);
-}
-.titlebar nav {
-    display: flex;
-    gap: 20px;
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-.titlebar nav a {
-    color: var(--text);
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-.titlebar nav a:hover {
-    background-color: var(--button-hover);
-}
-
-.info-box {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px 0;
-}
-.info-box h1 {
-    margin-top: 0;
-}
-.info-box p {
-    margin-bottom: 0;
 }
