@@ -86,3 +86,9 @@ async def franktorio_scanner(request: Request):
     """Franktorio's Scanner information page."""
     print(f"[INFO] [{PRINT_PREFIX}] Received Franktorio Scanner request.")
     return templates.TemplateResponse("franktorio-scanner.html", {"request": request})
+
+@app.get("/franktorio-scanner/data", name="franktorio-scanner-data")
+async def franktorio_scanner_data(request: Request):
+    """Franktorio's Scanner data page."""
+    print(f"[INFO] [{PRINT_PREFIX}] Received Franktorio Scanner data request.")
+    return templates.TemplateResponse("scanner-data.html", {"request": request})

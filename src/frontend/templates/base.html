@@ -3,7 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Franktorio & xSoul's Lab{% endblock %}</title>
+    <meta name="description" content="Discover detailed information about Roblox Pressure Rooms with the Franktorio Scanner. Community-driven database, gameplay guides & secrets, and room analytics.">
+    <meta name="keywords" content="pressure rooms, franktorio scanner, roblox pressure, pressure wiki, room guide, discord bot, roblox bot, xsouls lab, pressure room database">
+    <title>{% block page_title %}Franktorio & xSoul's Lab{% endblock %}</title>
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block og_title %}{{ self.page_title() }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}The Discord Bot that documents Roblox Pressure Rooms.
+                From the community, for the community.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url if request else '' }}">
+    <meta name="twitter:image" content="{{ url_for('static', path='images/researchfrankbadge.png') }}">
+    <meta property="og:site_name" content="Franktorio & xSoul's Lab">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ self.page_title() }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ self.og_description() }}{% endblock %}">
+    <meta name="twitter:image" content="{{ url_for('static', path='images/researchfrankbadge.png') }}">
+
+    <meta name="theme-color" content="#9b69ff">
 
     <!-- shared CSS / icons / colors -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
