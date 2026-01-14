@@ -3,10 +3,8 @@
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    justify-content: center;
     gap: 80px;
     max-width: 80%;
-    width: 100%;
     margin: 0 auto;
     line-height: 1.8;
 }
@@ -41,9 +39,6 @@
     margin-bottom: 40px;
     max-width: 100vw;
     box-shadow: 3px 0 20px var(--surface-light);
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
 }
 
 .add_to_discord-button {
