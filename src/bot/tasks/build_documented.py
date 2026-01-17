@@ -433,3 +433,9 @@ async def _process_single_room(room_name: str, documented_channel: discord.TextC
     except Exception as e:
         print(f"[ERROR] [{PRINT_PREFIX}] Error documenting '{room_name}' in server {server_id}: {e}")
         return True  # Still mark as processed to avoid infinite retry
+
+@build_documented_channels.before_loop
+async def before_build_documented_channels():
+    """Wait until the bot is ready before starting the build_documented_channels task."""
+    await shared.FRD_bot.wait_until_ready()
+    print(f"[INFO] [{PRINT_PREFIX}] Bot is ready. Starting documented channels build task.")

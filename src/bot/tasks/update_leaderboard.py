@@ -17,71 +17,81 @@ from src.utils import embeds, utils
 @tasks.loop(minutes=1)
 async def update_leaderboard():
     """Background task to update the leaderboards."""
-
-    
-    # Iterate through all guilds the bot is in
-    for guild in shared.FRD_bot.guilds:
-        # Get server profile to find leaderboard channel
-        profile = datamanager.server_db_handler.get_server_profile(guild.id)
-        if not profile or not profile.get('leaderboard_channel_id'):
-            continue
-
-        leaderboard_channel = guild.get_channel(profile['leaderboard_channel_id'])
-        if not leaderboard_channel:
-            print(f"[WARNING] [{PRINT_PREFIX}] Leaderboard channel not found in server {guild.name}, clearing configuration")
-            datamanager.server_db_handler.update_server_profile(
-                server_id=guild.id,
-                leaderboard_channel_id=0
-            )
-            continue
-
-        message_id = actions_data.get("leaderboard_messages", {}).get(str(guild.id))
-        if not message_id:
-            print(f"[INFO] [{PRINT_PREFIX}] Leaderboard message ID not found in server {guild.id}. Creating a new one.")
-            # Send initial leaderboard message
-            message = await leaderboard_channel.send("Initializing leaderboard...")
-            message_id = message.id
-            if "leaderboard_messages" not in actions_data:
-                actions_data["leaderboard_messages"] = {}
-            actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
-            save_actions_json()
-
-        try:
-            message = await leaderboard_channel.fetch_message(message_id)
-        except discord.NotFound:
-            print(f"[INFO] [{PRINT_PREFIX}] Leaderboard message not found in server {guild.id}. Creating a new one.")
-            # Send initial leaderboard message
-            message = await leaderboard_channel.send("Initializing leaderboard...")
-            message_id = message.id
-            if "leaderboard_messages" not in actions_data:
-                actions_data["leaderboard_messages"] = {}
-            actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
-            save_actions_json()
-        
-        # Get all rooms and count contributions (documentations + edits)
-        all_room_names = datamanager.room_db_handler.get_all_room_names()
-        contributions = {}  # {user_id: contribution_count}
-        
-        for room_name in all_room_names:
-            room_info = datamanager.room_db_handler.get_roominfo(room_name)
-            if not room_info:
+    try:
+        # Iterate through all guilds the bot is in
+        for guild in shared.FRD_bot.guilds:
+            # Get server profile to find leaderboard channel
+            profile = datamanager.server_db_handler.get_server_profile(guild.id)
+            if not profile or not profile.get('leaderboard_channel_id'):
                 continue
-            
-            # Count initial documentation
-            documenter = room_info.get('doc_by_user_id')
-            if documenter:
-                contributions[documenter] = contributions.get(documenter, 0) + 1
-            
-            # Count edits from edit history, but don't double-count if the original documenter edited their own room
-            edits = room_info.get('edits', [])
-            for edit in edits:
-                editor = edit.get('edited_by_user_id')
-                # Only count the edit if it's by someone other than the original documenter
-                if editor and editor != documenter:
-                    contributions[editor] = contributions.get(editor, 0) + 1
-        
-        # Sort and get top 10 contributors
-        top_10 = dict(sorted(contributions.items(), key=lambda item: item[1], reverse=True)[:10])
 
-        # Update the leaderboard message
-        await message.edit(embed=embeds.create_leaderboard_embed(top_10), content=None)
+            leaderboard_channel = guild.get_channel(profile['leaderboard_channel_id'])
+            if not leaderboard_channel:
+                print(f"[WARNING] [{PRINT_PREFIX}] Leaderboard channel not found in server {guild.name}, clearing configuration")
+                datamanager.server_db_handler.update_server_profile(
+                    server_id=guild.id,
+                    leaderboard_channel_id=0
+                )
+                continue
+
+            message_id = actions_data.get("leaderboard_messages", {}).get(str(guild.id))
+            if not message_id:
+                print(f"[INFO] [{PRINT_PREFIX}] Leaderboard message ID not found in server {guild.id}. Creating a new one.")
+                # Send initial leaderboard message
+                message = await leaderboard_channel.send("Initializing leaderboard...")
+                message_id = message.id
+                if "leaderboard_messages" not in actions_data:
+                    actions_data["leaderboard_messages"] = {}
+                actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
+                save_actions_json()
+
+            try:
+                message = await leaderboard_channel.fetch_message(message_id)
+            except discord.NotFound:
+                print(f"[INFO] [{PRINT_PREFIX}] Leaderboard message not found in server {guild.id}. Creating a new one.")
+                # Send initial leaderboard message
+                message = await leaderboard_channel.send("Initializing leaderboard...")
+                message_id = message.id
+                if "leaderboard_messages" not in actions_data:
+                    actions_data["leaderboard_messages"] = {}
+                actions_data["leaderboard_messages"][str(guild.id)] = str(message_id)
+                save_actions_json()
+            
+            # Get all rooms and count contributions (documentations + edits)
+            all_room_names = datamanager.room_db_handler.get_all_room_names()
+            contributions = {}  # {user_id: contribution_count}
+            
+            for room_name in all_room_names:
+                room_info = datamanager.room_db_handler.get_roominfo(room_name)
+                if not room_info:
+                    continue
+                
+                # Count initial documentation
+                documenter = room_info.get('doc_by_user_id')
+                if documenter:
+                    contributions[documenter] = contributions.get(documenter, 0) + 1
+                
+                # Count edits from edit history, but don't double-count if the original documenter edited their own room
+                edits = room_info.get('edits', [])
+                for edit in edits:
+                    editor = edit.get('edited_by_user_id')
+                    # Only count the edit if it's by someone other than the original documenter
+                    if editor and editor != documenter:
+                        contributions[editor] = contributions.get(editor, 0) + 1
+            
+            # Sort and get top 10 contributors
+            top_10 = dict(sorted(contributions.items(), key=lambda item: item[1], reverse=True)[:10])
+
+            # Update the leaderboard message
+            await message.edit(embed=embeds.create_leaderboard_embed(top_10), content=None)
+    
+    except Exception as e:
+        print(f"[ERROR] [{PRINT_PREFIX}] Error updating leaderboard: {e}")
+        import traceback
+        traceback.print_exc()
+
+@update_leaderboard.before_loop
+async def before_update_leaderboard():
+    """Wait until the bot is ready before starting the leaderboard update task."""
+    await shared.FRD_bot.wait_until_ready()
+    print(f"[INFO] [{PRINT_PREFIX}] Bot is ready, starting leaderboard update task")

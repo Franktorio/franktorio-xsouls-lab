@@ -39,11 +39,6 @@ async def on_guild_join(guild: discord.Guild):
                 color=discord.Color.blue(),
                 timestamp=discord.utils.utcnow()
             )
-            embed.add_field(
-                name="Website & Support",
-                value=("For support, talk to the developers in https://discord.gg/nightfalldiv and visit our website at https://pressure.xsoul.org/"),
-                inline=False
-            )
             embed.set_footer(text="Franktorio & xSoul's Research Division", icon_url=shared.FRD_bot.user.display_avatar.url)
             await owner.send(embed=embed)
 
@@ -65,5 +60,53 @@ async def on_guild_join(guild: discord.Guild):
             )
             perms_needed_embed.set_footer(text="Franktorio & xSoul's Research Division", icon_url=shared.FRD_bot.user.display_avatar.url)
             await owner.send(embed=perms_needed_embed)
+
+            website_embed = discord.Embed(
+                title="Support & Resources",
+                color=discord.Color.green(),
+                timestamp=discord.utils.utcnow()
+            )
+            website_embed.add_field(
+                name="Support",
+                value="[Support Server](https://discord.com/invite/nightfalldiv)",
+                inline=True
+            )
+            website_embed.add_field(
+                name="Documentation",
+                value="[Command Documentation](https://franktorio.dev/frd-api/commands)",
+                inline=True
+            )
+
+            # Dummy field to force 2x2 layout
+            website_embed.add_field(
+                name="\u200b",
+                value="\u200b",
+                inline=True
+            )
+
+            website_embed.add_field(
+                name="Website",
+                value="[franktorio.dev](https://franktorio.dev/frd-api/)",
+                inline=True
+            )
+            website_embed.add_field(
+                name="Source Code",
+                value="[GitHub Repository](https://github.com/Franktorio/franktorio-xsouls-lab)",
+                inline=True
+            )
+            website_embed.set_footer(
+                text="Franktorio & xSoul's Research Division",
+                icon_url=shared.FRD_bot.user.display_avatar.url
+            )
+            
+            # Dummy field to force 2x2 layout
+            website_embed.add_field(
+                name="\u200b",
+                value="\u200b",
+                inline=True
+            )
+
+            await owner.send(embed=website_embed)
+
         except Exception as e:
             print(f"[ERROR] [{PRINT_PREFIX}] Could not send welcome message to guild owner: {e}")

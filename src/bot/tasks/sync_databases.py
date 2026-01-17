@@ -207,3 +207,9 @@ async def sync_databases():
     print(f"[INFO] [{PRINT_PREFIX}]    Downloaded: {len(missing_locally)} rooms")
     print(f"[INFO] [{PRINT_PREFIX}]    Updated externally: {len(newer_locally)} rooms")
     print(f"[INFO] [{PRINT_PREFIX}]    Updated locally: {len(newer_externally)} rooms")
+
+@sync_databases.before_loop
+async def before_sync_databases():
+    """Wait until the bot is ready before starting the sync_databases task."""
+    await shared.FRD_bot.wait_until_ready()
+    print(f"[INFO] [{PRINT_PREFIX}] Bot is ready. Starting database synchronization task.")

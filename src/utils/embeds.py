@@ -84,6 +84,38 @@ async def send_room_documentation_embed(channel: discord.TextChannel, room_data:
 
     return message.id
 
+def create_small_room_documentation_embed(room_data: dict, guild_id: int, author_url: str, author_name: str) -> discord.Embed:
+    """
+    Create a small room documentation embed for quick overviews.
+    
+    Does not include images or description. Only a link to the full documentation.
+    """
+    doc_link = get_doc_message_link(guild_id, room_data.get('room_name'))
+    embed_desc = f"Room found in database: {doc_link}" if doc_link else "Room found in database."
+    embed = discord.Embed(
+        title=f"Room: {room_data.get('room_name')}",
+        color=discord.Color.green(),
+        timestamp=datetime.now(timezone.utc),
+        description=embed_desc
+    )
+    embed.set_footer(
+        text="Franktorio & xSoul's Research Division",
+        icon_url=shared.FRD_bot.user.display_avatar.url,
+    )
+    embed.set_author(
+        name=author_name,
+        icon_url=author_url
+    )
+    if not doc_link:
+        embed.add_field(
+            name="Website Documentation",
+            value=f"[View on Pressure Database](https://pressure.xsoul.org/rooms/{room_data.get('room_name')})",
+            inline=False
+        )
+    print(f"[DEBUG] [{PRINT_PREFIX}] Created small room documentation embed for '{room_data.get('room_name')}'")
+    return embed
+
+
 
 def create_leaderboard_embed(leaderboard_data: dict):
     """Create a science-themed Research Leaderboard embed for Franktorio's & xSoul's Lab."""
@@ -550,3 +582,4 @@ def create_single_bug_report_embed(report: dict) -> discord.Embed:
         icon_url=shared.FRD_bot.user.display_avatar.url,
     )
     return embed
+

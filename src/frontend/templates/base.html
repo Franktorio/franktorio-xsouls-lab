@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Discover detailed information about Roblox Pressure Rooms with the Franktorio Scanner. Community-driven database, gameplay guides & secrets, and room analytics.">
-    <meta name="keywords" content="pressure rooms, franktorio scanner, roblox pressure, pressure wiki, room guide, discord bot, roblox bot, xsouls lab, pressure room database">
+    <meta name="author" content="Franktorio">
+    <meta name="description" content="Franktorio's Pressure Bot - Official Discord bot for Roblox Pressure by Nightfall Division. Document rooms, research division tools, scanner integration, and community-driven database.">
+    <meta name="keywords" content="roblox pressure, pressure bot, roblox discord bot, franktorio, nightfall division, research division, pressure rooms, franktorio scanner, pressure wiki, room guide, discord bot, roblox bot, xsouls lab, pressure room database, pressure game, roblox pressure bot">
     <title>{% block page_title %}Franktorio & xSoul's Lab{% endblock %}</title>
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="{% block og_title %}{{ self.page_title() }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}The Discord Bot that documents Roblox Pressure Rooms.
-                From the community, for the community.{% endblock %}">
+From the community, for the community.{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url if request else '' }}">
     <meta name="twitter:image" content="{{ url_for('static', path='images/researchfrankbadge.png') }}">
@@ -24,12 +25,16 @@
 
     <meta name="theme-color" content="#9b69ff">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/favicon.ico') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', path='images/favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', path='images/favicon.ico') }}">
+
     <!-- shared CSS / icons / colors -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='css/titlebar-style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='css/footer-style.css') }}">
 
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/favicon.ico') }}">
     {% block head_extra %}{% endblock %}
 </head>
 <body>

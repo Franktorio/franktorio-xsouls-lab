@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Disallow crawling of API endpoints
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://franktorio.dev/frd-api/sitemap.xml

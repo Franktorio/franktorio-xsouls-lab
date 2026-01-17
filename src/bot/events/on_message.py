@@ -15,23 +15,23 @@ import discord
 
 # Local imports
 from src import datamanager, shared
-from src.utils import embeds
+from src.utils.embeds import create_small_room_documentation_embed
 
 _ROOM_INFO_TIMER = 120 # seconds
 all_room_names_cache = []
 last_room_info_time = 0
 
-_PER_CHANNEL_COOLDOWN_TIME = 5 # Only allow one room info request per channel every 5 seconds
-per_channel_cooldown = {}
+_PER_CHANNEL_COOLDOWN_TIME = 300 # Only allow the same room to be sent in a channel every 5 minutes (300 seconds)
+per_channel_room_cooldown = {}  # Dict of {channel_id: {room_name: timestamp}}
 
 # Locks
-per_channel_cooldown_lock = asyncio.Lock()
+per_channel_room_cooldown_lock = asyncio.Lock()
 all_room_names_cache_lock = asyncio.Lock()
 
 @shared.FRD_bot.event
 async def on_message(message: discord.Message):
     """Event handler for new messages."""
-    global last_room_info_time, _ROOM_INFO_TIMER, all_room_names_cache, per_channel_cooldown, _PER_CHANNEL_COOLDOWN_TIME, per_channel_cooldown_lock, all_room_names_cache_lock
+    global last_room_info_time, _ROOM_INFO_TIMER, all_room_names_cache, per_channel_room_cooldown, _PER_CHANNEL_COOLDOWN_TIME, per_channel_room_cooldown_lock, all_room_names_cache_lock
     # Ignore messages from bots
     if message.author.bot:
         return
@@ -60,30 +60,50 @@ async def on_message(message: discord.Message):
             last_room_info_time = time_now
             print(f"[INFO] [{PRINT_PREFIX}] Refreshed room names cache with {len(all_room_names_cache)} entries for on_message.")
 
-    # Expire per-channel cooldowns
-    async with per_channel_cooldown_lock:
-        expired_channels = [channel for channel, timestamp in per_channel_cooldown.items() if time_now - timestamp > _PER_CHANNEL_COOLDOWN_TIME]
-        for channel in expired_channels:
-            del per_channel_cooldown[channel]
+    # Expire per-channel per-room cooldowns
+    async with per_channel_room_cooldown_lock:
+        for channel_id in list(per_channel_room_cooldown.keys()):
+            expired_rooms = [room for room, timestamp in per_channel_room_cooldown[channel_id].items() if time_now - timestamp > _PER_CHANNEL_COOLDOWN_TIME]
+            for room in expired_rooms:
+                del per_channel_room_cooldown[channel_id][room]
+            # Clean up empty channel entries
+            if not per_channel_room_cooldown[channel_id]:
+                del per_channel_room_cooldown[channel_id]
 
-    content = message.content
+    # Remove quotation marks to allow matching room names within quotes
+    content = message.content.replace('"', '').replace("'", '').replace('"', '').replace('"', '')
+    
+    # Split message into individual words
+    words = content.split()
 
     for room_name in all_room_names_cache:
-        if message.channel in per_channel_cooldown:
-            break
+        # Check if this specific room is on cooldown in this channel
+        channel_id = message.channel.id
+        async with per_channel_room_cooldown_lock:
+            if channel_id in per_channel_room_cooldown and room_name in per_channel_room_cooldown[channel_id]:
+                continue
 
-        escaped = re.escape(room_name)
-        pattern = rf'\b{escaped}\b'
-
-        if re.search(pattern, content, re.IGNORECASE):
+        # Check if any word matches the room name (case-insensitive)
+        room_found = False
+        for word in words:
+            if word.lower() == room_name.lower():
+                room_found = True
+                break
+        
+        if room_found:
             room_info = datamanager.room_db_handler.get_roominfo(room_name)
             if not room_info:
                 return
 
-            await embeds.send_room_documentation_embed(message.channel, room_info)
+            # Send small embed
+            embed = create_small_room_documentation_embed(room_info, guild_id, message.author.display_avatar.url, str(message.author))
+            await message.channel.send(embed=embed)
             print(f"[INFO] [{PRINT_PREFIX}] Sent room info for room '{room_name}' in response to message from user '{message.author}' in server '{message.guild.name}'.")
 
-            async with per_channel_cooldown_lock:
-                per_channel_cooldown[message.channel] = time_now
+            # Set cooldown for this specific room in this channel
+            async with per_channel_room_cooldown_lock:
+                if channel_id not in per_channel_room_cooldown:
+                    per_channel_room_cooldown[channel_id] = {}
+                per_channel_room_cooldown[channel_id][room_name] = time_now
             break
 

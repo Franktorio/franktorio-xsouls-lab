@@ -75,6 +75,18 @@ async def favicon():
     favicon_path = os.path.join(STATIC_DIR, "images", "favicon.ico")
     return FileResponse(favicon_path)
 
+@app.get("/robots.txt", include_in_schema=False)
+async def robots():
+    """Serve the robots.txt file for search engine crawlers."""
+    robots_path = os.path.join(STATIC_DIR, "robots.txt")
+    return FileResponse(robots_path, media_type="text/plain")
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap():
+    """Serve the sitemap.xml file for search engines."""
+    sitemap_path = os.path.join(STATIC_DIR, "sitemap.xml")
+    return FileResponse(sitemap_path, media_type="application/xml")
+
 @app.get("/commands", name="bot_commands")
 async def bot_commands(request: Request):
     """Bot commands documentation page."""

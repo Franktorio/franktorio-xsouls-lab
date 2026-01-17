@@ -20,6 +20,7 @@ SCHEMA = {
     "server_profiles": """
         CREATE TABLE IF NOT EXISTS server_profiles (
             server_id INTEGER PRIMARY KEY,
+            website_opt_in BOOLEAN DEFAULT FALSE,
             leaderboard_channel_id INTEGER,
             documented_channel_id INTEGER,
             doc_msg_ids TEXT
@@ -313,3 +314,48 @@ def get_all_server_profiles() -> list:
         'documented_channel_id': row[2],
         'doc_msg_ids': json.loads(row[3]) if row[3] else {}
     } for row in rows]
+
+def set_website_opt_in(server_id: int, opt_in: bool) -> bool:
+    """
+    Set the website opt-in status for a server.
+    
+    Args:
+        server_id: The Discord server (guild) ID
+        opt_in: True to opt-in, False to opt-out
+    Returns:
+        True if updated successfully, False otherwise
+    """
+    profile = get_server_profile(server_id)
+    if profile:
+        conn = _connect_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE server_profiles
+            SET website_opt_in = ?
+            WHERE server_id = ?
+        """, (opt_in, server_id))
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        if success:
+            status = "opted in to" if opt_in else "opted out of"
+            print(f"[INFO] [{PRINT_PREFIX}] Server {server_id} has {status} website integration.")
+        return success
+    else:
+        print(f"[WARN] [{PRINT_PREFIX}] Failed to set website opt-in: guild {server_id} profile not found")
+        return False
+    
+def get_opted_in_servers() -> list:
+    """
+    Retrieve a list of server IDs that have opted in for website integration.
+    
+    Returns:
+        List of server IDs
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT server_id FROM server_profiles WHERE website_opt_in = 1")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [row[0] for row in rows]
