@@ -604,6 +604,15 @@ class ResearchCommands(app_commands.Group):
         if level < 3:
             await interaction.followup.send("You do not have permission to rename rooms. You need to be experienced researcher or higher.", ephemeral=True)
             return
+
+        newname_exists = room_db_handler.get_roominfo(newname)
+        if newname_exists:
+            embed = embeds.create_error_embed(
+                "Rename Failed",
+                f"The new room name '{newname}' is already in use. Please delete the documentation for that room first."
+            )
+            await interaction.followup.send(embed=embed)
+            return
         
         success = room_db_handler.rename_room(roomname, newname, edited_by_user_id=interaction.user.id)
         if success:
