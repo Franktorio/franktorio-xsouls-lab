@@ -106,10 +106,13 @@ def create_small_room_documentation_embed(room_data: dict, guild_id: int, author
         name=author_name,
         icon_url=author_url
     )
+
+    roomname_link = urllib.parse.quote(room_data.get('room_name'))
+    
     if not doc_link:
         embed.add_field(
             name="Website Documentation",
-            value=f"[View on Pressure Database](https://pressure.xsoul.org/rooms/{room_data.get('room_name')})",
+            value=f"[View on Pressure Database](https://pressure.xsoul.org/rooms/{roomname_link})",
             inline=False
         )
     print(f"[DEBUG] [{PRINT_PREFIX}] Created small room documentation embed for '{room_data.get('room_name')}'")

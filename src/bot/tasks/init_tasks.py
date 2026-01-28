@@ -9,6 +9,7 @@ PRINT_PREFIX = "TASK INIT"
 from .build_documented import build_documented_channels
 from .update_leaderboard import update_leaderboard
 from .sync_databases import sync_databases
+from .scanner_data_refresher import refresh_scanner_data_task
 
 
 def start_all_tasks():
@@ -18,6 +19,7 @@ def start_all_tasks():
         (build_documented_channels, "Build Documented Channels Task"),
         (update_leaderboard, "Update Leaderboard Task"),
         (sync_databases, "Sync Databases Task"),
+        (refresh_scanner_data_task, "Scanner Data Refresh Task"),
     ]
     # Start each task if it's not already running
     for task, name in tasks_to_start:
@@ -26,5 +28,6 @@ def start_all_tasks():
             print(f"[INFO] [{PRINT_PREFIX}] {name} started")
         else:
             print(f"[INFO] [{PRINT_PREFIX}] {name} already running")
+
     
     print(f"[INFO] [{PRINT_PREFIX}] All background tasks initialization complete")

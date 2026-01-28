@@ -18,7 +18,7 @@ from discord import app_commands
 from PIL import Image
 
 # Local imports
-from config.vars import RoomType, Tags
+from config.vars import RoomType, Tags, WEBP_QUALITY
 from src import shared
 from src.utils import r2_handler, external_api
 from src.datamanager.db_handlers import room_db_handler
@@ -38,16 +38,17 @@ async def _get_image_links(images: list[Optional[discord.Attachment]], brighten:
                         data = await resp.read()
                         
                         if brighten:
-                            # Apply gamma correction
-                            pil_img = Image.open(io.BytesIO(data))
-                            gamma = 0.3  # Lower gamma = brighter 
-                            brightened = pil_img.point(lambda x: int(255 * ((x / 255) ** gamma)))
-                            
-                            # Convert back to bytes
-                            output = io.BytesIO()
-                            brightened.save(output, format='PNG')
-                            output.seek(0)
-                            processed_data = output.getvalue()
+                            gamma = 0.3  # lower = brighter
+
+                            with Image.open(io.BytesIO(data)) as pil_img:
+                                pil_img = pil_img.convert("RGB")
+
+                                lut = [int(255 * ((i / 255) ** gamma)) for i in range(256)]
+                                brightened = pil_img.point(lut * 3)
+
+                                output = io.BytesIO()
+                                brightened.save(output, format="WEBP", quality=WEBP_QUALITY)
+                                processed_data = output.getvalue()
                         else:
                             processed_data = data
                         

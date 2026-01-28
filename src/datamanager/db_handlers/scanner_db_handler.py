@@ -11,6 +11,8 @@ import threading
 import random
 import string
 import hashlib
+import json
+from typing import Literal
 import os
 import time
 
@@ -41,7 +43,47 @@ SCHEMA = {
             found_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
             FOREIGN KEY (session_id) REFERENCES sessions(session_id)
         );
-    """
+    """,
+
+    "cleaned_data_hundred": """
+        CREATE TABLE IF NOT EXISTS cleaned_data_hundred (
+            session_id TEXT PRIMARY KEY,
+            session_rooms TEXT NOT NULL,
+            validated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+    """,
+
+    "cleaned_data_fifty": """
+        CREATE TABLE IF NOT EXISTS cleaned_data_fifty (
+            session_id TEXT PRIMARY KEY,
+            session_rooms TEXT NOT NULL,
+            validated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+    """,
+
+    "cleaned_data_twentyfive": """
+        CREATE TABLE IF NOT EXISTS cleaned_data_twentyfive (
+            session_id TEXT PRIMARY KEY,
+            session_rooms TEXT NOT NULL,
+            validated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+    """,
+    
+    "cleaned_data_all": """
+        CREATE TABLE IF NOT EXISTS cleaned_data_all (
+            session_id TEXT PRIMARY KEY,
+            session_rooms TEXT NOT NULL,
+            validated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+    """,
+
+    "statistics_table": """
+        CREATE TABLE IF NOT EXISTS statistics_table (
+            stat_name TEXT PRIMARY KEY,
+            stat_data TEXT NOT NULL,
+            updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );
+    """,
 }
 
 
@@ -271,12 +313,12 @@ def log_encountered_room(session_id: str, room_name: str, session_password: str)
     print(f"[DEBUG] [{PRINT_PREFIX}] Logged encountered room '{room_name}' in session {session_id}.")
     return success
 
-def get_sessions(include_closed: bool = True) -> list[tuple]:
+def get_sessions(include_closed: bool = True) -> list[dict]:
     """
     Get a list of sessions in descending order by creation date (newest first).
     
     Returns:
-        A list of tuples containing (session_id, created_at, last_edited_at, scanner_version, closed).
+        A list of dicts containing (session_id, created_at, last_edited_at, scanner_version, closed).
     """
     conn = _connect_db()
     cursor = conn.cursor()
@@ -297,6 +339,15 @@ def get_sessions(include_closed: bool = True) -> list[tuple]:
     
     sessions = cursor.fetchall()
     conn.close()
+
+    # Format to dicts
+    sessions = [{
+        "session_id": row[0],
+        "created_at": row[1],
+        "last_edited_at": row[2],
+        "scanner_version": row[3],
+        "closed": bool(row[4])
+    } for row in sessions]
 
     print(f"[INFO] [{PRINT_PREFIX}] Retrieved {'all' if include_closed else 'open'} sessions.")
     return sessions
@@ -321,7 +372,7 @@ def get_session_rooms(session_id: str) -> list[tuple]:
     encounters = cursor.fetchall()
     conn.close()
     
-    print(f"[INFO] [{PRINT_PREFIX}] Retrieved encountered rooms for session {session_id}.")
+    print(f"[DEBUG] [{PRINT_PREFIX}] Retrieved encountered rooms for session {session_id}.")
     return encounters
 
 def get_all_encountered_rooms() -> list[tuple]:
@@ -439,3 +490,143 @@ def purge_database() -> None:
     conn.close()
 
     print(f"[INFO] [{PRINT_PREFIX}] Purged all data from the scanner database.")
+
+
+def clear_cleaned_data() -> None:
+    """
+    Clear all data from all the cleaned data tables.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM cleaned_data_hundred")
+    cursor.execute("DELETE FROM cleaned_data_fifty")
+    cursor.execute("DELETE FROM cleaned_data_twentyfive")
+    cursor.execute("DELETE FROM cleaned_data_all")
+
+    conn.commit()
+    conn.close()
+
+    print(f"[INFO] [{PRINT_PREFIX}] Cleared all data from the cleaned_data tables.")
+
+def add_validated_session(session_id: str, session_rooms: list, category: Literal["hundred", "fifty", "twentyfive", "all"]) -> bool:
+    """
+    Add a validated session to the validated_sessions table.
+    
+    Args:
+        session_id (str): The ID of the session.
+        session_rooms (list): A list of room names in the session.
+    
+    Returns:
+        bool: True if the session was added successfully, False otherwise.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+
+    table_name = f"cleaned_data_{category}"
+
+    cursor.execute(f"""
+        INSERT INTO {table_name} (session_id, session_rooms)
+        VALUES (?, ?)
+    """, (session_id, json.dumps(session_rooms)))
+
+    success = cursor.rowcount > 0
+
+    conn.commit()
+    conn.close()
+
+    if success:
+        print(f"[DEBUG] [{PRINT_PREFIX}] Added validated session {session_id} to {table_name}.")
+    else:
+        print(f"[ERROR] [{PRINT_PREFIX}] Failed to add validated session {session_id} to {table_name}.")
+
+    return success
+
+
+def get_validated_sessions(category: Literal["hundred", "fifty", "twentyfive", "all"]) -> dict[str, list[tuple]]:
+    """
+    Get all validated sessions from the validated_sessions table.
+    
+    Args:
+        category (Literal): The category of cleaned data to retrieve.
+    Returns:
+        dict[str, list[tuple]]: A dictionary of session_id to list of room tuples (room_name, found_at).
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+
+    table_name = f"cleaned_data_{category}"
+
+    cursor.execute(f"""
+        SELECT session_id, session_rooms
+        FROM {table_name}
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    validated_sessions = {}
+    for row in rows:
+        session_id = row[0]
+        validated_sessions[session_id] = []
+        room_names_pairs = json.loads(row[1])
+
+        # Turn pairs back into list of tuples
+        for room_name, timestamp in room_names_pairs:
+            validated_sessions[session_id].append((room_name, timestamp))
+
+    print(f"[INFO] [{PRINT_PREFIX}] Retrieved {len(validated_sessions)} validated sessions from {table_name}.")
+    return validated_sessions
+
+def set_statistic(stat_name: str, stat_data: any) -> None:
+    """
+    Set a statistic in the statistics table.
+    
+    Args:
+        stat_name (str): The name of the statistic.
+        stat_data (any): The data of the statistic (will be JSON serialized).
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO statistics_table (stat_name, stat_data)
+        VALUES (?, ?)
+        ON CONFLICT(stat_name) DO UPDATE SET
+            stat_data=excluded.stat_data,
+            updated_at=strftime('%s', 'now')
+    """, (stat_name, json.dumps(stat_data)))
+
+    conn.commit()
+    conn.close()
+
+    print(f"[INFO] [{PRINT_PREFIX}] Set statistic '{stat_name}'.")
+
+def get_statistic(stat_name: str) -> any:
+    """
+    Get a statistic from the statistics table.
+    
+    Args:
+        stat_name (str): The name of the statistic.
+    Returns:
+        any | None: The data of the statistic (JSON deserialized) or None if not found.
+    """
+    conn = _connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT stat_data, updated_at
+        FROM statistics_table
+        WHERE stat_name = ?
+    """, (stat_name,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+
+    data = json.loads(row[0])
+    data["updated_at"] = row[1]
+
+    return data

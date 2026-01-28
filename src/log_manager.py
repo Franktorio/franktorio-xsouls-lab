@@ -1,12 +1,12 @@
-# Franktorio's Research Division
-# Author: Franktorio
-# December 10th 2025
-# Log Manager - Overrides print function to log outputs to a file
+# src\logging.py
+# Overrides the built-in print function to log messages to a file with timestamps.
+# Also implements automatic log rotation at midnight, keeping logs for 7 days.
 
 import builtins
 import os
 import datetime
 import threading
+from typing import Any
 from config.vars import DEBUG_ENABLED
 
 PRINT_PREFIX = "LOG MANAGER"
@@ -26,13 +26,13 @@ os.makedirs("logs/rotated_logs", exist_ok=True)
 # Create and/or open the bot logs file in append mode
 bot_logs = open("logs/bot_logs.log", "a")
 
-log_queue = [] # Hold messages when logs are closed for rotation
+log_queue: list[str] = [] # Hold messages when logs are closed for rotation
 
 log_lock = threading.Lock()
 
 startup_rotation = False # Will be set to True after application startup, which will trigger log rotation regardless of time
 
-def logging_print(*args, **kwargs):
+def logging_print(*args: Any, **kwargs: Any) -> None:
     """Custom print function for logging purposes."""
     global DEBUG_ENABLED
     # Skip debug prints if DEBUG_ENABLED is False
@@ -97,17 +97,21 @@ def auto_rotate_log():
         with log_lock:
             bot_logs.close()
 
-            date_suffix = now.strftime("%Y%m%d")
+            date_suffix = now.strftime("%Y-%m-%d")
+            
+            # Create directory for today's logs
+            today_log_dir = f"logs/rotated_logs/{date_suffix}"
+            os.makedirs(today_log_dir, exist_ok=True)
 
             # Add _x+1 if file already exists to avoid overwriting
             file_number = 1 # Start with 1
 
-            base_rotated_log_path = f"logs/rotated_logs/bot_logs_{date_suffix}_{file_number}.log"
+            base_rotated_log_path = f"{today_log_dir}/bot_logs_{file_number}.log"
             rotated_log_path = base_rotated_log_path
 
             while os.path.exists(rotated_log_path):
                 file_number += 1
-                rotated_log_path = f"logs/rotated_logs/bot_logs_{date_suffix}_{file_number}.log"
+                rotated_log_path = f"{today_log_dir}/bot_logs_{file_number}.log"
 
             try:
                 os.rename("logs/bot_logs.log", rotated_log_path)
@@ -116,19 +120,17 @@ def auto_rotate_log():
                 log_queue.append(f"[WARNING] [{PRINT_PREFIX}] No log file to rotate.")
                 pass
 
-            # Delete logs older than 7 days up to 30 days back
-            for i in range(8, 30): # Check up to 30 days back
-                old_date_suffix = (now - datetime.timedelta(days=i)).strftime("%Y%m%d")
-                file_number = 1
-                # Delete all files with this date suffix and incrementing file numbers
-                while os.path.exists(f"logs/rotated_logs/bot_logs_{old_date_suffix}_{file_number}.log"):
-                    old_log_path = f"logs/rotated_logs/bot_logs_{old_date_suffix}_{file_number}.log"
+            # Delete log directories older than 7 days
+            import shutil
+            for i in range(8, 30):
+                old_date_suffix = (now - datetime.timedelta(days=i)).strftime("%Y-%m-%d")
+                old_log_dir = f"logs/rotated_logs/{old_date_suffix}"
+                if os.path.exists(old_log_dir):
                     try:
-                        os.remove(old_log_path)
-                        log_queue.append(f"[INFO] [{PRINT_PREFIX}] Deleted old log file: {old_log_path}")
+                        shutil.rmtree(old_log_dir)
+                        log_queue.append(f"[INFO] [{PRINT_PREFIX}] Deleted old log directory: {old_log_dir}")
                     except Exception as e:
-                        log_queue.append(f"[ERROR] [{PRINT_PREFIX}] Failed to delete old log file {old_log_path}: {e}")
-                    file_number += 1
+                        log_queue.append(f"[ERROR] [{PRINT_PREFIX}] Failed to delete old log directory {old_log_dir}: {e}")
         
             # Reopen new active log
             _rotate_log()

@@ -82,7 +82,7 @@
     min-width: 300px;
     top: 0;
     left: 0;
-    transition: box-shadow 0.3s;
+    transition: box-shadow 0.3s, transform 0.3s;
 }
 .room_data_card h1 {
     color: var(--text-inactive);
@@ -98,6 +98,7 @@
 
 .room_data_card:hover {
     box-shadow: 0 1px 20px rgb(79, 30, 102);
+    transform: translateY(-2px);
 }
 
 .room_data_image_grid {

@@ -156,6 +156,16 @@ async def get_user_profile(user_id: int) -> dict:
     """
     async def _fetch_user_profile(user_id: int) -> dict:
         """Helper to fetch user profile in Discord's event loop."""
+        # Try cache first
+        user = shared.FRD_bot.get_user(user_id)
+        if user:
+            print(f"[INFO] [{PRINT_PREFIX}] Retrieved user profile from cache for user ID: {user_id}")
+            profile_picture_url = str(user.display_avatar.url) if user.display_avatar else None
+            return {
+                "profile_picture_url": profile_picture_url,
+                "username": str(user),
+                "display_name": user.name
+            }
         user = await shared.FRD_bot.fetch_user(user_id)
         print(f"[INFO] [{PRINT_PREFIX}] Fetching user profile for user ID: {user_id}")
         if user is None:

@@ -41,6 +41,17 @@
     box-shadow: 2px 2px 10px var(--accent);
 }
 
+.titlebar a.new_feature {
+    background-color: var(--accent);
+    color: var(--text);
+    border-color: var(--accent);
+}
+.titlebar a.new_feature:hover {
+    background-color: #7a4dff;
+    border-color: #7a4dff;
+    box-shadow: 2px 2px 15px rgba(155, 105, 255, 0.4);
+}
+
 .titlebar a.logo {
     display: flex;
     align-items: center;

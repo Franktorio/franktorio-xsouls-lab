@@ -331,4 +331,142 @@ class Admin(app_commands.Group):
         await interaction.followup.send("Scanner database purged successfully.", ephemeral=True)
         print(f"[INFO] [{PRINT_PREFIX}] Scanner database purged by {interaction.user}")
 
+    @app_commands.command(name="migrate_cdn_to_webp", description="Migrate all non-WebP images in R2 to WebP format.")
+    @app_commands.describe(confirm="Type CONFIRM to start the migration.")
+    async def migrate_cdn_to_webp(self, interaction: discord.Interaction, confirm: Optional[str] = None):
+        """
+        Migrate all non-WebP images in the R2 bucket to WebP format.
+        This will download each image, convert it to WebP, re-upload, and delete the original.
+        """
+        await interaction.response.defer()
+        
+        print(f"[INFO] [{PRINT_PREFIX}] CDN WebP migration requested by {interaction.user}")
+        
+        level = await utils.permission_check(interaction.user)
+        if level < 5:
+            await interaction.followup.send("You do not have permission to use this command.")
+            return
+        
+        if confirm != "CONFIRM":
+            await interaction.followup.send("To confirm migrating the CDN to WebP, please add `confirm=CONFIRM` to the command.")
+            return
+        
+        # Send initial message
+        await interaction.followup.send("Starting CDN migration to WebP format... This may take a while.")
+        
+        # Run the migration
+        stats = await r2_handler.migrate_cdn_to_webp()
+        
+        # Send results
+        if "error" in stats:
+            embed = embeds.create_error_embed(
+                title="Migration Failed",
+                description=f"Error: {stats['error']}"
+            )
+        else:
+            # Update room database URLs
+            url_mappings = stats.get("url_mappings", {})
+            rooms_updated = 0
+            
+            if url_mappings:
+                # Get all room names
+                room_names = datamanager.room_db_handler.get_all_room_names()
+                
+                for room_name in room_names:
+                    room_data = datamanager.room_db_handler.get_roominfo(room_name)
+                    if not room_data:
+                        continue
+                    
+                    picture_urls = room_data.get("picture_urls", [])
+                    updated_urls = []
+                    changed = False
+                    
+                    for url in picture_urls:
+                        if url in url_mappings:
+                            updated_urls.append(url_mappings[url])
+                            changed = True
+                        else:
+                            updated_urls.append(url)
+                    
+                    # Update if any URLs changed
+                    if changed:
+                        datamanager.room_db_handler.replace_imgs(room_name, updated_urls)
+                        rooms_updated += 1
+                        print(f"[INFO] [{PRINT_PREFIX}] Updated URLs for room: {room_name}")
+            
+            embed = embeds.create_success_embed(
+                title="CDN Migration Complete",
+                description=f"**Total images:** {stats['total']}\n"
+                           f"**Converted:** {stats['converted']}\n"
+                           f"**Skipped (already WebP):** {stats['skipped']}\n"
+                           f"**Failed:** {stats['failed']}\n"
+                           f"**Rooms updated:** {rooms_updated}"
+            )
+        
+        await interaction.followup.send(embed=embed, ephemeral=True)
+        print(f"[INFO] [{PRINT_PREFIX}] CDN migration completed by {interaction.user}: {stats}")
+
+    @app_commands.command(name="fix_webp_urls", description="Update all database URLs to use .webp extensions.")
+    @app_commands.describe(confirm="Type CONFIRM to update URLs.")
+    async def fix_webp_urls(self, interaction: discord.Interaction, confirm: Optional[str] = None):
+        """
+        Update all room picture URLs in the database to use .webp extensions.
+        This only updates the database, not the actual files in R2.
+        """
+        await interaction.response.defer(ephemeral=True)
+        
+        print(f"[INFO] [{PRINT_PREFIX}] Fix WebP URLs requested by {interaction.user}")
+        
+        level = await utils.permission_check(interaction.user)
+        if level < 5:
+            await interaction.followup.send("You do not have permission to use this command.", ephemeral=True)
+            return
+        
+        if confirm != "CONFIRM":
+            await interaction.followup.send("To confirm updating URLs, please add `confirm=CONFIRM` to the command.", ephemeral=True)
+            return
+        
+        # Get all room names
+        room_names = datamanager.room_db_handler.get_all_room_names()
+        
+        rooms_updated = 0
+        total_urls_updated = 0
+        
+        for room_name in room_names:
+            room_data = datamanager.room_db_handler.get_roominfo(room_name)
+            if not room_data:
+                continue
+            
+            picture_urls = room_data.get("picture_urls", [])
+            updated_urls = []
+            changed = False
+            
+            for url in picture_urls:
+                # Replace extension with .webp
+                if not url.lower().endswith('.webp'):
+                    # Split URL and replace extension
+                    base_url = url.rsplit('.', 1)[0] if '.' in url.split('/')[-1] else url
+                    new_url = f"{base_url}.webp"
+                    updated_urls.append(new_url)
+                    changed = True
+                    total_urls_updated += 1
+                else:
+                    updated_urls.append(url)
+            
+            # Update if any URLs changed
+            if changed:
+                datamanager.room_db_handler.replace_imgs(room_name, updated_urls)
+                rooms_updated += 1
+                print(f"[INFO] [{PRINT_PREFIX}] Updated URLs for room: {room_name}")
+        
+        embed = embeds.create_success_embed(
+            title="WebP URLs Updated",
+            description=f"**Rooms checked:** {len(room_names)}\n"
+                       f"**Rooms updated:** {rooms_updated}\n"
+                       f"**URLs changed:** {total_urls_updated}"
+        )
+        
+        await interaction.followup.send(embed=embed, ephemeral=True)
+        print(f"[INFO] [{PRINT_PREFIX}] Fixed WebP URLs: {rooms_updated} rooms, {total_urls_updated} URLs updated by {interaction.user}")
+
 shared.FRD_bot.tree.add_command(Admin())

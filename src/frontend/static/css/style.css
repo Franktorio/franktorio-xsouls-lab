@@ -43,9 +43,11 @@ body {
 }
 
 .content {
-    flex: 1; /*Push footer to bottom*/
+    flex: 1;
     margin: 20px;
     min-height: 0;
     overflow: visible;
+    display: flex;
+    flex-direction: column;
     align-items: center;
 }

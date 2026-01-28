@@ -1,3 +1,4 @@
+<!-- @ts-nocheck -->
 {% extends "base.html" %}
 
 {% block page_title %}Franktorio & xSoul's Lab ㆍ Scanner Data{% endblock %}
@@ -5,8 +6,87 @@
 Updated daily.{% endblock %}
 
 {% block head_extra %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/scanner-style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/scanner-style.css') }}?v=55">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', path='js/graph_encounters_time.js') }}?v=102" defer></script>
+<script src="{{ url_for('static', path='js/graph_encounters_total.js') }}?v=102" defer></script>
 {% endblock %}
 
 {% block content %}
+<div class="scanner-container">
+    <h1>Scanner Data & Analytics</h1>
+    <p>Real-time analytics from validated scanner sessions. Data updated daily.</p>
+    <h2>Last update: {{ last_update }}</h2>
+
+    <!-- Activity Over Time -->
+    <section class="chart-section">
+        <h2>Activity Over Time (Last 30 Days)</h2>
+        <p>Daily room encounter counts across all sessions - Total: {{ total_encounters }}</p>
+        <canvas id="activityChart"></canvas>
+    </section>
+
+    <!-- Most Common Rooms by Category -->
+    <section class="chart-section">
+        <h2>Most Common Rooms - All Rooms</h2>
+        <canvas id="roomsChartAll"></canvas>
+    </section>
+
+    <section class="chart-section">
+        <h2>Most Common Rooms - First 100 Rooms</h2>
+        <canvas id="roomsChartHundred"></canvas>
+    </section>
+
+    <section class="chart-section">
+        <h2>Most Common Rooms - First 50 Rooms</h2>
+        <canvas id="roomsChartFifty"></canvas>
+    </section>
+
+    <section class="chart-section">
+        <h2>Most Common Rooms - First 25 Rooms</h2>
+        <canvas id="roomsChartTwentyfive"></canvas>
+    </section>
+
+    <!-- Statistics Summary -->
+    <section class="stats-summary">
+        <h2>Statistics Summary</h2>
+        <div class="stats-grid">
+            {% if activity_over_time %}
+            <div class="stat-card">
+                <h3>Total Sessions</h3>
+                <p class="stat-value">{{ activity_over_time.total_sessions }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Days Tracked</h3>
+                <p class="stat-value">{{ activity_over_time.days_tracked }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Activity Over Time Chart
+        {% if activity_over_time %}
+        createActivityChart({{ activity_over_time | tojson }});
+        {% endif %}
+
+        // Most Common Rooms Charts
+        {% if most_common_rooms_all %}
+        createRoomChart('roomsChartAll', {{ most_common_rooms_all | tojson }}, 'All rooms across {{ most_common_rooms_all.total_sessions }} sessions');
+        {% endif %}
+        
+        {% if most_common_rooms_hundred %}
+        createRoomChart('roomsChartHundred', {{ most_common_rooms_hundred | tojson }}, 'First 100 rooms across {{ most_common_rooms_hundred.total_sessions }} sessions with more than 100 rooms');
+        {% endif %}
+        
+        {% if most_common_rooms_fifty %}
+        createRoomChart('roomsChartFifty', {{ most_common_rooms_fifty | tojson }}, 'First 50 rooms across {{ most_common_rooms_fifty.total_sessions }} sessions with more than 50 rooms');
+        {% endif %}
+        
+        {% if most_common_rooms_twentyfive %}
+        createRoomChart('roomsChartTwentyfive', {{ most_common_rooms_twentyfive | tojson }}, 'First 25 rooms across {{ most_common_rooms_twentyfive.total_sessions }} sessions with more than 25 rooms');
+        {% endif %}
+    });
+</script>
 {% endblock %}

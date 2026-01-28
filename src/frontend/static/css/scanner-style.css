@@ -1,0 +1,149 @@
+/* Scanner Data Page Styles */
+
+.scanner-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    width: 100%;
+}
+
+.scanner-container h1 {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+}
+
+.scanner-container > p {
+    color: var(--text-inactive);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.chart-section {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+}
+
+.chart-section h2 {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+}
+
+.chart-section > p {
+    color: var(--text-inactive);
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+canvas {
+    max-height: 1200px; 
+}
+
+.category-chart {
+    display: none;
+}
+
+.category-chart.active {
+    display: block;
+}
+
+.stats-summary {
+    margin: 3rem 0;
+}
+
+.stats-summary h2 {
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.stat-card h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-inactive);
+    font-size: 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--accent);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .scanner-container {
+        padding: 1rem;
+    }
+
+    .scanner-container h1 {
+        font-size: 2rem;
+    }
+
+    .chart-section {
+        padding: 1rem;
+    }
+
+    .chart-section h2 {
+        font-size: 1.5rem;
+    }
+
+    canvas {
+        max-height: 300px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .tabs {
+        gap: 0.25rem;
+    }
+
+    .tab-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    .chart-section h2 {
+        font-size: 1.2rem;
+    }
+}

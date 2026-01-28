@@ -21,12 +21,14 @@ _ROOM_INFO_TIMER = 120 # seconds
 all_room_names_cache = []
 last_room_info_time = 0
 
-_PER_CHANNEL_COOLDOWN_TIME = 300 # Only allow the same room to be sent in a channel every 5 minutes (300 seconds)
+_PER_CHANNEL_COOLDOWN_TIME = 600 # Only allow the same room to be sent in a channel every 10 minutes (600 seconds)
 per_channel_room_cooldown = {}  # Dict of {channel_id: {room_name: timestamp}}
 
 # Locks
 per_channel_room_cooldown_lock = asyncio.Lock()
 all_room_names_cache_lock = asyncio.Lock()
+
+COMMON_ROOMS_TO_SKIP = set(["start", "000"])
 
 @shared.FRD_bot.event
 async def on_message(message: discord.Message):
@@ -93,6 +95,10 @@ async def on_message(message: discord.Message):
         if room_found:
             room_info = datamanager.room_db_handler.get_roominfo(room_name)
             if not room_info:
+                return
+
+            if room_name.lower() in COMMON_ROOMS_TO_SKIP:
+                # Skip common rooms to reduce spam
                 return
 
             # Send small embed
